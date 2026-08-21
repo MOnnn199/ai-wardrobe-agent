@@ -1,0 +1,15 @@
+{
+  "_comment": "演示衣物的时间维度数据，由 seed/migrate 脚本读取后写入 clothing_items 字段。真实环境应由用户上传/录入时维护，不要在此处写死生产数据。",
+  "items": {
+    "1":  {"purchase_days_ago": 400, "last_worn_days_ago": 150, "wear_count": 4,  "name": "白色纯棉T恤"},
+    "2":  {"purchase_days_ago": 480, "last_worn_days_ago": 190, "wear_count": 3,  "name": "黑色免烫衬衫"},
+    "3":  {"purchase_days_ago": 360, "last_worn_days_ago": 120, "wear_count": 6,  "name": "灰色连帽卫衣"},
+    "4":  {"purchase_days_ago": 520, "last_worn_days_ago": 200, "wear_count": 2,  "name": "藏青针织开衫"},
+    "5":  {"purchase_days_ago": 300, "last_worn_days_ago": 14,  "wear_count": 30, "name": "浅蓝直筒牛仔裤"},
+    "6":  {"purchase_days_ago": 150, "last_worn_days_ago": 8,   "wear_count": 25, "name": "卡其休闲裤"},
+    "7":  {"purchase_days_ago": 200, "last_worn_days_ago": 25,  "wear_count": 18, "name": "黑色西装裤"},
+    "8":  {"purchase_days_ago": 120, "last_worn_days_ago": 2,   "wear_count": 45, "name": "白色运动鞋"},
+    "9":  {"purchase_days_ago": 90,  "last_worn_days_ago": 18,  "wear_count": 12, "name": "棕色乐福鞋"},
+    "10": {"purchase_days_ago": 60,  "last_worn_days_ago": 5,   "wear_count": 22, "name": "黑色棒球帽"}
+  }
+}

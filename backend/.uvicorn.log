@@ -1,0 +1,1134 @@
+INFO:     Will watch for changes in these directories: ['E:\\ai-wardrobe-agent\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [27084] using WatchFiles
+E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\pydantic\_internal\_fields.py:132: UserWarning: Field "model_name" in ModelConfigUpdate has conflict with protected namespace "model_".
+
+You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+  warnings.warn(
+E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\apscheduler\__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import get_distribution, DistributionNotFound
+INFO:     Started server process [22388]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64702 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64703 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60643 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54695 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61336 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61335 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61333 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61334 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53355 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62845 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63253 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63255 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63256 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63254 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50205 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E6%AF%9B%E6%AF%9B%E9%9B%A8&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59813 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E6%AF%9B%E6%AF%9B%E9%9B%A8&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61260 - "GET /uploads/home_1_1785164738502.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53831 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53862 - "GET /api/user/chat?user_input=%E6%B5%8B%E8%AF%95%E5%88%A0%E9%99%A4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52792 - "DELETE /api/user/conversations/26 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52794 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60932 - "DELETE /api/user/conversations/999999 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64308 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64307 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64303 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64305 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64306 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64304 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55453 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60265 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60264 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60263 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60262 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60261 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58938 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56049 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62440 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62694 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65114 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52777 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62440 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62694 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52777 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65114 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50556 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E6%AF%9B%E6%AF%9B%E9%9B%A8&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53408 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=true&weather=%E5%8A%A0%E8%BD%BD%E4%B8%AD%E2%80%A6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52754 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E6%AF%9B%E6%AF%9B%E9%9B%A8&city=%E6%B3%89%E5%B7%9E%E5%B8%82 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56575 - "GET /uploads/home_1_1785164898917.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56575 - "GET /uploads/home_1_1785164899092.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52954 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62741 - "DELETE /api/user/conversations/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58814 - "DELETE /api/user/conversations/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56736 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54295 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64315 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64318 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64314 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64311 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64310 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64313 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53957 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53954 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53956 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53955 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58001 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58002 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58982 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54253 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53478 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64482 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52744 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54465 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64482 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54253 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54465 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52744 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61299 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E6%AF%9B%E6%AF%9B%E9%9B%A8&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60121 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E6%AF%9B%E6%AF%9B%E9%9B%A8&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54465 - "GET /uploads/home_1_1785165226883.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49671 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61433 - "GET /api/user/notifications/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61435 - "GET /api/user/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63434 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63436 - "POST /api/user/notifications/trigger?job=all HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63438 - "GET /api/user/notifications/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63440 - "GET /api/user/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61641 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58126 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61751 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61750 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61748 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61749 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61747 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57149 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57148 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57146 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57144 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57147 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57145 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64676 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64675 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64673 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64671 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64674 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64672 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54878 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61355 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54811 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57686 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55782 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63120 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54878 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63120 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57686 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55782 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60584 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57686 - "GET /uploads/home_1_1785165390218.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53500 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54690 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54694 - "GET /api/user/notifications/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52902 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52904 - "GET /api/user/notifications/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64015 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64025 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64024 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64023 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64022 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64021 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62139 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62140 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60352 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60351 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60350 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60349 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53166 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63127 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62317 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53079 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54004 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53166 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54004 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63127 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63189 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63188 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51303 - "POST /api/user/notifications/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58763 - "POST /api/user/notifications/2/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59423 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65532 - "GET /uploads/home_1_1785165546713.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64916 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61512 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55068 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60676 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60675 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58109 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52755 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53066 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50704 - "GET /api/config/monitor HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50706 - "GET /api/config/model-config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50705 - "GET /api/config/tools HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50698 - "GET /api/config/prompts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50707 - "GET /api/config/pipeline HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49264 - "GET /api/config/model-config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49265 - "GET /api/config/tools HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49268 - "GET /api/config/monitor HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49263 - "GET /api/config/pipeline HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49262 - "GET /api/config/prompts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57040 - "GET /api/config/prompts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60769 - "GET /api/config/model-config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60770 - "GET /api/config/tools HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60772 - "GET /api/config/monitor HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60771 - "GET /api/config/pipeline HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54407 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54398 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54406 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54402 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54408 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54400 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54624 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54621 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54623 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62319 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62321 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52757 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63701 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50677 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54869 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56916 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58332 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59612 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58332 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56916 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63701 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59612 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53220 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64375 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64374 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64370 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64373 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64367 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64369 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50381 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50384 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52760 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52757 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52759 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58332 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63701 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54869 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59612 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50677 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56916 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59612 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54869 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50677 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56916 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51779 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62954 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59612 - "GET /uploads/home_1_1785165684365.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65523 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:63570 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63577 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63579 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63575 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63576 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63574 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60281 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60280 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60278 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60279 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60276 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60277 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62120 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59390 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55191 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63499 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54505 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64619 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55191 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63499 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64619 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54505 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62728 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52752 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64619 - "GET /uploads/home_1_1785165699347.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52751 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52757 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52756 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52752 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52760 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52759 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59419 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59415 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59417 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59418 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59414 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59416 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56372 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59519 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63421 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61045 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53639 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61038 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63421 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61038 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53639 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61045 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60559 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61045 - "GET /uploads/home_1_1785165962979.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64259 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59489 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=true&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61045 - "GET /uploads/home_1_1785165967583.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59285 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=true&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61045 - "GET /uploads/home_1_1785165969893.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52987 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=true&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61045 - "GET /uploads/home_1_1785165970663.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49309 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=true&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61045 - "GET /uploads/home_1_1785165971908.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62126 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58381 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56060 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56059 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56057 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56058 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56697 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.3&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65022 - "GET /uploads/home_1_1785166081968.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57990 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 401 Unauthorized
+WARNING:  WatchFiles detected changes in 'app\api\user.py'. Reloading...
+INFO:     127.0.0.1:51600 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65339 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53078 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53076 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53075 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53077 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65202 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.2&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53541 - "GET /uploads/home_1_1785166273768.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49667 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49674 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:63510 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57681 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:50284 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50287 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50289 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:52757 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52759 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:60416 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60418 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:59287 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62102 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57143 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:62644 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62646 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:64324 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60988 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58987 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:51422 - "GET /api/user/notifications?limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64473 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53199 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64756 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:60603 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50121 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:57729 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49670 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:61099 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61100 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61093 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61097 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61098 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61095 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60309 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60310 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51091 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51089 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51093 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51090 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55952 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50514 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63521 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49187 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51242 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54226 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50514 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55952 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63521 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54226 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51802 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.2&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63521 - "GET /uploads/home_1_1785167946706.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59553 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.2&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51249 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55141 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:60423 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60249 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:56741 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56744 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:49675 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59385 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:55567 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55565 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55571 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55575 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55574 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55572 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54240 - "GET /api/user/notifications/unread-count?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54239 - "GET /api/user/notifications?user_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54235 - "GET /api/user/wardrobe HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54238 - "GET /api/user/shopping-list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54237 - "GET /api/user/wardrobe-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54236 - "GET /api/user/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64597 - "GET /uploads/item_1.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63420 - "GET /uploads/item_2.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50566 - "GET /uploads/item_6.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51519 - "GET /uploads/item_5.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59428 - "GET /uploads/item_4.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57677 - "GET /uploads/item_3.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64597 - "GET /uploads/item_7.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51519 - "GET /uploads/item_8.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57677 - "GET /uploads/item_9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64597 - "GET /uploads/item_10.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56674 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.2&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57720 - "GET /uploads/home_1_1785168432033.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57722 - "GET /api/user/outfit-by-weather?user_id=1&random_pick=false&temp=22.2&weather=%E9%98%B4&city=%E5%8C%97%E4%BA%AC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50432 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53321 - "POST /api/user/wardrobe/upload-and-tag HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 187, in __call__
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\starlette\routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\ai-wardrobe-agent\backend\app\api\user.py", line 287, in upload_and_tag
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
+                 ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'
+INFO:     127.0.0.1:57740 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57744 - "POST /api/auth/login HTTP/1.1" 200 OK

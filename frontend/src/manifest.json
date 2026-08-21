@@ -1,0 +1,25 @@
+{
+  "name": "AI穿搭助手",
+  "appid": "",
+  "description": "AI 智能衣橱用户端（uni-app）",
+  "h5": {
+    "router": {
+      "base": "./"
+    },
+    "devServer": {
+      "port": 5173,
+      "proxy": {
+        "/api": {
+          "target": "http://localhost:8000",
+          "changeOrigin": true
+        }
+      }
+    }
+  },
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false
+    }
+  }
+}

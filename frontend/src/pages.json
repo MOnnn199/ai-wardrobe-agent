@@ -1,0 +1,28 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "",
+        "backgroundColor": "#eef5ff"
+      }
+    },
+    {
+      "path": "pages/user/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI 穿搭助手",
+        "navigationBarBackgroundColor": "#7aa8ff",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#eef5ff"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "AI 穿搭助手",
+    "navigationBarBackgroundColor": "#7aa8ff",
+    "backgroundColor": "#eef5ff"
+  }
+}

@@ -1,0 +1,2369 @@
+<template>
+  <view class="page">
+    <!-- 自定义顶部栏：标�?+ 全局通知铃铛 -->
+    <view class="topbar">
+      <text class="tb-title">AI 穿搭助手</text>
+      <view class="tb-right">
+        <view class="notify-bell" @click="switchView('notify')">
+          <text class="bell-ico">🔔</text>
+          <text v-if="unreadCount>0" class="bell-badge">{{ unreadCount>99?'99+':unreadCount }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 主体内容 -->
+    <scroll-view class="main" scroll-y>
+      <!-- ===== 1. 首页 ===== -->
+      <view v-show="currentView==='today'" class="panel">
+        <!-- 天气卡片（定位后显示�?-->
+        <view class="weather-card">
+          <view class="wx-weather">
+            <text class="wx-temp">{{ tempDisplay }}</text>
+            <text class="wx-desc">{{ weather.description }}</text>
+          </view>
+          <view class="wx-meta">
+            <text class="wx-city">📍 {{ weather.city }}{{ weather.located ? '' : '（默认）' }}</text>
+            <text v-if="weather.windspeed !== '--'" class="wx-wind">💨 {{ weather.windspeed }} km/h</text>
+          </view>
+        </view>
+
+        <!-- 今日穿搭：按天气从衣橱直接挑一�?-->
+        <view class="panel-head between">
+          <text class="panel-title">今日穿搭</text>
+          <view class="mini-btn" @click="loadHomeOutfit(true)">换一�</view>
+        </view>
+        <view v-if="homeLoading" class="card-box"><text class="loading-text">正在为你搭配�</text></view>
+        <view v-else-if="homeOutfit" class="card-box">
+          <text class="pre">{{ homeOutfit.text }}</text>
+          <image v-if="homeOutfit.image_url" :src="homeOutfit.image_url" mode="widthFix" class="outfit-img" />
+          <view v-if="homeOutfit.items && homeOutfit.items.length" class="home-outfit-actions">
+            <view class="mini-btn primary" @click="wearTodayOutfit">确认今日穿搭</view>
+          </view>
+        </view>
+        <view v-else class="card-box"><text class="pre">衣橱还没有衣物，去「衣橱」添加吧�</text></view>
+
+        <!-- 工作台：搭配两种入口 + 快捷功能 -->
+        <view class="panel-head" style="margin-top:32rpx"><text class="panel-title">工作�</text></view>
+
+        <!-- 工作台：仅保留搭配审核入口，其他功能走底部导�?-->
+        <view class="wb-single" @click="startSelfOutfit">
+          <view class="wb-single-icon"><text class="wb-ico">�</text></view>
+          <view class="wb-single-text">
+            <text class="wb-single-title">搭配审核</text>
+            <text class="wb-single-sub">从衣橱选几件，�?AI 判断合不合�</text>
+          </view>
+          <text class="wb-single-arrow">�</text>
+        </view>
+
+        <!-- 场景快捷推荐（FR-C4）：通勤 / 约会 / 运动…一键生�?-->
+        <view class="wb-scenes">
+          <view class="wb-scenes-head">
+            <text class="wb-scenes-title">场景快捷推荐</text>
+            <text v-if="sceneLoading" class="wb-scenes-loading">搭配中�</text>
+          </view>
+          <view class="scene-grid">
+            <view v-for="s in sceneList" :key="s.key" class="scene-chip" @click="runScene(s.key)">
+              <text class="scene-ico">{{ sceneIcons[s.key] || '�? }}</text>
+              <text class="scene-label">{{ s.label }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 场景推荐结果弹窗 -->
+        <view v-if="sceneResult" class="mask" @click="sceneResult = null">
+          <view class="scene-dialog" @click.stop>
+            <view class="wh-dlg-head">
+              <text class="wh-dlg-title">{{ sceneResult.sceneLabel }}推荐</text>
+              <text class="wh-dlg-back" @click="sceneResult = null">�</text>
+            </view>
+            <scroll-view scroll-y class="scene-dialog-scroll">
+              <text class="pre">{{ sceneResult.recommendation }}</text>
+              <image v-if="sceneResult.outfit_image" :src="sceneResult.outfit_image" mode="widthFix" class="outfit-img" />
+            </scroll-view>
+            <view class="scene-dialog-foot">
+              <view class="wh-dlg-btn cancel" @click="sceneResult = null">再看�</view>
+              <view class="wh-dlg-btn primary" @click="adoptSceneResult">采纳这套</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- ===== 2. AI对话 ===== -->
+      <view v-show="currentView==='chat'" class="panel">
+        <view class="panel-head between">
+          <view class="head-left">
+            <text class="menu-btn" @click="openHistoryDrawer">�</text>
+            <text class="panel-title">AI 穿搭对话</text>
+          </view>
+          <view class="mini-btn" @click="goWardrobe">查看衣橱</view>
+        </view>
+        <view class="chat-box">
+          <view v-for="(m,i) in messages" :key="i" :class="['msg','msg-'+m.role]">
+            <image v-if="m.image" :src="m.image" mode="widthFix" class="chat-img" />
+            <view class="bubble">
+              <text class="msg-label">{{ m.role==='user'?'�?:'AI搭配�? }}</text>
+              <text class="msg-text">{{ m.content }}</text>
+            </view>
+            <view v-if="m.role==='agent'&&m.cid" class="rate-row">
+              <text v-for="n in 5" :key="n" :class="['star',{active:n<=m.rating}]" @click="rateByIndex(i,n)">�</text>
+            </view>
+          </view>
+          <view v-if="chatLoading" class="msg msg-agent">
+            <view class="bubble"><text class="loading-text">AI搭配师正在思�?..</text></view>
+          </view>
+        </view>
+        <view class="chat-input">
+          <view class="icon-btn" @click="chatChooseImage">📷</view>
+          <input class="chat-field" :value="chatInput" placeholder="描述你的需求，比如：明天开会，帮我推荐..."
+                 @input="onChatInput" @confirm="onChatConfirm" />
+          <view class="send-btn" @click="onChatSend">发�</view>
+        </view>
+      </view>
+
+      <!-- ===== 3. 衣橱管理（DPSTAR 风格�?==== -->
+      <view v-show="currentView==='wardrobe'" class="panel wh-page">
+
+        <!-- 顶部横幅：数字衣�?-->
+        <view class="wh-banner">
+          <view class="wh-banner-bg">
+            <image v-if="homeOutfit?.image_url" :src="homeOutfit.image_url" mode="aspectFill" class="wh-banner-img" />
+          </view>
+          <view class="wh-banner-info">
+            <text class="wh-banner-title">数字衣柜 | AI衣柜</text>
+            <text class="wh-banner-stats">可存 500 件　|　已存 {{ wardrobe.length }} 件　|　{{ profile.nickname || '用户' }}</text>
+          </view>
+        </view>
+
+        <!-- 录入入口 -->
+        <view class="wh-upload-entry" @click="openUpload">
+          <text class="wh-up-ico">📷</text>
+          <text class="wh-up-text">录入新的衣服（AI自动识别图片填资料）</text>
+        </view>
+
+        <!-- 品类筛选标签栏（带计数�?-->
+        <view class="wh-filter-row">
+          <scroll-view class="wh-cat-tabs" scroll-x :show-scrollbar="false">
+            <view v-for="c in catListWithCount" :key="c.k"
+                  :class="['wh-cat-tab', { active: wardrobeFilter === c.k }]"
+                  @click="setFilter(c.k)">
+              <text>{{ c.l }}<text v-if="c.n" class="wh-cat-n"> {{ c.n }}</text></text>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 衣物卡片网格 -->
+        <view class="wh-grid">
+          <view v-for="item in filteredWardrobe" :key="item.id" class="wh-card" @click="openDetail(item)" @longpress="showCardMenu(item)">
+            <view class="wh-card-img-wrap">
+              <image v-if="item.image_url" :src="item.image_url" mode="aspectFit" class="wh-card-img" />
+              <view v-else class="wh-card-ph" :style="{ background: getItemColorHex(item) }">
+                <text class="wh-card-ph-txt">{{ item.name[0] }}</text>
+              </view>
+            </view>
+            <text class="wh-card-name">{{ item.name }}</text>
+            <view class="wh-card-del" @click.stop="deleteItem(item.id)">🗑</view>
+          </view>
+          <view v-if="filteredWardrobe.length===0" class="wh-empty">
+            <text class="wh-empty-ico">👗</text>
+            <text class="wh-empty-text">衣橱空空，点击上方录入你的第一件衣服吧</text>
+          </view>
+        </view>
+
+        <!-- 穿搭回顾：查看某天穿了什�?-->
+        <view class="wh-day-lookup">
+          <view class="wh-dl-head" @click="showDayLookup = !showDayLookup">
+            <text class="wh-dl-title">📅 穿搭回顾（看某天穿了什么）</text>
+            <text class="wh-dl-arrow">{{ showDayLookup ? '收起' : '展开' }}</text>
+          </view>
+          <view v-if="showDayLookup" class="wh-dl-body">
+            <picker class="wh-dl-picker" mode="date" :value="lookupDate" @change="onLookupDateChange">
+              <text class="wh-dl-pick-val">{{ lookupDate || '选择日期' }}</text>
+            </picker>
+            <view v-if="dayItems.length" class="wh-dl-items">
+              <view v-for="it in dayItems" :key="it.id" class="wh-dl-chip" @click="openDetail(it)">
+                <text>{{ it.name }}</text>
+              </view>
+            </view>
+            <text v-else-if="lookupDate" class="wh-dl-empty">这一天还没记录穿过任何衣�</text>
+          </view>
+        </view>
+
+        <!-- 我的套装（FR-C2）：创建 / 查看 / 删除自定义套�?-->
+        <view class="wh-day-lookup" style="margin-top:20rpx">
+          <view class="wh-dl-head" @click="showOutfitForm = !showOutfitForm">
+            <text class="wh-dl-title">👗 我的套装（{{ outfits.length }}�</text>
+            <text class="wh-dl-arrow">{{ showOutfitForm ? '收起' : '创建' }}</text>
+          </view>
+          <view v-if="showOutfitForm" class="wh-outfit-form">
+            <input class="cal-input" v-model="outfitForm.name" placeholder="套装名称，如：周一通勤�? style="margin-bottom:12rpx" />
+            <scroll-view scroll-y class="wh-outfit-pick">
+              <view v-for="it in wardrobe" :key="it.id"
+                    :class="['wh-outfit-pick-item', { sel: outfitForm.item_ids.includes(it.id) }]"
+                    @click="toggleOutfitItem(it.id)">
+                <text>{{ it.name }}</text>
+                <text class="wh-outfit-pick-tick">{{ outfitForm.item_ids.includes(it.id) ? '�? : '' }}</text>
+              </view>
+            </scroll-view>
+            <view class="wh-outfit-actions">
+              <view class="wh-dlg-btn cancel" @click="showOutfitForm = false">取消</view>
+              <view class="wh-dlg-btn save" @click="createOutfit">保存套装</view>
+            </view>
+          </view>
+          <view v-if="outfits.length" class="wh-outfit-list">
+            <view v-for="o in outfits" :key="o.id" class="wh-outfit-card">
+              <image v-if="o.cover_url" :src="o.cover_url" mode="aspectFill" class="wh-outfit-cover" />
+              <view v-else class="wh-outfit-cover ph">{{ (o.name || '�?)[0] }}</view>
+              <view class="wh-outfit-mid">
+                <text class="wh-outfit-name">{{ o.name }}</text>
+                <text class="wh-outfit-count">{{ o.item_ids.length }} �</text>
+              </view>
+              <view class="wh-card-del" @click.stop="deleteOutfit(o.id)">🗑</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 衣物详情 / 编辑弹窗 -->
+      <view v-if="showDetail" class="mask" @click="closeDetail">
+        <view class="wh-detail" @click.stop>
+          <view class="wh-dlg-head">
+            <text class="wh-dlg-title">衣服详情</text>
+            <text class="wh-dlg-back" @click="closeDetail">�</text>
+          </view>
+          <scroll-view scroll-y class="wh-detail-scroll">
+            <view class="wh-detail-img-wrap">
+              <image v-if="detailItem.image_url" :src="detailItem.image_url" mode="aspectFit" class="wh-detail-img" />
+              <view v-else class="wh-detail-ph" :style="{ background: getItemColorHex(detailItem) }">
+                <text class="wh-detail-ph-txt">{{ (detailItem.name || '?')[0] }}</text>
+              </view>
+            </view>
+
+            <view v-if="!detailEditing" class="wh-detail-fields">
+              <view class="wh-df"><text class="wh-df-k">名称</text><text class="wh-df-v">{{ detailItem.name }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">品类</text><text class="wh-df-v">{{ catMap[detailItem.category] || detailItem.category }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">颜色</text><text class="wh-df-v">{{ detailItem.color || '�? }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">风格</text><text class="wh-df-v">{{ detailItem.style || '�? }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">材质</text><text class="wh-df-v">{{ detailItem.material || '�? }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">图案</text><text class="wh-df-v">{{ detailItem.pattern || '�? }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">季节</text><text class="wh-df-v">{{ detailItem.season || '�? }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">购入日期</text><text class="wh-df-v">{{ fmtDate(detailItem.purchase_date) || '�? }}</text></view>
+              <view class="wh-df"><text class="wh-df-k">穿着次数</text><text class="wh-df-v">{{ wearDates.length }} �</text></view>
+              <view class="wh-df"><text class="wh-df-k">最近穿着</text><text class="wh-df-v">{{ wearDates.length ? fmtDate(wearDates[0]) : '从未记录' }}</text></view>
+              <view class="wh-df wh-df-col">
+                <text class="wh-df-k">穿着记录</text>
+                <view class="wh-wear-dates" v-if="wearDates.length">
+                  <view v-for="(d,i) in wearDates" :key="i" class="wh-wear-chip">
+                    <text>{{ d }}</text>
+                    <text class="wh-wear-del" @click="deleteWearDate(d)">×</text>
+                  </view>
+                </view>
+                <text class="wh-df-v" v-else>暂无记录</text>
+              </view>
+            </view>
+
+            <!-- 标记穿过（可回溯历史日期，用于校正闲置天数） -->
+            <view v-if="!detailEditing && showMarkWorn" class="wh-mark-worn">
+              <text class="wh-mw-label">记录穿着日期</text>
+              <picker class="wh-mw-picker" mode="date" :value="markWornDate" @change="e => markWornDate = e.detail.value">
+                <text class="wh-mw-pick-val">{{ markWornDate }}</text>
+              </picker>
+              <view class="wh-mw-actions">
+                <view class="wh-mw-btn cancel" @click="showMarkWorn=false">取消</view>
+                <view class="wh-mw-btn save" @click="doMarkWorn">记录穿过</view>
+              </view>
+            </view>
+
+
+            <view v-else class="wh-dlg-form">
+              <view class="wh-dlg-row">
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">单品名称</text>
+                  <input class="wh-dlg-input" :value="detailForm.name" placeholder="例：白色宽松印花T�? @input="e => onDetailFormInput(e, 'name')" />
+                </view>
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">品类</text>
+                  <picker class="wh-dlg-picker" :range="catLabels" @change="onDetailCatChange">
+                    <text :class="['wh-dlg-pick-val', { placeholder: !detailForm.category }]">{{ catMap[detailForm.category] || '请选择' }}</text>
+                  </picker>
+                </view>
+              </view>
+              <view class="wh-dlg-row">
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">颜色</text>
+                  <input class="wh-dlg-input" :value="detailForm.color" placeholder="例：白色" @input="e => onDetailFormInput(e, 'color')" />
+                </view>
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">风格</text>
+                  <input class="wh-dlg-input" :value="detailForm.style" placeholder="例：简�? @input="e => onDetailFormInput(e, 'style')" />
+                </view>
+              </view>
+              <view class="wh-dlg-row">
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">材质</text>
+                  <input class="wh-dlg-input" :value="detailForm.material" placeholder="例：�? @input="e => onDetailFormInput(e, 'material')" />
+                </view>
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">图案</text>
+                  <input class="wh-dlg-input" :value="detailForm.pattern" placeholder="例：条纹" @input="e => onDetailFormInput(e, 'pattern')" />
+                </view>
+              </view>
+              <view class="wh-dlg-row">
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">季节</text>
+                  <input class="wh-dlg-input" :value="detailForm.season" placeholder="例：四季" @input="e => onDetailFormInput(e, 'season')" />
+                </view>
+                <view class="wh-dlg-field">
+                  <text class="wh-dlg-label">购入日期</text>
+                  <picker class="wh-dlg-picker" mode="date" :value="detailForm.purchase_date" @change="onDetailPurchaseDateChange">
+                    <text :class="['wh-dlg-pick-val', { placeholder: !detailForm.purchase_date }]">{{ detailForm.purchase_date || '购入日期' }}</text>
+                  </picker>
+                </view>
+              </view>
+            </view>
+          </scroll-view>
+
+          <view class="wh-dlg-foot">
+            <template v-if="!detailEditing">
+              <view class="wh-dlg-btn ghost" @click="openMarkWorn">👕 标记穿过</view>
+              <view class="wh-dlg-btn cancel" @click="deleteItem(detailItem.id)">🗑 删除</view>
+              <view class="wh-dlg-btn save" @click="startEdit">✏️ 编辑</view>
+            </template>
+            <template v-else>
+              <view class="wh-dlg-btn cancel" @click="cancelEdit">取消</view>
+              <view class="wh-dlg-btn save" @click="saveDetail">保存</view>
+            </template>
+          </view>
+        </view>
+      </view>
+
+      <!-- 传图能力已合并进「对话」：对话输入框左边的 📷 按钮可发图让 AI 分析搭配 -->
+
+      <!-- ===== 5.5 自主搭配 + AI 审核 ===== -->
+      <view v-show="currentView==='outfit'" class="panel">
+        <view class="panel-head between">
+          <view class="head-left">
+            <text class="back-btn" @click="switchView('today')">�?返回</text>
+            <text class="panel-title">我的搭配</text>
+          </view>
+          <text class="panel-sub">从衣橱挑几件，让 AI 帮你审核</text>
+        </view>
+
+        <!-- 衣橱多选区 -->
+        <view class="grid">
+          <view v-for="item in wardrobe" :key="item.id"
+                :class="['card', 'pick', { picked: isSelected(item.id) }]" @click="toggleSelect(item.id)">
+            <view class="card-img">
+              <image v-if="item.image_url" :src="item.image_url" mode="aspectFill" class="full-img" />
+              <view v-else class="ph" :style="{background:item.color||'#eee'}"><text>{{ item.name[0] }}</text></view>
+            </view>
+            <view class="card-info">
+              <text class="card-name">{{ item.name }}</text>
+              <view class="tags">
+                <text class="tag">{{ catMap[item.category] || item.category }}</text>
+                <text class="tag ok">{{ item.color }}</text>
+              </view>
+            </view>
+            <view v-if="isSelected(item.id)" class="pick-badge">�</view>
+          </view>
+          <view v-if="wardrobe.length===0" class="empty"><text>衣橱空空，先去添加衣�</text></view>
+        </view>
+
+        <!-- 审核结果 -->
+        <view v-if="reviewResult" class="review-card">
+          <view class="review-top">
+            <view class="score-ring" :style="{ background: outfitScoreRing }">
+              <text class="score-num">{{ reviewResult.score != null ? reviewResult.score : '�? }}</text>
+              <text class="score-cap">/10</text>
+            </view>
+            <view class="review-verdict">
+              <text class="rv-label">AI 审核结论</text>
+              <text class="rv-tag" :style="{ background: outfitScoreColor }">{{ reviewResult.verdict || '已点�? }}</text>
+            </view>
+          </view>
+          <image v-if="reviewResult.image_url" :src="reviewResult.image_url" mode="widthFix" class="review-img" />
+          <view class="rv-block"><text class="rv-h">🎨 色彩协调</text><text class="rv-c">{{ reviewResult.color_comment || reviewResult.raw }}</text></view>
+          <view class="rv-block"><text class="rv-h">🌤 季节合适度</text><text class="rv-c">{{ reviewResult.season_comment }}</text></view>
+          <view class="rv-block"><text class="rv-h">🎩 场合得体�</text><text class="rv-c">{{ reviewResult.occasion_comment }}</text></view>
+          <view class="rv-block"><text class="rv-h">🧩 完整�</text><text class="rv-c">{{ reviewResult.completeness_comment }}</text></view>
+          <view v-if="reviewResult.suggestions && reviewResult.suggestions.length" class="rv-block">
+            <text class="rv-h">💡 改进建议</text>
+            <text v-for="(s,i) in reviewResult.suggestions" :key="i" class="sug">{{ (i+1) }}. {{ s }}</text>
+          </view>
+        </view>
+
+        <!-- 底部状态条：显示已选件数与审核状�?-->
+        <view class="outfit-bar">
+          <text class="ob-count">
+            已�?<text class="ob-num">{{ selectedIds.length }}</text> �?
+            <text v-if="reviewLoading" class="ob-status"> · AI 审核中�</text>
+            <text v-else-if="selectedIds.length < 2" class="ob-status"> · 再选一件即可审�</text>
+          </text>
+          <view class="ob-actions">
+            <text v-if="selectedIds.length > 0" class="ob-clear" @click="clearSelection">清空</text>
+            <view v-if="selectedIds.length > 0" class="ob-wear-btn" @click="confirmWearSelected">确认今日穿着</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- ===== 6. 衣橱分析 ===== -->
+      <view v-show="currentView==='analysis'" class="panel">
+        <view class="panel-head between">
+          <text class="panel-title">衣橱分析</text>
+          <view class="mini-btn" @click="fetchAnalysis">刷新</view>
+        </view>
+        <view v-if="analysis" class="card-box analysis-wrap">
+          <!-- 衣橱健康�?-->
+          <view class="score-card">
+            <view class="score-ring" :style="{ background: 'conic-gradient(' + scoreColor + ' ' + wardrobeScore + '%, #eef0f3 ' + wardrobeScore + '%)' }">
+              <view class="score-hole">
+                <text class="score-num">{{ wardrobeScore }}</text>
+                <text class="score-unit">�</text>
+              </view>
+            </view>
+            <view class="score-info">
+              <text class="score-title">{{ scoreText }}</text>
+              <text class="score-sub">衣橱健康度评�</text>
+              <view class="score-metrics">
+                <view class="sm"><text class="sm-num">{{ analysis.total_items }}</text><text class="sm-lab">衣物</text></view>
+                <view class="sm"><text class="sm-num warn">{{ (analysis.unused_items||[]).length }}</text><text class="sm-lab">闲置</text></view>
+                <view class="sm"><text class="sm-num danger">{{ (analysis.duplicate_warnings||[]).length }}</text><text class="sm-lab">重复</text></view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 购物建议（合并自购物清单�?-->
+          <view class="block" v-if="shoppingList&&shoppingList.suggestions&&shoppingList.suggestions.length">
+            <text class="block-title">购物建议</text>
+            <view v-for="(s,i) in shoppingList.suggestions" :key="i" class="card-box shop">
+              <text :class="['tag', tagClass(s.category)]">{{ catMap[s.category]||s.category }}</text>
+              <text class="shop-reason">{{ s.reason }}</text>
+            </view>
+          </view>
+          <view class="block" v-else>
+            <text class="block-title">购物建议</text>
+            <text class="empty-tip">你的衣橱品类齐全，暂无购物建�</text>
+          </view>
+
+          <!-- 品类分布 -->
+          <view class="block">
+            <text class="block-title">品类分布</text>
+            <view class="donut-row" v-if="categoryChart.items.length">
+              <view class="donut" :style="{ background: categoryChart.gradient }">
+                <view class="donut-hole">
+                  <text class="donut-num">{{ categoryChart.total }}</text>
+                  <text class="donut-unit">�</text>
+                </view>
+              </view>
+              <view class="legend">
+                <view v-for="it in categoryChart.items" :key="it.raw" class="legend-item">
+                  <view class="legend-dot" :style="{ background: it.color }"></view>
+                  <text class="legend-name">{{ it.name }}</text>
+                  <text class="legend-val">{{ it.value }} · {{ it.pct }}%</text>
+                </view>
+              </view>
+            </view>
+            <text v-else class="empty-tip">暂无数据</text>
+          </view>
+
+          <!-- 季节分布 -->
+          <view class="block" v-if="seasonChart.length">
+            <text class="block-title">季节分布</text>
+            <view class="stack-bar">
+              <view v-for="s in seasonChart" :key="s.name" class="stack-seg" :style="{ width: s.pct + '%', background: s.color }"></view>
+            </view>
+            <view class="stack-legend">
+              <view v-for="s in seasonChart" :key="s.name" class="stack-leg">
+                <view class="legend-dot" :style="{ background: s.color }"></view>
+                <text class="stack-leg-t">{{ s.name }} · {{ s.value }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 颜色分布 -->
+          <view class="block" v-if="colorList.length">
+            <text class="block-title">颜色分布</text>
+            <view class="color-wrap">
+              <view v-for="c in colorList" :key="c.name" class="color-chip">
+                <view class="color-dot" :style="{ background: c.hex, borderColor: c.hex === '#f5f5f5' ? '#e4e7ed' : c.hex }"></view>
+                <text class="color-name">{{ c.name }}</text>
+                <text class="color-cnt">{{ c.value }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 闲置提醒 -->
+          <view class="block">
+            <text class="block-title">闲置提醒</text>
+            <view v-if="analysis.unused_items&&analysis.unused_items.length" class="tag-list">
+              <text v-for="item in analysis.unused_items" :key="item.id" class="tag warn">{{ item.name }}（超90天）</text>
+            </view>
+            <text v-else class="empty-tip">暂无闲置，保持得很好</text>
+          </view>
+
+          <!-- 重复购买 -->
+          <view class="block">
+            <text class="block-title">重复购买提醒</text>
+            <view v-if="analysis.duplicate_warnings&&analysis.duplicate_warnings.length" class="tag-list">
+              <text v-for="d in analysis.duplicate_warnings" :key="d.name" class="tag danger">{{ d.name }} × {{ d.count }}</text>
+            </view>
+            <text v-else class="empty-tip">无重复购�</text>
+          </view>
+
+          <!-- 智能建议 -->
+          <view class="block" v-if="analysis.suggestions&&analysis.suggestions.length">
+            <text class="block-title">智能建议</text>
+            <view class="sug-list">
+              <view v-for="(s,i) in analysis.suggestions" :key="i" class="sug-item">
+                <text class="sug-bullet">�</text>
+                <text class="sug-text">{{ s }}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 对话历史已合并进对话界面的左侧抽屉，见底�?history-drawer -->
+
+      <!-- ===== 穿搭日志（FR-C7）：采纳记录回顾 ===== -->
+      <view v-show="currentView==='diary'" class="panel">
+        <view class="panel-head between">
+          <text class="panel-title">穿搭日志</text>
+          <view class="mini-btn" @click="loadDiary">刷新</view>
+        </view>
+        <view v-if="diaryLoading" class="card-box"><text class="loading-text">加载中�</text></view>
+        <view v-else-if="diaryStats" class="diary-stats">
+          <view class="diary-stat"><text class="ds-n">{{ diaryStats.total_adoptions }}</text><text class="ds-l">采纳搭配</text></view>
+          <view class="diary-stat"><text class="ds-n">{{ diaryStats.days_active }}</text><text class="ds-l">记录天数</text></view>
+        </view>
+        <view v-for="d in diaryDays" :key="d.date" class="diary-day">
+          <view class="diary-day-head">
+            <text class="diary-day-date">{{ d.date }}</text>
+            <text class="diary-day-count">{{ d.items.length }} �</text>
+          </view>
+          <scroll-view scroll-x class="diary-day-items">
+            <view v-for="it in d.items" :key="it.id" class="diary-chip" @click="openDetail(it)">
+              <image v-if="it.image_url" :src="it.image_url" mode="aspectFill" class="diary-chip-img" />
+              <view v-else class="diary-chip-ph" :style="{ background: getItemColorHex(it) }">
+                <text>{{ (it.name || '?')[0] }}</text>
+              </view>
+              <text class="diary-chip-name">{{ it.name }}</text>
+            </view>
+          </scroll-view>
+          <view v-if="d.adoptions && d.adoptions.length" class="diary-adoptions">
+            <text v-for="ad in d.adoptions" :key="ad.id" class="diary-ad-tag">
+              {{ ad.scene || ad.source }}<text v-if="ad.reason">：{{ ad.reason }}</text>
+            </text>
+          </view>
+        </view>
+        <view v-if="!diaryLoading && diaryDays.length === 0" class="empty"><text>还没有穿搭记录，去采纳一套吧�</text></view>
+      </view>
+
+      <!-- ===== 日程（FR-C6 日程联动）：应用内日程表 ===== -->
+      <view v-show="currentView==='calendar'" class="panel">
+        <view class="panel-head between">
+          <text class="panel-title">我的日程</text>
+          <view class="mini-btn primary" @click="showCalForm = !showCalForm">{{ showCalForm ? '收起' : '�?添加' }}</view>
+        </view>
+
+        <view v-if="showCalForm" class="cal-form">
+          <view class="cal-form-row">
+            <input class="cal-input" v-model="calForm.title" placeholder="日程标题，如：临时会�? />
+            <picker class="cal-picker" mode="date" :value="calForm.event_date" @change="e => calForm.event_date = e.detail.value">
+              <text class="cal-pick-val">{{ calForm.event_date || '选择日期' }}</text>
+            </picker>
+          </view>
+          <view class="cal-form-row">
+            <input class="cal-input" v-model="calForm.start_time" placeholder="开始时�?�?09:00" />
+            <input class="cal-input" v-model="calForm.occasion" placeholder="场合：正�?休闲/运动" />
+          </view>
+          <view class="cal-form-row">
+            <input class="cal-input" v-model="calForm.location" placeholder="地点（可选）" />
+            <view class="cal-btn save" @click="addCalendarEvent">保存</view>
+          </view>
+        </view>
+
+        <view v-if="calLoading" class="card-box"><text class="loading-text">加载中�</text></view>
+        <view v-for="ev in calendarEvents" :key="ev.id" class="cal-card">
+          <view class="cal-card-left">
+            <text class="cal-card-date">{{ ev.event_date }}</text>
+            <text class="cal-card-time">{{ ev.start_time || '全天' }}</text>
+          </view>
+          <view class="cal-card-mid">
+            <text class="cal-card-title">{{ ev.title }}</text>
+            <text class="cal-card-sub">{{ ev.occasion || '未指定场�? }}{{ ev.location ? ' @ ' + ev.location : '' }}</text>
+          </view>
+          <view class="cal-card-del" @click="deleteCalendarEvent(ev.id)">🗑</view>
+        </view>
+        <view v-if="!calLoading && calendarEvents.length === 0" class="empty"><text>暂无日程，添加一个试试（当天早晨会收到穿搭提醒）</text></view>
+      </view>
+
+      <!-- ===== 个人中心 ===== -->
+      <view v-show="currentView==='profile'" class="panel">
+        <view class="panel-head"><text class="panel-title">个人中心</text></view>
+        <view class="me-card">
+          <view class="me-avatar">{{ profile.nickname ? profile.nickname[0] : '👤' }}</view>
+          <view class="me-info">
+            <text class="me-name">{{ profile.nickname || '穿搭用户' }}</text>
+            <text class="me-sub">{{ profile.username ? '账号�? + profile.username : 'AI 穿搭助手用户' }}</text>
+          </view>
+        </view>
+        <view class="me-list">
+          <view class="me-row" @click="goWardrobe">
+            <text class="me-row-l">我的衣橱</text>
+            <text class="me-arrow">�</text>
+          </view>
+          <view class="me-row" @click="switchView('notify')">
+            <text class="me-row-l">通知中心</text>
+            <text class="me-badge" v-if="unreadCount>0">{{ unreadCount>99?'99+':unreadCount }}</text>
+            <text class="me-arrow">�</text>
+          </view>
+        </view>
+        <view class="me-logout" @click="logout">退出登�</view>
+      </view>
+
+      <!-- ===== 10. 通知中心 ===== -->
+      <view v-show="currentView==='notify'" class="panel">
+        <view class="panel-head between">
+          <text class="panel-title">通知中心</text>
+          <view class="mini-btn" @click="markAllRead">全部已读</view>
+        </view>
+        <view v-if="notifyLoading" class="card-box"><text class="loading-text">加载中�</text></view>
+        <view v-for="n in notifications" :key="n.id" :class="['noti', {unread: !n.is_read}]" @click="onNotiClick(n)">
+          <view class="noti-top">
+            <text :class="['noti-tag', 't-' + n.type]">{{ notiTypeLabel(n.type) }}</text>
+            <text class="noti-time">{{ n.created_at }}</text>
+          </view>
+          <text class="noti-title">{{ n.title }}</text>
+          <text class="noti-content">{{ n.content }}</text>
+          <image v-if="n.image_url" :src="n.image_url" mode="widthFix" class="noti-img" />
+        </view>
+        <view v-if="!notifyLoading && notifications.length===0" class="empty"><text>暂无通知</text></view>
+      </view>
+    </scroll-view>
+
+    <!-- 历史侧边抽屉（与对话合并：点 �?打开，点遮罩/抽屉外收起） -->
+    <view v-show="showHistoryDrawer" class="drawer-wrap">
+      <view class="drawer-mask" @click="closeHistoryDrawer"></view>
+      <view :class="['history-drawer', { open: drawerOpened }]">
+        <view class="drawer-head">
+          <text class="drawer-title">对话历史</text>
+          <view class="drawer-new" @click="newChat">�?新建</view>
+        </view>
+        <scroll-view class="drawer-list" scroll-y>
+          <view v-for="conv in conversations" :key="conv.id" class="drawer-item">
+            <view class="di-main" @click="openHistoryChatById(conv.id)">
+              <text class="di-q">{{ conv.user_input }}<text v-if="conv.turn_count > 1" class="di-turn">{{ conv.turn_count }}轮对�</text></text>
+              <text v-if="conv.agent_response" class="di-a">{{ conv.agent_response }}</text>
+              <text v-if="conv._time" class="di-time">{{ conv._time }}</text>
+            </view>
+            <view class="di-del" @click.stop="deleteConversation(conv.id)">🗑</view>
+          </view>
+          <view v-if="conversations.length === 0" class="drawer-empty"><text>暂无对话记录</text></view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <!-- 底部导航（横向滚动） -->
+    <scroll-view class="bottom-nav" scroll-x>
+      <view v-for="item in navItems" :key="item.key"
+            :class="['nav-item',{active: currentView===item.key}]" @click="switchView(item.key)">
+        <view class="nav-ico-wrap">
+          <text class="nav-icon">{{ item.icon }}</text>
+          <text v-if="item.key==='notify' && unreadCount>0" class="badge">{{ unreadCount>99?'99+':unreadCount }}</text>
+        </view>
+        <text class="nav-label">{{ item.label }}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 上传弹窗（DPSTAR 风格�?-->
+    <view v-if="showUpload" class="mask" @click="closeUpload">
+      <view class="wh-upload-dialog" @click.stop>
+        <!-- 头部 -->
+        <view class="wh-dlg-head">
+          <text class="wh-dlg-back" @click="closeUpload">返回</text>
+          <text class="wh-dlg-title">记录新的衣服</text>
+          <text></text>
+        </view>
+
+        <!-- 上传�?-->
+        <view class="wh-dlg-up-area" @click="chooseWardrobeImage">
+          <text class="wh-dlg-up-ico">📷</text>
+          <text class="wh-dlg-up-txt">上传 / 替换照片</text>
+        </view>
+
+        <!-- 批量上传入口 -->
+        <view class="wh-dlg-batch" @click="chooseBatchImages">
+          <text class="wh-dlg-batch-ico">🖼�</text>
+          <text class="wh-dlg-batch-txt">批量上传照片（上�?0张）</text>
+        </view>
+
+        <!-- 预览 + 表单 -->
+        <view v-if="uploadPreview" class="wh-dlg-body">
+          <!-- 当前单品�?-->
+          <view class="wh-dlg-preview">
+            <image :src="uploadPreview" mode="aspectFit" class="wh-dlg-preview-img" />
+            <view v-if="uploadDetecting" class="wh-dlg-detect"><text>AI 自动识别�?..</text></view>
+          </view>
+          <text class="wh-dlg-preview-tip">修改时会保留原图片，重新上传可替换�</text>
+
+          <!-- 双列表单 -->
+          <view v-if="uploadPreview && !uploadDetecting" class="wh-dlg-form">
+            <view class="wh-dlg-row">
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">单品名称</text>
+                <input class="wh-dlg-input" :value="uploadForm.name" placeholder="例：白色宽松印花T�?
+                       @input="e => onFormInput(e, 'name')" />
+              </view>
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">品类</text>
+                <picker class="wh-dlg-picker" :range="catLabels" @change="onCatChange">
+                  <text :class="['wh-dlg-pick-val', { placeholder: !uploadForm.category }]">{{ catMap[uploadForm.category] || '请选择' }}</text>
+                </picker>
+              </view>
+            </view>
+            <view class="wh-dlg-row">
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">颜色</text>
+                <input class="wh-dlg-input" :value="uploadForm.color" placeholder="例：白色"
+                       @input="e => onFormInput(e, 'color')" />
+              </view>
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">风格</text>
+                <input class="wh-dlg-input" :value="uploadForm.style" placeholder="例：简�?
+                       @input="e => onFormInput(e, 'style')" />
+              </view>
+            </view>
+            <view class="wh-dlg-row">
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">材质</text>
+                <input class="wh-dlg-input" :value="uploadForm.material" placeholder="例：�?
+                       @input="e => onFormInput(e, 'material')" />
+              </view>
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">图案</text>
+                <input class="wh-dlg-input" :value="uploadForm.pattern" placeholder="例：条纹/纯色"
+                       @input="e => onFormInput(e, 'pattern')" />
+              </view>
+            </view>
+            <view class="wh-dlg-row">
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">季节</text>
+                <input class="wh-dlg-input" :value="uploadForm.season" placeholder="例：四季"
+                       @input="e => onFormInput(e, 'season')" />
+              </view>
+              <view class="wh-dlg-field">
+                <text class="wh-dlg-label">购入日期</text>
+                <picker class="wh-dlg-picker" mode="date" :value="purchaseDate" @change="onPurchaseDateChange">
+                  <text :class="['wh-dlg-pick-val', { placeholder: !purchaseDate }]">{{ purchaseDate || '选择日期' }}</text>
+                </picker>
+              </view>
+            </view>
+          </view>
+
+          <!-- 底部按钮 -->
+          <view class="wh-dlg-foot">
+            <view class="wh-dlg-btn cancel" @click="closeUpload">取消</view>
+            <view class="wh-dlg-btn save" :class="{ disabled: !uploadPreview }" @click="confirmUpload">保存这件衣服</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 批量导入编辑弹窗 -->
+  <view v-if="showBatchEdit" class="mask" @click="closeBatchEdit">
+    <view class="wh-batch-dialog" @click.stop>
+      <view class="wh-dlg-head">
+        <text class="wh-dlg-title">批量确认（{{ batchEditIndex + 1 }} / {{ batchEditList.length }}�</text>
+        <text class="wh-dlg-back" @click="closeBatchEdit">返回</text>
+      </view>
+      <view v-if="batchEditList[batchEditIndex]" class="wh-batch-body">
+        <view class="wh-batch-img-wrap">
+          <image :src="batchEditList[batchEditIndex].image_url" mode="aspectFit" class="wh-batch-img" />
+        </view>
+        <view class="wh-dlg-form">
+          <view class="wh-dlg-row">
+            <view class="wh-dlg-field">
+              <text class="wh-dlg-label">单品名称</text>
+              <input class="wh-dlg-input" :value="batchEditList[batchEditIndex].name" placeholder="例：白色宽松印花T�?
+                     @input="e => onBatchFormInput(e, 'name')" />
+            </view>
+            <view class="wh-dlg-field">
+              <text class="wh-dlg-label">品类</text>
+              <picker class="wh-dlg-picker" :range="catLabels" @change="onBatchCatChange">
+                <text :class="['wh-dlg-pick-val', { placeholder: !batchEditList[batchEditIndex].category }]">{{ catMap[batchEditList[batchEditIndex].category] || '请选择' }}</text>
+              </picker>
+            </view>
+          </view>
+          <view class="wh-dlg-row">
+            <view class="wh-dlg-field">
+              <text class="wh-dlg-label">颜色</text>
+              <input class="wh-dlg-input" :value="batchEditList[batchEditIndex].color" placeholder="例：白色"
+                     @input="e => onBatchFormInput(e, 'color')" />
+            </view>
+            <view class="wh-dlg-field">
+              <text class="wh-dlg-label">风格</text>
+              <input class="wh-dlg-input" :value="batchEditList[batchEditIndex].style" placeholder="例：简�?
+                     @input="e => onBatchFormInput(e, 'style')" />
+            </view>
+          </view>
+          <view class="wh-dlg-row">
+            <view class="wh-dlg-field">
+              <text class="wh-dlg-label">季节</text>
+              <input class="wh-dlg-input" :value="batchEditList[batchEditIndex].season" placeholder="例：四季"
+                     @input="e => onBatchFormInput(e, 'season')" />
+            </view>
+            <view class="wh-dlg-field">
+              <text class="wh-dlg-label">购入日期</text>
+              <picker class="wh-dlg-picker" mode="date" :value="batchEditList[batchEditIndex].purchase_date" @change="onBatchPurchaseDateChange">
+                <text :class="['wh-dlg-pick-val', { placeholder: !batchEditList[batchEditIndex].purchase_date }]">{{ batchEditList[batchEditIndex].purchase_date || '选择日期' }}</text>
+              </picker>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="wh-batch-foot">
+        <view class="wh-dlg-btn cancel" :class="{ disabled: batchEditIndex === 0 }" @click="prevBatchItem">上一�</view>
+        <view class="wh-dlg-btn save" :class="{ disabled: batchEditIndex === batchEditList.length - 1 }" @click="nextBatchItem">下一�</view>
+        <view class="wh-dlg-btn primary" @click="confirmBatchEdit">全部保存</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted, shallowRef, markRaw, nextTick } from 'vue'
+import { get, post, del, put, upload } from '../../utils/request.js'
+
+const currentView = ref('today')
+const chatInput = ref('')
+const chatLoading = ref(false)
+const messages = shallowRef([])
+const currentConvId = ref(null)
+
+const wardrobe = ref([])
+const wardrobeFilter = ref('all')
+const conversations = ref([])
+const showHistoryDrawer = ref(false)
+const drawerOpened = ref(false)
+const analysis = ref(null)
+const shoppingList = ref(null)
+
+const notifications = ref([])
+const unreadCount = ref(0)
+const notifyLoading = ref(false)
+
+const showUpload = ref(false)
+const uploadPreview = ref('')
+const uploadTags = ref(null)
+const uploadDetecting = ref(false)
+const uploadedFile = ref('')
+const uploadedItemId = ref(null)
+const purchaseDate = ref('')
+const uploadForm = ref({ name: '', category: 'top', color: '', style: '', material: '', pattern: '', season: '' })
+
+// 批量导入编辑
+const showBatchEdit = ref(false)
+const batchEditList = ref([])
+const batchEditIndex = ref(0)
+
+// 衣物详情 / 编辑
+const showDetail = ref(false)
+const detailItem = ref({})
+const detailEditing = ref(false)
+const detailForm = ref({ name: '', category: 'top', color: '', style: '', material: '', pattern: '', season: '', purchase_date: '' })
+// 穿着记录（按日期的历史）
+const wearDates = ref([])
+const showMarkWorn = ref(false)
+const markWornDate = ref('')
+function todayStr() {
+  const d = new Date()
+  const p = n => String(n).padStart(2, '0')
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+}
+// 穿搭回顾（反向：某天穿了哪些件）
+const showDayLookup = ref(false)
+const lookupDate = ref('')
+const dayItems = ref([])
+function onLookupDateChange(e) {
+  lookupDate.value = e.detail.value
+  fetchDayWear()
+}
+async function fetchDayWear() {
+  if (!lookupDate.value) return
+  try {
+    const r = await get('/user/wardrobe/wear-by-date?date=' + lookupDate.value)
+    dayItems.value = (r && r.items) || []
+  } catch (e) {
+    dayItems.value = []
+  }
+}
+
+const weatherLoading = ref(false)
+const weather = ref({ temperature: '--', description: '加载中�?, city: '', windspeed: '--', located: false, lat: null, lon: null })
+const homeLoading = ref(false)
+const homeOutfit = ref(null)
+const tempDisplay = computed(() => {
+  const t = weather.value.temperature
+  if (t === '--' || t === null || t === undefined) return '--'
+  return t + '°'
+})
+
+const navItems = [
+  { key: 'today', icon: '🏠', label: '首页' },
+  { key: 'chat', icon: '💬', label: '对话' },
+  { key: 'wardrobe', icon: '👔', label: '衣橱' },
+  { key: 'diary', icon: '📒', label: '日志' },
+  { key: 'calendar', icon: '📅', label: '日程' },
+  { key: 'analysis', icon: '📊', label: '分析' },
+  { key: 'profile', icon: '👤', label: '我的' },
+]
+
+const catList = [
+  { k: 'all', l: '全部' }, { k: 'top', l: '上装' }, { k: 'outer', l: '外套' },
+  { k: 'dress', l: '连衣�? }, { k: 'bottom', l: '下装' },
+  { k: 'shoes', l: '鞋子' }, { k: 'accessory', l: '配饰' }
+]
+// 品类筛选标签带动态计�?
+const catListWithCount = computed(() => {
+  const w = wardrobe.value
+  const total = w.length
+  const counts = { all: total }
+  w.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1 })
+  return catList.map(c => ({ ...c, n: counts[c.k] || 0 }))
+})
+const catMap = { top: '上装', bottom: '下装', shoes: '鞋子', accessory: '配饰', outer: '外套', dress: '连衣�? }
+const catKeys = ['top', 'bottom', 'shoes', 'accessory', 'outer', 'dress']
+const catLabels = ['上装', '下装', '鞋子', '配饰', '外套', '连衣�?]
+
+// ===== 场景快捷推荐（FR-C4�?====
+const sceneList = ref([])
+const sceneLoading = ref(false)
+const sceneResult = ref(null)
+const sceneIcons = { commute: '🚇', date: '💞', sport: '🏃', wedding: '💒', party: '🎉', travel: '✈️', interview: '💼' }
+async function loadScenes() {
+  try {
+    const d = await get('/user/scenes')
+    sceneList.value = d || []
+  } catch (e) { sceneList.value = [] }
+}
+async function runScene(key) {
+  const s = sceneList.value.find(x => x.key === key)
+  if (!s) return
+  sceneLoading.value = true
+  try {
+    const d = await post('/user/quick-recommend', { scene: key })
+    sceneResult.value = { ...d, sceneLabel: s.label, sceneKey: key }
+  } catch (e) {
+    uni.showToast({ title: '推荐失败，请重试', icon: 'none' })
+  }
+  sceneLoading.value = false
+}
+async function adoptSceneResult() {
+  if (!sceneResult.value) return
+  try {
+    await post('/user/outfits/adopt', { item_ids: [], source: 'scene', scene: sceneResult.value.sceneLabel, reason: '' })
+    uni.showToast({ title: '已采纳，记入穿搭日志', icon: 'success' })
+    sceneResult.value = null
+  } catch (e) {
+    uni.showToast({ title: '采纳失败', icon: 'none' })
+  }
+}
+
+// ===== 穿搭日志（FR-C7�?====
+const diaryDays = ref([])
+const diaryStats = ref(null)
+const diaryLoading = ref(false)
+async function loadDiary() {
+  diaryLoading.value = true
+  try {
+    const d = await get('/user/wear-diary')
+    diaryDays.value = (d && d.days) || []
+    diaryStats.value = (d && d.stats) || null
+  } catch (e) {
+    diaryDays.value = []
+    diaryStats.value = null
+  }
+  diaryLoading.value = false
+}
+
+// ===== 日程表（FR-C6�?====
+const calendarEvents = ref([])
+const calLoading = ref(false)
+const showCalForm = ref(false)
+const calForm = ref({ title: '', event_date: todayStr(), start_time: '', occasion: '', location: '' })
+async function loadCalendar() {
+  calLoading.value = true
+  try {
+    calendarEvents.value = await get('/user/calendar')
+  } catch (e) { calendarEvents.value = [] }
+  calLoading.value = false
+}
+async function addCalendarEvent() {
+  if (!calForm.value.title.trim()) { uni.showToast({ title: '请填写日程标�?, icon: 'none' }); return }
+  try {
+    await post('/user/calendar', calForm.value)
+    showCalForm.value = false
+    calForm.value = { title: '', event_date: todayStr(), start_time: '', occasion: '', location: '' }
+    loadCalendar()
+    uni.showToast({ title: '已添加，当天早晨会提�?, icon: 'success' })
+  } catch (e) { uni.showToast({ title: '添加失败', icon: 'none' }) }
+}
+async function deleteCalendarEvent(id) {
+  try { await del('/user/calendar/' + id); loadCalendar() } catch (e) {}
+}
+
+// ===== 自定义套装（FR-C2�?====
+const outfits = ref([])
+const showOutfitForm = ref(false)
+const outfitForm = ref({ name: '', item_ids: [] })
+async function loadOutfits() {
+  try { outfits.value = await get('/user/outfits') } catch (e) { outfits.value = [] }
+}
+function toggleOutfitItem(id) {
+  const ids = outfitForm.value.item_ids
+  const idx = ids.indexOf(id)
+  if (idx >= 0) ids.splice(idx, 1); else ids.push(id)
+}
+async function createOutfit() {
+  if (!outfitForm.value.item_ids.length) { uni.showToast({ title: '至少�?1 件衣�?, icon: 'none' }); return }
+  try {
+    await post('/user/outfits', outfitForm.value)
+    showOutfitForm.value = false
+    outfitForm.value = { name: '我的套装', item_ids: [] }
+    loadOutfits()
+    uni.showToast({ title: '套装已创�?, icon: 'success' })
+  } catch (e) { uni.showToast({ title: '创建失败', icon: 'none' }) }
+}
+async function deleteOutfit(id) {
+  try { await del('/user/outfits/' + id); loadOutfits() } catch (e) {}
+}
+
+// ===== 衣橱款式分析 / 利用率（基于 wear_count / last_worn�?====
+const wardrobeInsight = computed(() => {
+  const w = wardrobe.value
+  const total = w.length
+  if (!total) return { utilRate: 0, idleCount: 0, topName: '�?, topCount: 0, totalWorn: 0 }
+  const now = new Date()
+  const DAY = 86400000
+  let active90 = 0, idle = 0, totalWorn = 0
+  let top = { name: '�?, count: -1 }
+  w.forEach(i => {
+    const wc = i.wear_count || 0
+    totalWorn += wc
+    if (wc > top.count) top = { name: i.name, count: wc }
+    const lw = i.last_worn ? new Date(i.last_worn) : null
+    if (lw) {
+      const days = Math.floor((now - lw) / DAY)
+      if (days <= 90) active90++
+      if (days > 180) idle++
+    } else {
+      idle++ // 从未记录穿着 �?计入闲置
+    }
+  })
+  return {
+    utilRate: pct(active90, total),
+    idleCount: idle,
+    topName: top.name,
+    topCount: top.count < 0 ? 0 : top.count,
+    totalWorn
+  }
+})
+
+const filteredWardrobe = computed(() => {
+  if (wardrobeFilter.value === 'all') return wardrobe.value
+  return wardrobe.value.filter(i => i.category === wardrobeFilter.value)
+})
+
+function pct(v, total) {
+  if (!total) return 0
+  return Math.round((v / total) * 100)
+}
+
+// ===== 分析页可视化 =====
+const CAT_CN = { top: '上装', bottom: '下装', shoes: '鞋子', accessory: '配饰', outer: '外套', dress: '连衣�?, bag: '包袋', hat: '帽子' }
+const PALETTE = ['#5b8def', '#22c1a8', '#f6a609', '#ef6f6c', '#9b6dff', '#3ec6e0', '#f78fb3', '#8ad08a']
+const SEASON_CN = { spring: '�?, summer: '�?, autumn: '�?, winter: '�?, all: '四季' }
+const SEASON_COLOR = { spring: '#7ed6a5', summer: '#ffd166', autumn: '#f6a05a', winter: '#6ab7ff', all: '#b8a6e8' }
+const COLOR_HEX = {
+  '白色': '#f5f5f5', '白色�?: '#f5f5f5', '黑色': '#2b2b2b', '黑色�?: '#2b2b2b', '灰色': '#9aa0a6', '灰色�?: '#9aa0a6',
+  '红色': '#ef6f6c', '红色�?: '#ef6f6c', '蓝色': '#5b8def', '蓝色�?: '#5b8def', '绿色': '#22c1a8', '黄色': '#f6c244',
+  '粉色': '#f78fb3', '紫色': '#9b6dff', '棕色': '#a0713f', '米色': '#e7d8bf', '卡其': '#c2a878', '橙色': '#f6993a', '藏青': '#34406b'
+}
+
+const categoryChart = computed(() => {
+  const d = analysis.value
+  if (!d || !d.category_distribution) return { items: [], gradient: '#ebeef5', total: 0 }
+  const entries = Object.entries(d.category_distribution)
+  const total = d.total_items || entries.reduce((s, [, v]) => s + v, 0)
+  const items = entries.map(([k, v], idx) => ({
+    raw: k,
+    name: CAT_CN[k] || k,
+    value: v,
+    pct: total ? Math.round((v / total) * 100) : 0,
+    color: PALETTE[idx % PALETTE.length]
+  }))
+  let acc = 0
+  const parts = items.map(it => { const s = acc; acc += it.pct; return it.color + ' ' + s + '% ' + acc + '%' })
+  if (!parts.length) parts.push('#ebeef5 0% 100%')
+  return { items, gradient: 'conic-gradient(' + parts.join(',') + ')', total }
+})
+
+const seasonChart = computed(() => {
+  const d = analysis.value
+  if (!d || !d.season_distribution) return []
+  const total = Object.values(d.season_distribution).reduce((s, v) => s + v, 0)
+  return Object.entries(d.season_distribution).map(([k, v]) => ({
+    name: SEASON_CN[k] || k,
+    value: v,
+    pct: total ? Math.round((v / total) * 100) : 0,
+    color: SEASON_COLOR[k] || '#c0c4cc'
+  }))
+})
+
+const colorList = computed(() => {
+  const d = analysis.value
+  if (!d || !d.color_distribution) return []
+  return Object.entries(d.color_distribution).map(([k, v]) => ({
+    name: k, value: v, hex: COLOR_HEX[k] || '#c0c4cc'
+  }))
+})
+
+const wardrobeScore = computed(() => {
+  const d = analysis.value
+  if (!d || !d.total_items) return 0
+  const total = d.total_items
+  const unused = (d.unused_items || []).length
+  const dupes = (d.duplicate_warnings || []).length
+  const score = 100 - (unused / total) * 45 - (dupes / total) * 25
+  return Math.max(0, Math.min(100, Math.round(score)))
+})
+
+const scoreColor = computed(() => {
+  const s = wardrobeScore.value
+  if (s >= 80) return '#22c1a8'
+  if (s >= 60) return '#f6a609'
+  return '#ef6f6c'
+})
+
+const scoreText = computed(() => {
+  const s = wardrobeScore.value
+  if (s >= 80) return '衣橱状态优秀'
+  if (s >= 60) return '衣橱状态良�?
+  return '衣橱需要整�?
+})
+function tagClass(c) {
+  return c === 'top' ? '' : c === 'bottom' ? 'ok' : c === 'shoes' ? 'warn' : 'info'
+}
+function onCatChange(e) {
+  uploadForm.value.category = catKeys[e.detail.value]
+}
+
+// ===== 数据加载 =====
+async function fetchWardrobe() {
+  try { wardrobe.value = await get('/user/wardrobe') } catch (e) { console.log(e) }
+}
+function fmtShortTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return String(iso)
+  const p = n => String(n).padStart(2, '0')
+  return p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes())
+}
+async function fetchConversations() {
+  try {
+    const list = await get('/user/conversations')
+    conversations.value = (list || []).map(c => ({ ...c, _time: fmtShortTime(c.created_at) }))
+  } catch (e) {}
+}
+async function fetchAnalysis() {
+  try { analysis.value = await get('/user/wardrobe-analysis') } catch (e) {}
+}
+async function fetchShoppingList() {
+  try { shoppingList.value = await get('/user/shopping-list') } catch (e) {}
+}
+
+// 当前登录用户的真�?id（注�?登录时写�?storage），没有则回退 1
+function getUserId() {
+  return uni.getStorageSync('user_id') || 1
+}
+
+// ===== 自主搭配（多选取�?+ AI 审核�?====
+const selectedIds = ref([])
+const reviewLoading = ref(false)
+const reviewResult = ref(null)
+let reviewTimer = null
+
+function isSelected(id) { return selectedIds.value.includes(id) }
+function toggleSelect(id) {
+  const i = selectedIds.value.indexOf(id)
+  if (i >= 0) selectedIds.value.splice(i, 1)
+  else selectedIds.value.push(id)
+}
+function clearSelection() {
+  selectedIds.value = []
+  reviewResult.value = null
+}
+watch(selectedIds, () => {
+  if (reviewTimer) clearTimeout(reviewTimer)
+  if (selectedIds.value.length >= 2) {
+    reviewTimer = setTimeout(() => reviewOutfit(), 800)
+  } else {
+    reviewResult.value = null
+  }
+}, { deep: true })
+const outfitScoreColor = computed(() => {
+  const s = reviewResult.value && reviewResult.value.score
+  if (!s) return '#909399'
+  if (s >= 8) return '#67c23a'
+  if (s >= 6) return '#e6a23c'
+  return '#f56c6c'
+})
+const outfitScoreRing = computed(() => {
+  const s = reviewResult.value && reviewResult.value.score
+  const pct = s ? Math.max(0, Math.min(100, s * 10)) : 0
+  return `conic-gradient(${outfitScoreColor.value} ${pct}%, #ebeef5 ${pct}%)`
+})
+async function reviewOutfit() {
+  if (selectedIds.value.length < 2) {
+    uni.showToast({ title: '至少选择 2 件衣�?, icon: 'none' })
+    return
+  }
+  reviewLoading.value = true
+  reviewResult.value = null
+  try {
+    const d = await post('/user/outfit-review', { ids: selectedIds.value })
+    reviewResult.value = d
+  } catch (e) {
+    uni.showToast({ title: '审核失败，请重试', icon: 'none' })
+  }
+  reviewLoading.value = false
+}
+
+async function confirmWearSelected() {
+  if (!selectedIds.value.length) {
+    uni.showToast({ title: '请先选择衣物', icon: 'none' })
+    return
+  }
+  try {
+    await post('/user/wardrobe/mark-worn', { ids: selectedIds.value })
+    uni.showToast({ title: '已记录今天穿了的衣物', icon: 'success' })
+    selectedIds.value = []
+    reviewResult.value = null
+    fetchWardrobe()
+    fetchAnalysis()
+  } catch (e) {
+    uni.showToast({ title: '记录失败，请重试', icon: 'none' })
+  }
+}
+
+// ===== 搭配入口：二选一 =====
+// �?AI 帮你搭：预填一句需求并跳到对话�?
+function aiHelpOutfit() {
+  chatInput.value = '帮我搭配一身合适的衣服'
+  switchView('chat')
+}
+// 自己搭配 + AI 审核：进入多选界�?
+function startSelfOutfit() {
+  switchView('outfit')
+}
+
+// ===== 通知中心 =====
+async function fetchNotifications() {
+  try { notifications.value = await get('/user/notifications') } catch (e) { console.log(e) }
+}
+async function fetchUnread() {
+  try {
+    const d = await get('/user/notifications/unread-count')
+    unreadCount.value = d.count || 0
+  } catch (e) {}
+}
+function notiTypeLabel(t) {
+  return ({
+    monthly_report: '衣橱月报', trend_push: '穿搭热点', system: '系统'
+  })[t] || '通知'
+}
+async function onNotiClick(n) {
+  if (!n.is_read) {
+    n.is_read = true
+    unreadCount.value = Math.max(0, unreadCount.value - 1)
+    try { await post('/user/notifications/' + n.id + '/read') } catch (e) {}
+  }
+}
+async function markAllRead() {
+  try {
+    await post('/user/notifications/read-all')
+    notifications.value.forEach(x => { x.is_read = true })
+    unreadCount.value = 0
+    uni.showToast({ title: '已全部标记已�?, icon: 'success' })
+  } catch (e) {}
+}
+
+// ===== 图片选择（uni 原生，支持拍�?相册�?====
+function chooseImage() {
+  return new Promise((resolve, reject) => {
+    uni.chooseImage({
+      count: 1,
+      sourceType: ['album', 'camera'],
+      success: (res) => resolve(res.tempFilePaths[0]),
+      fail: (err) => reject(err)
+    })
+  })
+}
+
+// ===== 对话 =====
+function onChatInput(e) {
+  const v = e && e.detail && typeof e.detail.value === 'string' ? e.detail.value : e && typeof e.target.value === 'string' ? e.target.value : String(e || '')
+  chatInput.value = v
+}
+function onChatConfirm() { sendChat() }
+function onChatSend() { sendChat() }
+function onFormInput(e, key) {
+  const v = e && e.detail && typeof e.detail.value === 'string' ? e.detail.value : e && typeof e.target.value === 'string' ? e.target.value : String(e || '')
+  uploadForm.value[key] = v
+}
+
+async function sendChat(text) {
+  const q = (typeof text === 'string' ? text : chatInput.value).trim()
+  if (!q || chatLoading.value) return
+  chatInput.value = ''
+  messages.value.push(markRaw({ role: 'user', content: q }))
+  chatLoading.value = true
+  try {
+    const w = weather.value
+    let url = '/user/chat?user_input=' + encodeURIComponent(q)
+    if (w.city) url += '&city=' + encodeURIComponent(w.city)
+    if (w.lat != null) url += '&lat=' + w.lat
+    if (w.lon != null) url += '&lon=' + w.lon
+    if (currentConvId.value) url += '&conversation_id=' + currentConvId.value
+    const d = await get(url)
+    currentConvId.value = d.conversation_id
+    messages.value.push(markRaw({ role: 'agent', content: d.response, cid: d.conversation_id, rating: 0, image: d.outfit_image || '' }))
+    fetchConversations()
+  } catch (e) {
+    messages.value.push(markRaw({ role: 'agent', content: '请求失败，请检查后�? }))
+  }
+  chatLoading.value = false
+}
+
+async function chatChooseImage() {
+  try {
+    const path = await chooseImage()
+    const d = await upload('/user/analyze-image', path)
+    messages.value.push(markRaw({ role: 'user', content: '上传了一张图片请分析搭配', image: path }))
+    chatLoading.value = true
+    const q = encodeURIComponent('请分析这张图片并推荐搭配方案。识别结果：' + (d.analysis || ''))
+    let url = '/user/chat?user_input=' + q + '&city=' + encodeURIComponent(weather.value.city || '') + '&lat=' + (weather.value.lat || '') + '&lon=' + (weather.value.lon || '')
+    if (currentConvId.value) url += '&conversation_id=' + currentConvId.value
+    const d2 = await get(url)
+    currentConvId.value = d2.conversation_id
+    messages.value.push(markRaw({ role: 'agent', content: d2.response, cid: d2.conversation_id, rating: 0, image: d2.outfit_image || '' }))
+    fetchConversations()
+    chatLoading.value = false
+  } catch (e) {
+    uni.showToast({ title: '图片分析失败', icon: 'none' })
+  }
+}
+
+function rateByIndex(i, score) {
+  const msg = messages.value[i]
+  if (!msg || !msg.cid) return
+  msg.rating = score
+  messages.value = [...messages.value]
+  try {
+    post('/user/conversations/rate', { conversation_id: msg.cid, score })
+    uni.showToast({ title: '评分已提�?, icon: 'success' })
+  } catch (e) {}
+}
+
+const profile = ref({ nickname: '', username: '', role: '' })
+function loadProfile() {
+  // 先用本地缓存快速显示，再异步从后端拉取最新昵称覆�?
+  profile.value = {
+    nickname: uni.getStorageSync('nickname') || '',
+    username: uni.getStorageSync('username') || '',
+    role: uni.getStorageSync('role') || ''
+  }
+  refreshProfile()
+}
+async function refreshProfile() {
+  try {
+    const me = await get('/auth/me')
+    profile.value = {
+      nickname: me.nickname || profile.value.nickname,
+      username: me.username || profile.value.username,
+      role: me.role || profile.value.role
+    }
+    // 同步回本地，保证其它页面/后续读取一�?
+    uni.setStorageSync('nickname', profile.value.nickname)
+    uni.setStorageSync('username', profile.value.username)
+  } catch (e) {
+    // 拉取失败则维持本地缓�?
+  }
+}
+
+function logout() {
+  uni.removeStorageSync('token')
+  uni.removeStorageSync('role')
+  uni.removeStorageSync('nickname')
+  uni.removeStorageSync('username')
+  uni.removeStorageSync('user_id')
+  uni.reLaunch({ url: '/pages/login/index' })
+}
+
+function goWardrobe() { currentView.value = 'wardrobe' }
+function switchView(key) {
+  currentView.value = key
+  if (key === 'notify') {
+    fetchNotifications()
+    fetchUnread()
+    // 进入通知中心即视为已读：静默标记全部（查�?已读），避免退出重登角标复�?
+    setTimeout(() => {
+      if (notifications.value.some(n => !n.is_read)) {
+        post('/user/notifications/read-all').then(() => {
+          notifications.value.forEach(x => { x.is_read = true })
+          unreadCount.value = 0
+        }).catch(() => {})
+      }
+    }, 600)
+  } else if (key === 'profile') {
+    loadProfile()
+  } else if (key === 'diary') {
+    loadDiary()
+  } else if (key === 'calendar') {
+    loadCalendar()
+  } else if (key === 'wardrobe') {
+    loadOutfits()
+  }
+}
+function setFilter(k) { wardrobeFilter.value = k }
+function closeUpload() { showUpload.value = false }
+
+// ===== 首页：定位天�?+ 按天气从衣橱挑搭�?=====
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    uni.getLocation({ type: 'wgs84', success: r => resolve(r), fail: e => reject(e) })
+  })
+}
+async function fetchWeather(lat, lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+  const r = await fetch(url)
+  return await r.json()
+}
+async function reverseGeocode(lat, lon) {
+  // OpenStreetMap Nominatim：免费、带 CORS，比已失效的 bigdatacloud(bdc.io) 可靠
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=zh&zoom=10`
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), 4000)
+  try {
+    const r = await fetch(url, { signal: ctrl.signal })
+    if (!r.ok) return null
+    const j = await r.json()
+    const a = (j && j.address) || {}
+    return a.city || a.town || a.county || a.state || a.province || null
+  } catch (e) {
+    return null
+  } finally {
+    clearTimeout(t)
+  }
+}
+function weatherText(code) {
+  const m = {
+    0: '�?, 1: '晴间多云', 2: '局部多�?, 3: '�?,
+    45: '�?, 48: '雾凇', 51: '毛毛�?, 53: '毛毛�?, 55: '毛毛�?,
+    61: '小雨', 63: '中雨', 65: '大雨', 66: '冻雨', 67: '冻雨',
+    71: '小雪', 73: '中雪', 75: '大雪', 77: '雪粒',
+    80: '阵雨', 81: '阵雨', 82: '强阵�?, 85: '阵雪', 86: '阵雪',
+    95: '雷阵�?, 96: '雷阵雨伴冰雹', 99: '雷阵雨伴冰雹'
+  }
+  return m[code] !== undefined ? m[code] : '未知'
+}
+async function loadWeather() {
+  weatherLoading.value = true
+  // 自动尝试定位（带 4s 超时），失败/超时/被拒都回退默认城市，绝不卡�?
+  let lat = 39.9042, lon = 116.4074, located = false, city = '北京'
+  try {
+    const loc = await Promise.race([
+      getLocation(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+    ])
+    lat = loc.latitude
+    lon = loc.longitude
+    located = true
+  } catch (e) {
+    // 定位被拒/超时/不可用：退回默认城市（北京�?
+  }
+  let wx = null, geo = null
+  try { wx = await fetchWeather(lat, lon) } catch (e) { wx = null }
+  // 仅在真正定位成功时才反查城市名；定位失败/超时时跳过，避免无谓的外网请求与报错
+  if (located) {
+    try { geo = await reverseGeocode(lat, lon) } catch (e) { geo = null }
+  }
+  if (geo) city = geo
+  const cw = wx && wx.current_weather
+  weather.value = {
+    city, located,
+    temperature: cw ? cw.temperature : '--',
+    description: cw ? weatherText(cw.weathercode) : '天气获取失败',
+    windspeed: cw ? cw.windspeed : '--',
+    lat, lon
+  }
+  weatherLoading.value = false
+  // 天气拿到后，直接按天气从衣橱挑一套搭�?
+  loadHomeOutfit(false)
+}
+async function loadHomeOutfit(randomPick = false) {
+  homeLoading.value = true
+  try {
+    const wx = weather.value
+    const temp = (typeof wx.temperature === 'number') ? wx.temperature : null
+    const w = (wx.description && wx.description !== '未知' && wx.description !== '天气获取失败') ? wx.description : ''
+    const city = wx.city || ''
+    let url = `/user/outfit-by-weather?user_id=${getUserId()}&random_pick=${randomPick ? 'true' : 'false'}`
+    if (temp !== null) url += `&temp=${temp}`
+    if (w) url += `&weather=${encodeURIComponent(w)}`
+    if (city) url += `&city=${encodeURIComponent(city)}`
+    const d = await get(url)
+    homeOutfit.value = d
+  } catch (e) {
+    homeOutfit.value = { text: '搭配获取失败，请稍后重试', image_url: '', items: [] }
+  }
+  homeLoading.value = false
+}
+
+async function wearTodayOutfit() {
+  const items = homeOutfit.value?.items || []
+  const ids = items.map(it => it.id).filter(Boolean)
+  if (!ids.length) {
+    uni.showToast({ title: '没有可标记的衣物', icon: 'none' })
+    return
+  }
+  try {
+    await post('/user/wardrobe/mark-worn', { ids })
+    // 同时记入采纳记录（穿搭日志）
+    try {
+      await post('/user/outfits/adopt', { item_ids: ids, source: 'today', scene: '今日穿搭', reason: (homeOutfit.value.text || '').slice(0, 100) })
+    } catch (e) {}
+    uni.showToast({ title: '已记录今天穿了这�?, icon: 'success' })
+    fetchWardrobe()
+    fetchAnalysis()
+  } catch (e) {
+    uni.showToast({ title: '记录失败，请重试', icon: 'none' })
+  }
+}
+
+// ===== 衣橱上传 / 抠图 =====
+function openUpload() { showUpload.value = true }
+async function chooseWardrobeImage() {
+  try {
+    const path = await chooseImage()
+    uploadPreview.value = path
+    uploadedFile.value = path
+    uploadDetecting.value = true
+    const d = await upload('/user/wardrobe/upload-and-tag', path)
+    uploadedItemId.value = d.item ? d.item.id : null
+    if (d.duplicate_warning && d.duplicate_warning.length) {
+      uni.showModal({
+        title: '重复购买提醒',
+        content: '衣橱里已经有类似的：' + d.duplicate_warning.join('�?) + '。\n确认是否需要重复拥有？',
+        showCancel: false
+      })
+    }
+    if (d.tags) {
+      uploadForm.value = {
+        name: d.tags.name || '',
+        category: d.tags.category || 'top',
+        color: d.tags.color || '',
+        style: d.tags.style || '',
+        season: d.tags.season || ''
+      }
+      uploadTags.value = d.tags
+      uni.showToast({ title: 'AI识别完成，请确认后保�?, icon: 'none' })
+    }
+  } catch (e) {
+    uploadTags.value = {}
+    uploadForm.value = { name: '', category: 'top', color: '', style: '', material: '', pattern: '', season: '' }
+    uni.showToast({ title: 'AI识别失败，可手动填写', icon: 'none' })
+  }
+  uploadDetecting.value = false
+}
+// 批量上传（上�?0张）：逐张�?AI 识图，进入批量编辑弹窗让用户确认
+async function chooseBatchImages() {
+  try {
+    const res = await uni.chooseImage({ count: 10, sizeType: ['compressed'], sourceType: ['album', 'camera'] })
+    const files = res.tempFilePaths
+    if (!files || !files.length) return
+    uni.showLoading({ title: `正在识别 ${files.length} �?..`, mask: true })
+    const list = []
+    let fail = 0
+    for (const f of files) {
+      try {
+        const d = await upload('/user/wardrobe/upload-and-tag', f)
+        const it = d.item || {}
+        const t = d.tags || {}
+        list.push({
+          id: it.id,
+          image_url: it.image_url || f,
+          name: t.name || '衣物',
+          category: t.category || 'top',
+          color: t.color || '',
+          style: t.style || '',
+          season: t.season || '',
+          purchase_date: new Date().toISOString().slice(0, 10)
+        })
+      } catch (e) { fail++ }
+    }
+    uni.hideLoading()
+    if (list.length) {
+      batchEditList.value = list
+      batchEditIndex.value = 0
+      showBatchEdit.value = true
+    }
+    if (fail) {
+      uni.showToast({ title: `${fail} 张识别失败`, icon: 'none' })
+    }
+  } catch (e) { /* 用户取消 */ }
+}
+function onPurchaseDateChange(e) {
+  purchaseDate.value = e.detail.value
+}
+async function confirmUpload() {
+  if (!uploadedItemId.value) {
+    uni.showToast({ title: '请先上传图片', icon: 'none' })
+    return
+  }
+  try {
+    await put('/user/wardrobe/' + uploadedItemId.value, {
+      name: uploadForm.value.name,
+      category: uploadForm.value.category,
+      color: uploadForm.value.color,
+      style: uploadForm.value.style,
+      material: uploadForm.value.material,
+      pattern: uploadForm.value.pattern,
+      season: uploadForm.value.season,
+      purchase_date: purchaseDate.value || null
+    })
+    uni.showToast({ title: '已保存到衣橱', icon: 'success' })
+  } catch (e) {
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
+  showUpload.value = false
+  resetUpload()
+  fetchWardrobe()
+  fetchShoppingList()
+}
+function resetUpload() {
+  uploadPreview.value = ''; uploadTags.value = null; uploadedFile.value = ''
+  uploadedItemId.value = null; purchaseDate.value = ''
+  uploadForm.value = { name: '', category: 'top', color: '', style: '', season: '' }
+}
+
+// ===== 批量编辑 =====
+function closeBatchEdit() {
+  showBatchEdit.value = false
+  batchEditList.value = []
+  batchEditIndex.value = 0
+}
+function prevBatchItem() { if (batchEditIndex.value > 0) batchEditIndex.value-- }
+function nextBatchItem() { if (batchEditIndex.value < batchEditList.value.length - 1) batchEditIndex.value++ }
+function onBatchFormInput(e, key) {
+  const v = e && e.detail && typeof e.detail.value === 'string' ? e.detail.value : e && typeof e.target.value === 'string' ? e.target.value : String(e || '')
+  if (batchEditList.value[batchEditIndex.value]) batchEditList.value[batchEditIndex.value][key] = v
+}
+function onBatchCatChange(e) {
+  if (batchEditList.value[batchEditIndex.value]) batchEditList.value[batchEditIndex.value].category = catKeys[e.detail.value]
+}
+function onBatchPurchaseDateChange(e) {
+  if (batchEditList.value[batchEditIndex.value]) batchEditList.value[batchEditIndex.value].purchase_date = e.detail.value
+}
+async function confirmBatchEdit() {
+  uni.showLoading({ title: '保存�?..', mask: true })
+  let success = 0, fail = 0
+  for (const it of batchEditList.value) {
+    try {
+      await put('/user/wardrobe/' + it.id, {
+        name: it.name || '衣物',
+        category: it.category || 'top',
+        color: it.color || '',
+        style: it.style || '',
+        season: it.season || '',
+        purchase_date: it.purchase_date || null
+      })
+      success++
+    } catch (e) { fail++ }
+  }
+  uni.hideLoading()
+  closeBatchEdit()
+  fetchWardrobe()
+  fetchShoppingList()
+  uni.showToast({ title: `成功保存 ${success} �?{fail ? `，失�?${fail} 件` : ''}`, icon: success > 0 ? 'success' : 'none' })
+}
+
+// ===== 衣橱操作 =====
+function itemMeta(item) {
+  const today = new Date()
+  const toDate = s => s ? new Date(s) : null
+  const pd = toDate(item.purchase_date)
+  const lw = toDate(item.last_worn)
+  const owned = pd ? Math.floor((today - pd) / 86400000) : null
+  const idle = lw ? Math.floor((today - lw) / 86400000) : null
+  const parts = []
+  if (owned !== null) parts.push('购入' + owned + '�?)
+  if (idle !== null) {
+    if (idle === 0) parts.push('今天穿过')
+    else if (idle === 1) parts.push('昨天穿过')
+    else parts.push('�? + idle + '天没�?)
+  } else if (owned !== null && owned > 90) parts.push('购入久未�?)
+  parts.push('�? + (item.wear_count || 0) + '�?)
+  return parts.join(' · ')
+}
+function isIdle(item) {
+  const today = new Date()
+  const lw = item.last_worn ? new Date(item.last_worn) : null
+  const pd = item.purchase_date ? new Date(item.purchase_date) : null
+  if (lw) return Math.floor((today - lw) / 86400000) > 90
+  if (pd) return Math.floor((today - pd) / 86400000) > 90
+  return false
+}
+async function markWorn(ids, wornDate) {
+  try { await post('/user/wardrobe/mark-worn', { ids, worn_date: wornDate || undefined }) } catch (e) {}
+}
+function pickItem(id) {
+  // 衣橱卡片的「搭配」：加入自主搭配选择并直接进入「自己搭 + AI 审核」界�?
+  if (!isSelected(id)) selectedIds.value.push(id)
+  reviewResult.value = null
+  currentView.value = 'outfit'
+}
+async function deleteItem(id) {
+  uni.showModal({
+    title: '确定删除?',
+    success: async (r) => {
+      if (r.confirm) {
+        try { await del('/user/wardrobe/' + id); if (showDetail.value) showDetail.value = false; fetchWardrobe(); fetchShoppingList(); uni.showToast({ title: '已删�?, icon: 'success' }) } catch (e) {}
+      }
+    }
+  })
+}
+// 衣橱卡片长按操作菜单
+function showCardMenu(item) {
+  uni.showActionSheet({
+    itemList: ['加入搭配审核', '编辑信息', '删除这件衣服'],
+    success: (res) => {
+      if (res.tapIndex === 0) pickItem(item.id)
+      else if (res.tapIndex === 2) deleteItem(item.id)
+      else if (res.tapIndex === 1) openDetail(item, true)  // 编辑信息 �?打开详情并直接进入编�?
+    }
+  })
+}
+// ===== 衣物详情 / 编辑 =====
+function fmtDate(s) {
+  if (!s) return ''
+  return String(s).slice(0, 10)
+}
+function openDetail(item, edit = false) {
+  detailItem.value = JSON.parse(JSON.stringify(item))
+  detailEditing.value = false
+  showMarkWorn.value = false
+  showDetail.value = true
+  markWornDate.value = todayStr()
+  fetchWearHistory(item.id)
+  if (edit) startEdit()
+}
+async function fetchWearHistory(id) {
+  try {
+    const r = await get('/user/wardrobe/wear-history?item_id=' + id)
+    wearDates.value = (r && r.dates) || []
+  } catch (e) {
+    wearDates.value = []
+  }
+}
+function openMarkWorn() {
+  markWornDate.value = todayStr()
+  showMarkWorn.value = true
+}
+async function doMarkWorn() {
+  try {
+    await markWorn([detailItem.value.id], markWornDate.value)
+    showMarkWorn.value = false
+    await fetchWearHistory(detailItem.value.id)
+    await fetchWardrobe()  // 同步刷新衣橱，使卡片闲置天数实时更新
+    const it = wardrobe.value.find(i => i.id === detailItem.value.id)
+    if (it) {
+      detailItem.value.last_worn = it.last_worn
+      detailItem.value.wear_count = it.wear_count
+    }
+    uni.showToast({ title: '已记�?, icon: 'success' })
+  } catch (e) {
+    uni.showToast({ title: '记录失败', icon: 'none' })
+  }
+}
+async function deleteWearDate(dateStr) {
+  const itemId = detailItem.value?.id
+  if (!itemId || !dateStr) return
+  uni.showModal({
+    title: '删除记录',
+    content: '确定删除 ' + dateStr + ' 的穿着记录吗？',
+    confirmColor: '#f56c6c',
+    success: async (res) => {
+      if (!res.confirm) return
+      try {
+        await post('/user/wardrobe/wear-history/delete', { item_id: itemId, worn_date: dateStr })
+        await fetchWearHistory(itemId)
+        await fetchWardrobe()
+        uni.showToast({ title: '已删�?, icon: 'success' })
+      } catch (e) {
+        uni.showToast({ title: '删除失败', icon: 'none' })
+      }
+    }
+  })
+}
+function closeDetail() {
+  showDetail.value = false
+  detailEditing.value = false
+}
+function startEdit() {
+  const d = detailItem.value
+  detailForm.value = {
+    name: d.name || '',
+    category: d.category || 'top',
+    color: d.color || '',
+    style: d.style || '',
+    season: d.season || '',
+    purchase_date: fmtDate(d.purchase_date)
+  }
+  detailEditing.value = true
+}
+function cancelEdit() { detailEditing.value = false }
+function onDetailFormInput(e, key) {
+  const v = e && e.detail && typeof e.detail.value === 'string' ? e.detail.value : String(e || '')
+  detailForm.value[key] = v
+}
+function onDetailCatChange(e) { detailForm.value.category = catKeys[e.detail.value] }
+function onDetailPurchaseDateChange(e) { detailForm.value.purchase_date = e.detail.value }
+async function saveDetail() {
+  try {
+    await put('/user/wardrobe/' + detailItem.value.id, {
+      name: detailForm.value.name || '衣物',
+      category: detailForm.value.category || 'top',
+      color: detailForm.value.color || '',
+      style: detailForm.value.style || '',
+      material: detailForm.value.material || '',
+      pattern: detailForm.value.pattern || '',
+      season: detailForm.value.season || '',
+      purchase_date: detailForm.value.purchase_date || null
+    })
+    const idx = wardrobe.value.findIndex(i => i.id === detailItem.value.id)
+    if (idx >= 0) wardrobe.value[idx] = { ...wardrobe.value[idx], ...JSON.parse(JSON.stringify(detailForm.value)) }
+    Object.assign(detailItem.value, JSON.parse(JSON.stringify(detailForm.value)))
+    detailEditing.value = false
+    fetchWardrobe()
+    fetchShoppingList()
+    uni.showToast({ title: '已保�?, icon: 'success' })
+  } catch (e) {
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
+}
+// 颜色�?�?hex（用于无图卡片的占位色）
+const COLOR_HEX_MAP = {
+  '白色': '#f5f5f5', '白色�?: '#f5f5f5', '米白': '#f5f0e1', '米色': '#f0e6d2',
+  '黑色': '#2b2b2b', '黑色�?: '#2b2b2b', '深灰': '#6b6b6b', '灰色': '#9aa0a6', '灰色�?: '#9aa0a6', '浅灰': '#d4d4d4',
+  '红色': '#ef6f6c', '红色�?: '#ef6f6c', '酒红': '#8b2323', '玫红': '#e84a7d', '粉色': '#f78fb3', '粉色�?: '#f78fb3',
+  '蓝色': '#5b8def', '蓝色�?: '#5b8def', '深蓝': '#1a3a6b', '浅蓝': '#87ceeb', '藏青': '#2c3e50',
+  '绿色': '#22c1a8', '绿色�?: '#22c1a8', '墨绿': '#2d5a3d', '军绿': '#556b2f', '橄榄': '#808000',
+  '黄色': '#f6c244', '黄色�?: '#f6c244', '橙色': '#f6a609', '橙色�?: '#f6a609',
+  '棕色': '#8b6914', '棕色�?: '#8b6914', '驼色': '#c19a6b', '卡其': '#c3b091',
+  '紫色': '#9b6dff', '紫色�?: '#9b6dff', '薰衣�?: '#b39ddb',
+  '金色': '#ffd700', '银色': '#c0c0c0', '杏色': '#ffdead'
+}
+function getItemColorHex(item) {
+  return COLOR_HEX_MAP[item.color] || COLOR_HEX_MAP[item.color?.replace('�?,'')] || '#e0e0e0'
+}
+async function openHistoryDrawer() {
+  fetchConversations()
+  showHistoryDrawer.value = true
+  drawerOpened.value = false
+  await nextTick()
+  drawerOpened.value = true
+}
+function closeHistoryDrawer() {
+  drawerOpened.value = false
+  setTimeout(() => { showHistoryDrawer.value = false }, 280)
+}
+function newChat() {
+  messages.value = []
+  currentConvId.value = null
+  currentView.value = 'chat'
+  closeHistoryDrawer()
+}
+async function deleteConversation(id) {
+  uni.showModal({
+    title: '删除对话',
+    content: '确定删除这条对话记录吗？',
+    success: async (r) => {
+      if (r.confirm) {
+        try {
+          await del('/user/conversations/' + id)
+          conversations.value = conversations.value.filter(c => c.id !== id)
+          uni.showToast({ title: '已删�?, icon: 'success' })
+        } catch (e) {}
+      }
+    }
+  })
+}
+function openHistoryChatById(id) {
+  const conv = conversations.value.find(c => c.id === id)
+  if (!conv) return
+  messages.value = []
+  currentConvId.value = id
+  const hist = Array.isArray(conv.history) ? conv.history : []
+  if (hist.length) {
+    hist.forEach(h => {
+      messages.value.push(markRaw({ role: h.role, content: h.content, cid: id, rating: 0, image: '' }))
+    })
+  } else {
+    messages.value.push(markRaw({ role: 'user', content: conv.user_input }))
+    messages.value.push(markRaw({ role: 'agent', content: conv.agent_response || '（无回复�?, cid: conv.id, rating: conv.score }))
+  }
+  currentView.value = 'chat'
+  closeHistoryDrawer()
+}
+
+onMounted(() => {
+  fetchWardrobe()
+  fetchConversations()
+  fetchAnalysis()
+  fetchShoppingList()
+  fetchNotifications()
+  fetchUnread()
+  loadProfile()
+  loadWeather()
+  loadScenes()
+  loadDiary()
+  loadCalendar()
+  loadOutfits()
+})
+</script>
+
+<style scoped>
+.page { height: 100vh; display: flex; flex-direction: column; background: #f5f7fa; overflow: hidden; }
+
+/* 主体 */
+.main { flex: 1; overflow: hidden; width: 100%; min-width: 0; box-sizing: border-box; }
+.panel { padding: 24rpx; box-sizing: border-box; width: 100%; }
+.panel-head { margin-bottom: 20rpx; position: sticky; top: 0; z-index: 100; background: #f5f7fa; }
+.panel-head.between { display: flex; justify-content: space-between; align-items: center; }
+.panel-title { font-size: 34rpx; font-weight: 600; }
+
+/* 通用按钮 */
+.mini-btn { padding: 10rpx 22rpx; background: #fff; border: 1rpx solid #dcdfe6; border-radius: 8rpx; font-size: 24rpx; color: #606266; }
+.mini-btn.primary { background: #409eff; color: #fff; border-color: #409eff; }
+.big-btn { background: #409eff; color: #fff; font-size: 32rpx; text-align: center; padding: 36rpx; border-radius: 16rpx; }
+.big-btn.loading { opacity: .7; }
+
+/* 卡片 */
+.card-box { background: #fff; border: 1rpx solid #ebeef5; border-radius: 16rpx; padding: 24rpx; margin-top: 20rpx; }
+.pre { font-size: 28rpx; line-height: 1.8; white-space: pre-wrap; word-break: break-word; color: #303133; }
+.outfit-img { width: 100%; max-width: 680rpx; margin-top: 20rpx; border-radius: 16rpx; display: block; }
+
+/* 首页 */
+.weather-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #5b9cf0, #74c0fc);
+  border-radius: 20rpx;
+  padding: 32rpx 36rpx;
+  color: #fff;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(91, 156, 240, .25);
+}
+.wx-weather { display: flex; flex-direction: column; }
+.wx-temp { font-size: 72rpx; font-weight: 700; line-height: 1; }
+.wx-desc { font-size: 28rpx; margin-top: 10rpx; opacity: .95; }
+.wx-meta { text-align: right; display: flex; flex-direction: column; gap: 8rpx; }
+.wx-city { font-size: 28rpx; font-weight: 500; }
+.wx-wind { font-size: 24rpx; opacity: .9; }
+
+/* 对话 */
+.head-left { display: flex; align-items: center; }
+.menu-btn { font-size: 40rpx; margin-right: 16rpx; padding: 4rpx 8rpx; color: #409eff; }
+.chat-box { display: flex; flex-direction: column; }
+.msg { margin-bottom: 24rpx; }
+.msg-img { margin-bottom: 8rpx; }
+.chat-img { max-width: 360rpx; border-radius: 12rpx; }
+.bubble { max-width: 660rpx; }
+.msg-label { font-size: 22rpx; color: #999; margin-bottom: 6rpx; display: block; }
+.msg-text { font-size: 28rpx; line-height: 1.7; padding: 18rpx 22rpx; border-radius: 16rpx; display: block; white-space: pre-wrap; word-break: break-word; }
+.msg-user .msg-text { background: #409eff; color: #fff; border-bottom-right-radius: 4rpx; }
+.msg-agent .msg-text { background: #fff; border: 1rpx solid #e4e7ed; border-bottom-left-radius: 4rpx; }
+.rate-row { margin-top: 8rpx; }
+.star { font-size: 32rpx; color: #dcdfe6; margin-right: 6rpx; }
+.star.active { color: #f7ba2a; }
+.loading-text { color: #999; font-size: 28rpx; }
+.chat-input { display: flex; align-items: center; gap: 12rpx; background: #fff; border: 1rpx solid #e4e7ed; border-radius: 12rpx; padding: 12rpx; margin-top: 12rpx; }
+.icon-btn { font-size: 40rpx; padding: 0 12rpx; }
+.chat-field { flex: 1; font-size: 28rpx; padding: 0 12rpx; }
+.send-btn { background: #409eff; color: #fff; font-size: 26rpx; padding: 14rpx 28rpx; border-radius: 10rpx; }
+
+/* 衣橱（旧�?chip/grid/card 保留给搭配多选用�?*/
+.filter-bar { white-space: nowrap; margin-bottom: 20rpx; }
+.chip { display: inline-block; padding: 8rpx 22rpx; background: #fff; border: 1rpx solid #dcdfe6; border-radius: 30rpx; font-size: 24rpx; color: #606266; margin-right: 12rpx; }
+.chip.active { background: #409eff; color: #fff; border-color: #409eff; }
+
+/* ===== 衣橱�?DPSTAR 风格 ===== */
+.wh-page { padding-bottom: 20rpx; }
+
+/* 顶部横幅 */
+.wh-banner { position: relative; height: 220rpx; border-radius: 20rpx; overflow: hidden; margin-bottom: 24rpx; background: linear-gradient(135deg, #2c3e50, #4a6fa5); }
+.wh-banner-bg { position: absolute; inset: 0; opacity: .35; }
+.wh-banner-img { width: 100%; height: 100%; object-fit: cover; }
+.wh-banner-info { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 28rpx; }
+.wh-banner-title { font-size: 34rpx; font-weight: 700; color: #fff; letter-spacing: 2rpx; margin-bottom: 10rpx; }
+.wh-banner-stats { font-size: 23rpx; color: rgba(255,255,255,.8); }
+
+/* 款式分析 / 利用�?*/
+.wh-insight { display: flex; align-items: center; gap: 22rpx; background: #fff; border: 1rpx solid #ebeef5; border-radius: 18rpx; padding: 24rpx 26rpx; margin-bottom: 24rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,.04); }
+.wi-ring { width: 132rpx; height: 132rpx; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.wi-ring-in { width: 100rpx; height: 100rpx; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.wi-ring-num { font-size: 38rpx; font-weight: 700; color: #303133; line-height: 1.1; }
+.wi-ring-lbl { font-size: 20rpx; color: #909399; }
+.wi-metrics { flex: 1; display: flex; justify-content: space-around; }
+.wi-m { display: flex; flex-direction: column; align-items: center; }
+.wi-m-num { font-size: 36rpx; font-weight: 700; color: #303133; }
+.wi-m-lbl { font-size: 20rpx; color: #909399; margin-top: 4rpx; }
+.wi-top { display: flex; flex-direction: column; align-items: flex-end; max-width: 150rpx; }
+.wi-top-lbl { font-size: 20rpx; color: #909399; margin-bottom: 6rpx; }
+.wi-top-name { font-size: 24rpx; font-weight: 600; color: #303133; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150rpx; }
+
+/* 录入入口 */
+.wh-upload-entry { display: flex; align-items: center; gap: 14rpx; background: #fff; border: 2rpx dashed #c0c4cc; border-radius: 16rpx; padding: 26rpx 28rpx; margin-bottom: 24rpx; }
+.wh-upload-entry:active { background: #f5f7fa; border-color: #909399; }
+.wh-up-ico { font-size: 38rpx; }
+.wh-up-text { font-size: 27rpx; color: #303133; font-weight: 500; }
+
+/* 品类筛选行 */
+.wh-filter-row { display: flex; align-items: center; gap: 16rpx; margin-bottom: 20rpx; }
+.wh-filter-label { font-size: 24rpx; color: #909399; flex-shrink: 0; }
+.wh-cat-tabs { flex: 1; white-space: nowrap; }
+.wh-cat-tab { display: inline-block; padding: 10rpx 26rpx; background: #f5f7fa; border-radius: 30rpx; font-size: 25rpx; color: #606266; margin-right: 14rpx; transition: all .2s; }
+.wh-cat-tab.active { background: #303133; color: #fff; font-weight: 600; }
+.wh-cat-n { font-weight: 400; opacity: .75; font-size: 22rpx; }
+
+/* 卡片网格 */
+.wh-grid { display: flex; flex-wrap: wrap; gap: 18rpx; }
+.wh-card { width: calc(33.33% - 12rpx); background: #fff; border-radius: 14rpx; overflow: hidden; box-shadow: 0 2rpx 12rpx rgba(0,0,0,.06); position: relative; }
+.wh-card-img-wrap { height: 220rpx; background: #f7f8fa; display: flex; align-items: center; justify-content: center; }
+.wh-card-img { width: 100%; height: 100%; object-fit: contain; }
+.wh-card-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.wh-card-ph-txt { font-size: 48rpx; color: rgba(255,255,255,.7); font-weight: 700; }
+.wh-card-name { display: block; text-align: center; font-size: 23rpx; color: #303133; padding: 12rpx 8rpx 16rpx; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wh-card-del { position: absolute; top: 6rpx; right: 6rpx; width: 40rpx; height: 40rpx; background: rgba(0,0,0,.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22rpx; line-height: 1; color: #fff; z-index: 2; }
+
+/* 衣物详情弹窗 */
+.wh-detail { width: 86vw; max-width: 640rpx; max-height: 84vh; background: #fff; border-radius: 20rpx; display: flex; flex-direction: column; overflow: hidden; }
+.wh-detail-scroll { max-height: 64vh; }
+.wh-detail-img-wrap { width: 100%; height: 360rpx; background: #f7f8fa; display: flex; align-items: center; justify-content: center; }
+.wh-detail-img { width: 100%; height: 100%; }
+.wh-detail-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.wh-detail-ph-txt { font-size: 90rpx; color: rgba(255,255,255,.75); font-weight: 700; }
+.wh-detail-fields { padding: 8rpx 28rpx 12rpx; }
+.wh-df { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid #f2f3f5; }
+.wh-df-k { width: 170rpx; font-size: 26rpx; color: #909399; flex-shrink: 0; }
+.wh-df-v { flex: 1; font-size: 28rpx; color: #303133; word-break: break-all; }
+.wh-df-col { align-items: flex-start; }
+.wh-wear-dates { flex: 1; display: flex; flex-wrap: wrap; gap: 10rpx; }
+.wh-wear-chip { display: inline-flex; align-items: center; gap: 6rpx; font-size: 23rpx; color: #409eff; background: #ecf5ff; border-radius: 8rpx; padding: 4rpx 8rpx 4rpx 12rpx; margin-right: 10rpx; margin-bottom: 8rpx; }
+.wh-wear-del { color: #f56c6c; font-size: 26rpx; padding: 0 4rpx; }
+
+/* 标记穿过面板 */
+.wh-mark-worn { margin-top: 18rpx; padding: 22rpx; background: #fafbfc; border-radius: 14rpx; border: 1rpx solid #eef0f3; }
+.wh-mw-label { font-size: 26rpx; color: #606266; }
+.wh-mw-picker { margin: 16rpx 0; height: 76rpx; line-height: 76rpx; background: #fff; border: 1rpx solid #dcdfe6; border-radius: 12rpx; padding: 0 20rpx; }
+.wh-mw-pick-val { font-size: 28rpx; color: #303133; }
+.wh-mw-actions { display: flex; gap: 16rpx; }
+.wh-mw-btn { flex: 1; height: 76rpx; line-height: 76rpx; text-align: center; border-radius: 12rpx; font-size: 28rpx; }
+.wh-mw-btn.cancel { background: #f5f7fa; color: #606266; }
+.wh-mw-btn.save { background: #303133; color: #fff; }
+
+/* 空状�?*/
+.wh-empty { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 80rpx 0 40rpx; gap: 16rpx; }
+.wh-empty-ico { font-size: 72rpx; }
+.wh-empty-text { font-size: 27rpx; color: #909399; }
+.grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.card { width: calc(50% - 8rpx); background: #fff; border-radius: 12rpx; overflow: hidden; border: 1rpx solid #eee; }
+.card-img { height: 240rpx; background: #f5f5f5; display: flex; align-items: center; justify-content: center; }
+.full-img { width: 100%; height: 100%; }
+.ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 60rpx; color: #fff; }
+.card-info { padding: 14rpx 16rpx; }
+.card-name { font-size: 26rpx; font-weight: 500; display: block; margin-bottom: 8rpx; }
+.card-meta { font-size: 20rpx; color: #909399; margin-top: 8rpx; display: block; }
+.card-meta.idle { color: #f56c6c; font-weight: 600; }
+.tags { display: flex; flex-wrap: wrap; gap: 6rpx; }
+
+/* 自主搭配 */
+.panel-sub { font-size: 22rpx; color: #909399; margin-right: 12rpx; }
+/* 工作台功能网格（DPSTAR 风格：圆角方块图标） */
+.wb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28rpx 20rpx; padding: 8rpx 0; }
+.wb-tile { display: flex; flex-direction: column; align-items: center; gap: 14rpx; position: relative; }
+.wb-icon-wrap { width: 112rpx; height: 112rpx; border-radius: 28rpx; background: #1a1a2e; display: flex; align-items: center; justify-content: center; transition: transform .15s; }
+.wb-tile:active .wb-icon-wrap { transform: scale(.92); }
+.wb-ico { font-size: 52rpx; line-height: 1; }
+.wb-label { font-size: 25rpx; color: #303133; font-weight: 500; white-space: nowrap; }
+.wb-single { display: flex; align-items: center; gap: 24rpx; background: #fff; border: 1rpx solid #e4e7ed; border-radius: 20rpx; padding: 24rpx 28rpx; box-shadow: 0 4rpx 16rpx rgba(0,0,0,.04); }
+.wb-single:active { opacity: .85; }
+.wb-single-icon { width: 96rpx; height: 96rpx; border-radius: 24rpx; background: #1a1a2e; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.wb-single-icon .wb-ico { font-size: 48rpx; }
+.wb-single-text { flex: 1; display: flex; flex-direction: column; gap: 8rpx; }
+.wb-single-title { font-size: 30rpx; color: #303133; font-weight: 600; }
+.wb-single-sub { font-size: 24rpx; color: #909399; }
+.wb-single-arrow { font-size: 40rpx; color: #c0c4cc; }
+.wb-badge { position: absolute; top: 0; right: 12rpx; min-width: 32rpx; height: 32rpx; line-height: 32rpx; text-align: center; background: #f56c6c; color: #fff; font-size: 20rpx; border-radius: 16rpx; padding: 0 8rpx; }
+.back-btn { font-size: 30rpx; color: #409eff; margin-right: 16rpx; }
+.card.pick { position: relative; transition: all .15s; }
+.card.pick.picked { border-color: #409eff; box-shadow: 0 0 0 3rpx rgba(64,158,255,.25); }
+.pick-badge { position: absolute; top: 10rpx; right: 10rpx; width: 40rpx; height: 40rpx; border-radius: 50%; background: #409eff; color: #fff; font-size: 24rpx; display: flex; align-items: center; justify-content: center; }
+.outfit-bar { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; background: #fff; border-top: 1rpx solid #e4e7ed; padding: 16rpx 20rpx; margin: 16rpx -24rpx -24rpx; }
+.ob-count { font-size: 26rpx; color: #606266; }
+.ob-num { color: #409eff; font-weight: 700; font-size: 30rpx; }
+.ob-status { color: #909399; font-size: 24rpx; }
+.ob-clear { font-size: 26rpx; color: #f56c6c; padding: 8rpx 16rpx; }
+.ob-actions { display: flex; align-items: center; gap: 12rpx; }
+.ob-wear-btn { padding: 10rpx 20rpx; background: #22c1a8; color: #fff; border-radius: 8rpx; font-size: 24rpx; }
+.home-outfit-actions { display: flex; justify-content: center; margin-top: 16rpx; }
+.review-card { background: #fff; border: 1rpx solid #ebeef5; border-radius: 16rpx; padding: 24rpx; margin-top: 20rpx; }
+.review-top { display: flex; align-items: center; gap: 28rpx; }
+.score-ring { width: 140rpx; height: 140rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
+.score-num { font-size: 52rpx; font-weight: 800; color: #303133; }
+.score-cap { font-size: 22rpx; color: #909399; margin-top: 16rpx; }
+.review-verdict { display: flex; flex-direction: column; gap: 12rpx; }
+.rv-label { font-size: 24rpx; color: #909399; }
+.rv-tag { align-self: flex-start; padding: 8rpx 24rpx; border-radius: 30rpx; color: #fff; font-size: 28rpx; font-weight: 600; }
+.review-img { width: 100%; margin: 20rpx 0; border-radius: 12rpx; }
+.rv-block { margin-top: 18rpx; }
+.rv-h { font-size: 26rpx; font-weight: 600; color: #303133; display: block; margin-bottom: 6rpx; }
+.rv-c { font-size: 25rpx; color: #606266; line-height: 1.7; white-space: pre-wrap; }
+.review-actions { margin-top: 20rpx; display: flex; justify-content: flex-end; }
+.tag { font-size: 20rpx; padding: 4rpx 12rpx; background: #ecf5ff; color: #409eff; border-radius: 6rpx; margin-right: 6rpx; }
+.tag.ok { background: #f0f9eb; color: #67c23a; }
+.tag.warn { background: #fdf6ec; color: #e6a23c; }
+.tag.danger { background: #fef0f0; color: #f56c6c; }
+.tag.info { background: #f4f4f5; color: #909399; }
+.card-act { padding: 12rpx 16rpx; border-top: 1rpx solid #f5f5f5; display: flex; justify-content: flex-end; gap: 24rpx; }
+.link { font-size: 24rpx; color: #409eff; }
+.link.danger { color: #f56c6c; }
+.empty { text-align: center; color: #999; font-size: 26rpx; padding: 60rpx 0; }
+.empty-tip { color: #999; font-size: 24rpx; display: block; margin: 8rpx 0; }
+.sug { font-size: 26rpx; line-height: 1.8; display: block; color: #606266; }
+
+/* 上传 */
+.upload-area { border: 2rpx dashed #c0c4cc; border-radius: 16rpx; padding: 60rpx; text-align: center; background: #fafafa; }
+.up-icon { font-size: 80rpx; color: #409eff; display: block; }
+.up-tip { font-size: 28rpx; color: #606266; display: block; margin-top: 16rpx; }
+.up-sub { font-size: 22rpx; color: #999; display: block; margin-top: 8rpx; }
+.upload-result { margin-top: 24rpx; text-align: center; }
+.result-img { max-width: 400rpx; border-radius: 12rpx; }
+.detecting { text-align: center; padding: 40rpx; color: #999; font-size: 26rpx; }
+
+/* 表单 */
+.form { margin-top: 20rpx; background: #fff; border-radius: 12rpx; padding: 20rpx; }
+.form-row { display: flex; align-items: center; padding: 14rpx 0; border-bottom: 1rpx solid #f5f5f5; }
+.form-label { width: 120rpx; font-size: 26rpx; color: #606266; }
+.form-input { flex: 1; font-size: 26rpx; padding: 8rpx 12rpx; background: #f8f8f8; border-radius: 8rpx; }
+.form-picker { flex: 1; font-size: 26rpx; padding: 8rpx 12rpx; background: #f8f8f8; border-radius: 8rpx; }
+.form-foot, .dialog-foot { display: flex; justify-content: flex-end; gap: 16rpx; margin-top: 24rpx; }
+
+/* 分析（高级版�?*/
+.analysis-wrap { padding: 4rpx 0; }
+.score-card { display: flex; align-items: center; gap: 28rpx; padding: 28rpx; border-radius: 20rpx;
+  background: linear-gradient(135deg, #f7f9ff 0%, #eef3ff 100%); margin-bottom: 24rpx; }
+.score-ring { width: 160rpx; height: 160rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 6rpx 18rpx rgba(91,141,239,.25); }
+.score-hole { width: 122rpx; height: 122rpx; border-radius: 50%; background: #fff; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; }
+.score-num { font-size: 52rpx; font-weight: 800; color: #303133; line-height: 1; }
+.score-unit { font-size: 22rpx; color: #909399; margin-top: 2rpx; }
+.score-info { flex: 1; min-width: 0; }
+.score-title { font-size: 30rpx; font-weight: 700; color: #303133; display: block; }
+.score-sub { font-size: 22rpx; color: #909399; display: block; margin: 4rpx 0 16rpx; }
+.score-metrics { display: flex; gap: 12rpx; }
+.sm { flex: 1; background: #fff; border-radius: 14rpx; padding: 14rpx 0; text-align: center; }
+.sm-num { font-size: 34rpx; font-weight: 700; color: #303133; display: block; }
+.sm-num.warn { color: #f6a609; }
+.sm-num.danger { color: #ef6f6c; }
+.sm-lab { font-size: 20rpx; color: #909399; display: block; margin-top: 2rpx; }
+
+.block { margin-bottom: 28rpx; }
+.block-title { font-size: 28rpx; font-weight: 700; color: #303133; display: block; margin-bottom: 16rpx;
+  padding-left: 16rpx; border-left: 6rpx solid #5b8def; }
+
+/* 穿搭回顾面板 */
+.wh-day-lookup { margin: 20rpx 0 8rpx; background: #fff; border-radius: 16rpx; padding: 20rpx 22rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04); }
+.wh-dl-head { display: flex; align-items: center; justify-content: space-between; }
+.wh-dl-title { font-size: 27rpx; color: #303133; font-weight: 600; }
+.wh-dl-arrow { font-size: 25rpx; color: #909399; }
+.wh-dl-body { margin-top: 18rpx; }
+.wh-dl-picker { height: 76rpx; line-height: 76rpx; background: #f7f8fa; border: 1rpx solid #e4e7ed; border-radius: 12rpx; padding: 0 20rpx; margin-bottom: 16rpx; }
+.wh-dl-pick-val { font-size: 28rpx; color: #303133; }
+.wh-dl-items { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.wh-dl-chip { background: #ecf5ff; color: #409eff; font-size: 25rpx; border-radius: 10rpx; padding: 12rpx 20rpx; }
+.wh-dl-empty { font-size: 25rpx; color: #909399; }
+
+.donut-row { display: flex; align-items: center; gap: 28rpx; }
+.donut { width: 200rpx; height: 200rpx; border-radius: 50%; flex-shrink: 0; position: relative;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,.08); }
+.donut-hole { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 138rpx; height: 138rpx; border-radius: 50%; background: #fff; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; }
+.donut-num { font-size: 44rpx; font-weight: 800; color: #303133; line-height: 1; }
+.donut-unit { font-size: 22rpx; color: #909399; }
+.legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14rpx; }
+.legend-item { display: flex; align-items: center; gap: 12rpx; }
+.legend-dot { width: 18rpx; height: 18rpx; border-radius: 6rpx; flex-shrink: 0; }
+.legend-name { font-size: 26rpx; color: #303133; flex: 1; }
+.legend-val { font-size: 24rpx; color: #909399; }
+
+.stack-bar { display: flex; height: 28rpx; border-radius: 14rpx; overflow: hidden; background: #ebeef5; }
+.stack-seg { height: 100%; }
+.stack-legend { display: flex; flex-wrap: wrap; gap: 20rpx; margin-top: 14rpx; }
+.stack-leg { display: flex; align-items: center; gap: 8rpx; }
+.stack-leg-t { font-size: 24rpx; color: #606266; }
+
+.color-wrap { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.color-chip { display: flex; align-items: center; gap: 8rpx; background: #f7f8fa; border-radius: 30rpx; padding: 8rpx 18rpx; }
+.color-dot { width: 26rpx; height: 26rpx; border-radius: 50%; border: 1rpx solid #e4e7ed; }
+.color-name { font-size: 24rpx; color: #303133; }
+.color-cnt { font-size: 22rpx; color: #909399; }
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
+
+.sug-list { display: flex; flex-direction: column; gap: 12rpx; }
+.sug-item { display: flex; gap: 12rpx; background: linear-gradient(135deg,#f7f9ff,#eef3ff); border-radius: 14rpx; padding: 18rpx 20rpx; }
+.sug-bullet { color: #5b8def; font-size: 24rpx; flex-shrink: 0; }
+.sug-text { font-size: 25rpx; color: #454a52; line-height: 1.6; flex: 1; }
+.shop { display: flex; align-items: center; gap: 16rpx; }
+.shop-reason { font-size: 26rpx; color: #606266; flex: 1; }
+
+/* 历史侧边抽屉 */
+.drawer-wrap { position: fixed !important; top: 0; left: 0; right: 0; bottom: 0; z-index: 200; overflow: hidden; }
+.history-drawer {
+  position: absolute !important; top: 0; left: 0;
+  width: 75vw; max-width: 560rpx; height: 100%;
+  background: #fff;
+  display: flex; flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform .28s ease;
+  box-shadow: 6rpx 0 30rpx rgba(0,0,0,.15);
+  box-sizing: border-box;
+}
+.history-drawer.open { transform: translateX(0); }
+.drawer-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.35); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 28rpx 24rpx; border-bottom: 1rpx solid #ebeef5; flex-shrink: 0; }
+.drawer-title { font-size: 32rpx; font-weight: 600; color: #303133; }
+.drawer-new { font-size: 26rpx; color: #409eff; padding: 8rpx 16rpx; background: #ecf5ff; border-radius: 20rpx; }
+.drawer-list { flex: 1; height: 0; min-height: 0; width: 100%; padding: 16rpx 20rpx; box-sizing: border-box; }
+.drawer-item { background: #f7f8fa; padding: 20rpx 22rpx; margin-bottom: 16rpx; border-radius: 12rpx; border: 1rpx solid #eef0f3; width: 100%; box-sizing: border-box; display: flex; align-items: flex-start; }
+.drawer-item:active { background: #eef4ff; }
+.di-main { flex: 1; min-width: 0; overflow: hidden; }
+.di-del { padding: 4rpx 14rpx; margin-left: 12rpx; font-size: 34rpx; color: #c0c4cc; flex-shrink: 0; }
+.di-del:active { color: #f56c6c; }
+.di-q { font-weight: 500; font-size: 28rpx; color: #303133; display: block; margin-bottom: 8rpx; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.di-turn { display: inline-block; font-size: 20rpx; color: #409eff; background: #ecf5ff; padding: 2rpx 10rpx; border-radius: 10rpx; margin-left: 10rpx; font-weight: normal; vertical-align: middle; }
+.di-a { font-size: 24rpx; color: #888; display: block; margin-bottom: 10rpx; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.di-time { font-size: 22rpx; color: #aaa; display: block; }
+.drawer-empty { text-align: center; color: #999; font-size: 26rpx; padding-top: 80rpx; }
+
+/* 个人中心 */
+.me-card { display: flex; align-items: center; background: #fff; border-radius: 16rpx; padding: 32rpx 28rpx; margin-bottom: 20rpx; }
+.me-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: #409eff; color: #fff; font-size: 44rpx; display: flex; align-items: center; justify-content: center; margin-right: 24rpx; flex-shrink: 0; }
+.me-info { display: flex; flex-direction: column; min-width: 0; }
+.me-name { font-size: 34rpx; font-weight: 600; color: #303133; }
+.me-sub { font-size: 24rpx; color: #909399; margin-top: 8rpx; }
+.me-list { background: #fff; border-radius: 16rpx; overflow: hidden; }
+.me-row { display: flex; align-items: center; padding: 30rpx 28rpx; border-bottom: 1rpx solid #f5f5f5; }
+.me-row:active { background: #f7f8fa; }
+.me-row-l { flex: 1; font-size: 30rpx; color: #303133; }
+.me-arrow { font-size: 40rpx; color: #c0c4cc; margin-left: 12rpx; }
+.me-badge { min-width: 32rpx; height: 32rpx; padding: 0 8rpx; background: #f56c6c; color: #fff; font-size: 20rpx; line-height: 32rpx; text-align: center; border-radius: 16rpx; margin-left: auto; margin-right: 12rpx; }
+.me-logout { margin-top: 40rpx; background: #fff; color: #f56c6c; text-align: center; padding: 30rpx; border-radius: 16rpx; font-size: 30rpx; border: 1rpx solid #fde2e2; }
+.me-logout:active { background: #fef0f0; }
+
+/* 底部导航 */
+.bottom-nav { height: 100rpx; background: #fff; border-top: 1rpx solid #e4e7ed; white-space: nowrap; }
+.nav-item { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 140rpx; height: 100rpx; color: #909399; }
+.nav-item.active { color: #409eff; background: #ecf5ff; }
+.nav-icon { font-size: 38rpx; }
+.nav-label { font-size: 20rpx; margin-top: 4rpx; }
+.nav-ico-wrap { position: relative; }
+.badge { position: absolute; top: -8rpx; right: -14rpx; min-width: 30rpx; height: 30rpx; padding: 0 6rpx; background: #f56c6c; color: #fff; font-size: 18rpx; line-height: 30rpx; text-align: center; border-radius: 15rpx; }
+
+/* 自定义顶部栏 */
+.topbar { height: 88rpx; flex-shrink: 0; background: #1d1e1f; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 22rpx; box-sizing: border-box; }
+.tb-title { font-size: 32rpx; font-weight: 600; }
+.tb-right { display: flex; align-items: center; }
+
+/* 全局通知铃铛（顶部栏右侧，点击进入通知中心�?*/
+.notify-bell { position: relative; width: 64rpx; height: 64rpx; background: rgba(255,255,255,.16); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.bell-ico { font-size: 34rpx; line-height: 1; }
+.bell-badge { position: absolute; top: -6rpx; right: -6rpx; min-width: 30rpx; height: 30rpx; padding: 0 6rpx; background: #f56c6c; color: #fff; font-size: 18rpx; line-height: 30rpx; text-align: center; border-radius: 15rpx; }
+
+/* 通知中心 */
+.noti { background: #fff; border: 1rpx solid #ebeef5; border-radius: 14rpx; padding: 20rpx 22rpx; margin-top: 16rpx; }
+.noti.unread { border-left: 6rpx solid #409eff; }
+.noti-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8rpx; }
+.noti-tag { font-size: 20rpx; padding: 4rpx 14rpx; border-radius: 20rpx; color: #fff; background: #909399; }
+.noti-tag.t-monthly_report { background: #67c23a; }
+.noti-tag.t-trend_push { background: #9b59b6; }
+.noti-time { font-size: 20rpx; color: #999; }
+.noti-title { font-size: 28rpx; font-weight: 600; display: block; margin: 4rpx 0 8rpx; color: #303133; }
+.noti-content { font-size: 25rpx; line-height: 1.7; color: #606266; white-space: pre-wrap; word-break: break-word; display: block; }
+.noti-img { width: 100%; max-width: 600rpx; margin-top: 16rpx; border-radius: 12rpx; }
+
+/* 弹窗 */
+.mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 99; }
+.dialog { width: 640rpx; background: #fff; border-radius: 16rpx; padding: 30rpx; max-height: 84vh; overflow-y: auto; }
+.dialog-title { font-size: 32rpx; font-weight: 600; display: block; margin-bottom: 20rpx; }
+.dialog-img { max-height: 360rpx; border-radius: 12rpx; margin: 16rpx auto; display: block; }
+.mini-btn.disabled { opacity: .5; }
+
+/* ===== 上传弹窗 DPSTAR 风格 ===== */
+.wh-upload-dialog { width: 660rpx; background: #fff; border-radius: 20rpx; max-height: 88vh; overflow-y: auto; display: flex; flex-direction: column; }
+.wh-dlg-head { display: flex; align-items: center; justify-content: space-between; padding: 24rpx 28rpx; border-bottom: 1rpx solid #f0f0f0; }
+.wh-dlg-back { font-size: 28rpx; color: #409eff; }
+.wh-dlg-title { font-size: 32rpx; font-weight: 600; color: #303133; }
+.wh-dlg-up-area { margin: 24rpx 28rpx 16rpx; background: #303133; border-radius: 12rpx; padding: 28rpx; display: flex; align-items: center; justify-content: center; gap: 12rpx; }
+.wh-dlg-up-area:active { opacity: .85; }
+.wh-dlg-up-ico { font-size: 34rpx; }
+.wh-dlg-up-txt { font-size: 28rpx; color: #fff; font-weight: 500; }
+.wh-dlg-batch { margin: 0 28rpx 20rpx; border: 2rpx dashed #dcdfe6; border-radius: 12rpx; padding: 22rpx; display: flex; align-items: center; justify-content: center; gap: 10rpx; }
+.wh-dlg-batch:active { background: #f5f7fa; }
+.wh-dlg-batch-ico { font-size: 30rpx; }
+.wh-dlg-batch-txt { font-size: 26rpx; color: #606266; }
+.wh-dlg-body { padding: 0 28rpx 28rpx; }
+.wh-dlg-preview { background: #f7f8fa; border-radius: 14rpx; padding: 20rpx; display: flex; align-items: center; justify-content: center; position: relative; min-height: 280rpx; }
+.wh-dlg-preview-img { max-width: 100%; max-height: 360rpx; border-radius: 10rpx; }
+.wh-dlg-detect { position: absolute; inset: 0; background: rgba(255,255,255,.85); display: flex; align-items: center; justify-content: center; border-radius: 14rpx; font-size: 27rpx; color: #409eff; font-weight: 500; }
+.wh-dlg-preview-tip { display: block; text-align: center; font-size: 23rpx; color: #c0c4cc; margin: 12rpx 0 20rpx; }
+.wh-dlg-form { display: flex; flex-direction: column; gap: 0; }
+.wh-dlg-row { display: flex; gap: 16rpx; margin-bottom: 0; }
+.wh-dlg-field { flex: 1; }
+.wh-dgl-label, .wh-dlg-label { font-size: 24rpx; color: #909399; margin-bottom: 8rpx; display: block; }
+.wh-dlg-input { width: 100%; height: 68rpx; background: #f5f7fa; border: 1rpx solid #e4e7ed; border-radius: 10rpx; padding: 0 16rpx; font-size: 27rpx; box-sizing: border-box; }
+.wh-dlg-picker { width: 100%; height: 68rpx; background: #f5f7fa; border: 1rpx solid #e4e7ed; border-radius: 10rpx; padding: 0 16rpx; font-size: 27rpx; box-sizing: border-box; display: flex; align-items: center; }
+.wh-dlg-pick-val { font-size: 27rpx; color: #303133; }
+.wh-dlg-pick-val.placeholder { color: #c0c4cc; }
+.wh-dlg-foot { display: flex; gap: 16rpx; margin-top: 28rpx; padding-top: 20rpx; border-top: 1rpx solid #f0f0f0; }
+.wh-dlg-btn { flex: 1; height: 80rpx; line-height: 80rpx; text-align: center; border-radius: 12rpx; font-size: 29rpx; font-weight: 500; }
+.wh-dlg-btn.cancel { background: #f5f7fa; color: #606266; }
+.wh-dlg-btn.save { background: #303133; color: #fff; }
+.wh-dlg-btn.ghost { background: #ecf5ff; color: #409eff; }
+.wh-dlg-btn.save.disabled { background: #c0c4cc; }
+.wh-dlg-btn.primary { background: #409eff; color: #fff; }
+.wh-dlg-btn.cancel.disabled { background: #ebeef5; color: #c0c4cc; }
+
+/* 批量编辑弹窗 */
+.wh-batch-dialog { width: 660rpx; background: #fff; border-radius: 20rpx; max-height: 88vh; overflow-y: auto; display: flex; flex-direction: column; }
+.wh-batch-body { padding: 24rpx 28rpx; }
+.wh-batch-img-wrap { height: 320rpx; background: #f7f8fa; border-radius: 14rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 20rpx; }
+.wh-batch-img { width: 100%; height: 100%; object-fit: contain; }
+.wh-batch-foot { display: flex; gap: 16rpx; padding: 20rpx 28rpx 28rpx; border-top: 1rpx solid #f0f0f0; }
+</style>

@@ -1,7 +1,24 @@
 # 项目排除路径
-/backend/.venv/
-/frontend/dist/
-/frontend/node_modules/
+# ===== 敏感数据（绝对不入库）=====
+backend/.env                    # API Key（DeepSeek / 智谱 / 千问）
+*.db                             # SQLite 数据库（app.db 等）
+backend/uploads/                # 运行时图片/上传文件
+.idea/                          # IDE 配置（可能含连接密码）
+
+# ===== 运行时产物 =====
+backend/.venv/
+frontend/dist/
+frontend/node_modules/
+frontend-web/dist/
+frontend-web/dist.old.*/
+logs/
+archive/
+_wh4.js                         # vite HMR 编译缓存
+.workbuddy/                     # AI 助手项目记忆（本地保留，不入库）
+__pycache__/
+*.pyc
+*.pyo
+
 /frontend/node_modules/@ampproject/remapping/
 /frontend/node_modules/@babel/parser/
 /frontend/node_modules/@babel/types/

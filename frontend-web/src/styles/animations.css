@@ -1,0 +1,266 @@
+/* =====================================================================
+ * animations.css —— 全局动效（学习项目风格：淡入上移 + 悬浮上浮 + 按下回弹）
+ * 配色复用 ai-wardrobe 浅蓝奶油色系：
+ *   主蓝 #7aa8ff / 浅蓝 #a9c6ff / 奶油白 #FDFBF7 / 强调珊瑚 #FF9E8E
+ *   墨蓝文字 #2D3A5A / 边框 #d6e5ff
+ * ===================================================================== */
+:root {
+  --wb-blue: #7aa8ff;
+  --wb-blue-light: #a9c6ff;
+  --wb-cream: #FDFBF7;
+  --wb-orange: #FF9E8E;
+  --wb-ink: #2D3A5A;
+  --wb-border: #d6e5ff;
+}
+
+/* 全局字体细节：抗锯齿 + 数字等宽对齐（价格/分数/日期不跳动） */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+.kpi-val,
+.m-value,
+.el-table .cell,
+.el-pagination,
+.stat-number,
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" on;
+  letter-spacing: 0;
+}
+
+
+/* ===================== 关键帧 ===================== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* ===================== 工具类 ===================== */
+.anim-fade-up   { animation: fadeInUp .4s ease both; }
+.anim-fade-slide{ animation: fadeInSlide .35s ease both; }
+.anim-pop       { animation: popIn .3s cubic-bezier(.2,.9,.4,1.1) both; }
+.anim-shake     { animation: shakeX .4s ease; }
+
+/* ===================== 标签页切换：容器与子块错落淡入 ===================== */
+/* 每个 tab 的 .page 容器在切换时（v-if 重挂）整体淡入上移 */
+.page { animation: fadeInSlide .35s ease both; width: 100%; height: 100%; }
+/* 直接子块依次浮现 */
+.page > * { animation: fadeInSlide .42s ease both; }
+.page > *:nth-child(1) { animation-delay: .02s; }
+.page > *:nth-child(2) { animation-delay: .09s; }
+.page > *:nth-child(3) { animation-delay: .16s; }
+.page > *:nth-child(4) { animation-delay: .23s; }
+.page > *:nth-child(5) { animation-delay: .30s; }
+.page > *:nth-child(n+6) { animation-delay: .34s; }
+
+/* ===================== 概览卡片 / 指标卡 / 通用面板 错落入场 ===================== */
+.quick-cards .q-card { animation: fadeInUp .45s ease both; }
+.quick-cards .q-card:nth-child(1) { animation-delay: .06s; }
+.quick-cards .q-card:nth-child(2) { animation-delay: .12s; }
+.quick-cards .q-card:nth-child(3) { animation-delay: .18s; }
+.quick-cards .q-card:nth-child(4) { animation-delay: .24s; }
+
+.metric-row .metric-card { animation: fadeInUp .45s ease both; }
+.metric-row .metric-card:nth-child(1) { animation-delay: .06s; }
+.metric-row .metric-card:nth-child(2) { animation-delay: .12s; }
+.metric-row .metric-card:nth-child(3) { animation-delay: .18s; }
+.metric-row .metric-card:nth-child(4) { animation-delay: .24s; }
+
+.card { animation: fadeInUp .5s ease both; }
+.dash-grid > .card:nth-child(1) { animation-delay: .10s; }
+.dash-grid > .card:nth-child(2) { animation-delay: .18s; }
+.dash-grid > .card:nth-child(3) { animation-delay: .26s; }
+
+/* ===================== 卡片悬浮上浮（拟物风浅阴影） ===================== */
+.q-card,
+.metric-card { transition: transform .22s ease, box-shadow .22s ease; }
+.q-card:hover,
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(45, 58, 90, .10), 0 2px 6px rgba(45, 58, 90, .06);
+}
+
+/* ===================== Element Plus 组件动效 ===================== */
+/* 按钮：悬浮上浮 + 按下回弹；B 端所有操作按钮统一胶囊形状 */
+.el-button { border-radius: 999px; transition: all .18s ease; }
+.el-button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(122, 168, 255, .22); }
+.el-button:active { transform: scale(.97); }
+.el-button--primary:hover { box-shadow: 0 6px 16px rgba(122, 168, 255, .35); }
+.el-button.is-circle:hover,
+.el-button.is-round:hover { transform: translateY(-1px); }
+
+/* 翻页器按钮同步胶囊（运营端无局部覆盖，搭配师端已在其局部样式改为胶囊） */
+.el-pagination .btn-prev,
+.el-pagination .btn-next,
+.el-pagination .el-pager li {
+  border-radius: 999px;
+}
+
+/* 输入框聚焦：浅蓝光环 */
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--wb-blue) inset, 0 0 0 3px rgba(122, 168, 255, .18) !important;
+}
+.el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px var(--wb-blue) inset, 0 0 0 3px rgba(122, 168, 255, .18) !important;
+}
+
+/* 表格：行悬浮浅蓝底 + 数据载入时逐行淡入 */
+.el-table tbody tr { transition: background-color .15s ease; }
+.el-table .el-table__row:hover > td.el-table__cell { background-color: #eef5ff !important; }
+.el-table__body-wrapper tbody tr { animation: fadeInSlide .3s ease both; }
+
+/* 加载/空态提示也柔和一点 */
+.el-empty, .el-loading-mask { animation: fadeInSlide .3s ease both; }
+
+/* 防止 Drawer/Dialog 打开时 body 滚动条消失导致页面宽度抖动 */
+html { overflow-y: scroll; }
+
+/* ===================== Dialog 平滑开关：防止关闭闪烁 ===================== */
+/* Element Plus dialog 默认过渡名 dialog-fade；这里固定 opacity/transform，避免与自定义样式冲突 */
+.dialog-fade-enter-active,
+.dialog-fade-leave-active { transition: opacity 0.22s ease !important; }
+.dialog-fade-enter-from,
+.dialog-fade-leave-to { opacity: 0 !important; }
+
+/* 在 dialog 内容本身也加一层统一过渡，防止关闭瞬间 transform 跳变 */
+.el-overlay-dialog .el-dialog {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.el-overlay-dialog .el-dialog.is-fade-leave-active,
+.el-overlay-dialog .el-dialog.is-fade-enter-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+/* =====================================================================
+ * 2026-08-21 扩展 —— 与 H5 三色系统 / 动效 token 对齐
+ * 主蓝 #7aa8ff / 淡薰衣草 #8B7AC0 / 珊瑚 #FF9E8E / 墨蓝 #2D3A5A
+ * ===================================================================== */
+:root {
+  --lav-50:  #F4EFFA;
+  --lav-100: #E8DEF3;
+  --lav-200: #D4C0E8;
+  --lav-400: #B19CD9;
+  --lav-600: #8B7AC0;
+  --lav-800: #5D4F80;
+  --coral: #FF9E8E;
+  --coral-light: #FFE9E2;
+  --coral-ink: #D66A60;
+}
+
+/* ---- 动效曲线 token（学习自 Apple / Linear / 小红书） ---- */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-move: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---- H5 同源关键帧 ---- */
+@keyframes wbFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes wbPop {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes wbBreath {
+  0%, 100% { opacity: .75; }
+  50%      { opacity: 1; }
+}
+@keyframes wbShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes wbGrowX {
+  from { width: 0; }
+}
+@keyframes wbCountPop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  70%  { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---- 统计数字入场跳动 ---- */
+.dash-hero .dash-title,
+.kpi-val,
+.metric-card .m-value { display: inline-block; animation: wbCountPop .5s var(--ease-spring) both; }
+
+/* ---- 概览横幅 / Hero 区入场 ---- */
+.dash-hero { animation: wbFadeUp .5s var(--ease-out) both; }
+
+/* ---- 侧边栏菜单项：错落滑入 ---- */
+.sl-menu-item { animation: wbFadeUp .4s var(--ease-out) both; }
+.sl-menu-item:nth-child(1) { animation-delay: .03s; }
+.sl-menu-item:nth-child(2) { animation-delay: .08s; }
+.sl-menu-item:nth-child(3) { animation-delay: .13s; }
+.sl-menu-item:nth-child(4) { animation-delay: .18s; }
+.sl-menu-item:nth-child(5) { animation-delay: .23s; }
+.sl-menu-item:nth-child(n+6) { animation-delay: .26s; }
+
+/* ---- 通知/任务点呼吸（未完成态） ---- */
+.noti-task-dot,
+.noti-dot.pending { animation: wbBreath 2.2s ease-in-out infinite; }
+
+/* ---- 进度条：宽度增长 + 渐变流动 ---- */
+.kb-progress-fill,
+.el-progress-bar__inner { animation: wbGrowX .9s var(--ease-out) both; }
+
+/* ---- 骨架屏 shimmer（Linear 风格） ---- */
+.wb-skel {
+  background: linear-gradient(90deg, #eef5ff 0%, #f4f8ff 50%, #eef5ff 100%);
+  background-size: 200% 100%;
+  animation: wbShimmer 1.4s linear infinite;
+  border-radius: 10px;
+}
+
+/* ---- 侧边栏品牌 logo 呼吸光晕（学习自小红书品牌点） ---- */
+.sl-brand-logo { animation: wbBreath 3.2s ease-in-out infinite; }
+
+/* ---- 卡片 hover：更精致的拟物提浮（学习自 Emil Kowalski） ---- */
+.kpi-card,
+.q-card,
+.metric-card,
+.health-card { transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out); }
+.kpi-card:hover,
+.q-card:hover,
+.metric-card:hover,
+.health-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 34px rgba(122, 168, 255, .16), 0 4px 10px rgba(45, 58, 90, .06);
+}
+
+/* ---- 标签页 Tab 切换：胶囊高亮呼吸 ---- */
+.el-tabs__item.is-active { animation: wbPop .3s var(--ease-spring) both; }
+
+/* ---- 页面切换时子块错落（与 H5 一致，加深覆盖） ---- */
+.page > *:nth-child(1) { animation: wbFadeUp .45s var(--ease-out) both; }
+.page > *:nth-child(2) { animation: wbFadeUp .45s .06s var(--ease-out) both; }
+.page > *:nth-child(3) { animation: wbFadeUp .45s .12s var(--ease-out) both; }
+.page > *:nth-child(4) { animation: wbFadeUp .45s .18s var(--ease-out) both; }
+.page > *:nth-child(n+5) { animation: wbFadeUp .45s .24s var(--ease-out) both; }
+
+/* ---- 无障碍：尊重 prefers-reduced-motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
