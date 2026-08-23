@@ -88,15 +88,8 @@
           </view>
         </view>
 
-        <!-- 搭配审核入口 -->
-        <view class="section-head">
-          <text class="section-title">搭配工具</text>
-        </view>
+        <!-- 搭配审核入口已下线 -->
         <view class="tool-list">
-          <view class="tool-tile" @click="startSelfOutfit">
-            <view class="tool-icon-wrap blue"><icon-svg name="check" :size="42"></icon-svg></view>
-            <text class="tool-label">搭配审核</text>
-          </view>
           <view class="tool-tile" @click="goWardrobe">
             <view class="tool-icon-wrap lav"><icon-svg name="shirt" :size="42"></icon-svg></view>
             <text class="tool-label">我的衣橱</text>
@@ -1965,11 +1958,17 @@ function switchView(key) {
     openNotifyDrawer()
     return
   }
+  // 搭配审核界面已下线，任何进入 outfit 的入口都回到首页
+  if (key === 'outfit') {
+    key = 'today'
+  }
   currentView.value = key
   if (key === 'profile') {
     loadProfile()
   } else if (key === 'wardrobe') {
     loadOutfits()
+  } else if (key === 'analysis') {
+    fetchAnalysis()
   }
 }
 function setFilter(k) { wardrobeFilter.value = k }
@@ -2582,11 +2581,10 @@ async function deleteItem(id) {
 // 衣橱卡片长按操作菜单
 function showCardMenu(item) {
   uni.showActionSheet({
-    itemList: ['加入搭配审核', '编辑信息', '删除这件衣服'],
+    itemList: ['编辑信息', '删除这件衣服'],
     success: (res) => {
-      if (res.tapIndex === 0) pickItem(item.id)
-      else if (res.tapIndex === 2) deleteItem(item.id)
-      else if (res.tapIndex === 1) openDetail(item, true)  // 编辑信息 → 打开详情并直接进入编辑
+      if (res.tapIndex === 1) deleteItem(item.id)
+      else if (res.tapIndex === 0) openDetail(item, true)  // 编辑信息 → 打开详情并直接进入编辑
     }
   })
 }
