@@ -3,6 +3,20 @@
     <!-- 背景紫色光晕 -->
     <view class="glow glow-1"></view>
     <view class="glow glow-2"></view>
+
+    <!-- 账号被禁用提醒（显示 3 秒后淡出） -->
+    <view class="ban-toast-wrap">
+      <transition name="ban-fade">
+        <view v-if="banToast" class="ban-toast">
+          <svg class="ban-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>
+          </svg>
+          <text class="ban-tx">{{ banMsg }}</text>
+        </view>
+      </transition>
+    </view>
+
     <!-- 底部波浪 -->
     <svg class="bottom-wave" viewBox="0 0 375 120" preserveAspectRatio="none" aria-hidden="true">
       <path
@@ -165,6 +179,15 @@ const err = ref('')
 const loading = ref(false)
 const showPwd = ref(false)
 const remember = ref(false)
+const banToast = ref(false)
+const banMsg = ref('该账号已被禁用，请联系管理员')
+let banTimer = null
+function showBan(text) {
+  banMsg.value = text || '该账号已被禁用，请联系管理员'
+  banToast.value = true
+  if (banTimer) clearTimeout(banTimer)
+  banTimer = setTimeout(() => { banToast.value = false }, 3000)
+}
 
 function onUser(e) { username.value = e.detail.value }
 function onPwd(e) { password.value = e.detail.value }
@@ -220,6 +243,11 @@ async function onLogin() {
     await saveSession(d, u)
   } catch (e) {
     const msg = e && e.data && e.data.detail ? e.data.detail : '登录失败，请检查后端'
+    if (msg.indexOf('禁用') !== -1) {
+      showBan()
+      loading.value = false
+      return
+    }
     err.value = msg
     loading.value = false
   }
@@ -540,5 +568,41 @@ async function onRegister() {
   color: #B0B7C3;
   text-align: center;
   margin-top: 14px;
+}
+
+/* 账号被禁用提醒：顶部居中浮层，显示 3 秒后淡出 */
+.ban-toast-wrap {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 60;
+  pointer-events: none;
+}
+.ban-toast {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 84%;
+  padding: 11px 18px;
+  border-radius: 14px;
+  background: rgba(229, 72, 77, 0.96);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  box-shadow: 0 10px 28px rgba(229, 72, 77, 0.32);
+}
+.ban-ic { width: 17px; height: 17px; flex: 0 0 17px; }
+.ban-tx { flex: 1; }
+/* 淡入 + 3 秒后淡出 */
+.ban-fade-enter-active { transition: opacity .3s ease, transform .3s cubic-bezier(.22, 1, .36, 1); }
+.ban-fade-leave-active { transition: opacity .6s ease, transform .6s ease; }
+.ban-fade-enter-from { opacity: 0; transform: translateY(-12px); }
+.ban-fade-leave-to { opacity: 0; transform: translateY(-12px); }
+@media (prefers-reduced-motion: reduce) {
+  .ban-fade-enter-active, .ban-fade-leave-active { transition: none; }
 }
 </style>
