@@ -587,13 +587,16 @@ async function onRegister() {
   gap: 7px;
   max-width: 84%;
   padding: 11px 18px;
-  border-radius: 14px;
-  background: rgba(229, 72, 77, 0.96);
-  color: #fff;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #2D3A5A;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.35;
-  box-shadow: 0 10px 28px rgba(229, 72, 77, 0.32);
+  border: 1px solid rgba(45, 58, 90, 0.08);
+  box-shadow: 0 8px 24px rgba(45, 58, 90, 0.12);
 }
 .ban-ic { width: 17px; height: 17px; flex: 0 0 17px; }
 .ban-tx { flex: 1; }
