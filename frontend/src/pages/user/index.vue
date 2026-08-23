@@ -1512,7 +1512,12 @@ const groupedWardrobe = computed(() => {
     list = list.filter(i => (i.season || '').includes(seasonFilter.value))
   }
   if (styleFilter.value !== 'all') {
-    list = list.filter(i => (i.style || '').includes(styleFilter.value))
+    const kw = styleFilter.value
+    list = list.filter(i =>
+      (i.style || '').includes(kw) ||
+      (i.occasion || '').includes(kw) ||
+      parseTags(i).includes(kw)
+    )
   }
   const groups = []
   for (const c of catList.filter(x => x.k !== 'all')) {
