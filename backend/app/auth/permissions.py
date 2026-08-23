@@ -24,7 +24,7 @@ def get_current_user(authorization: str = Header(None), db: Session = Depends(ge
     user = db.query(User).filter(User.id == uid).first()
     if not user:
         raise HTTPException(status_code=401, detail="用户不存在")
-    if getattr(user, "is_active", True) is False:
+    if not getattr(user, "is_active", True):
         raise HTTPException(status_code=403, detail="账号已被禁用")
     return user
 

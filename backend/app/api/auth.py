@@ -48,7 +48,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == req.username).first()
     if not user or user.password_hash != hash_password(req.password):
         raise HTTPException(status_code=401, detail="用户名或密码错误")
-    if getattr(user, "is_active", True) is False:
+    if not getattr(user, "is_active", True):
         raise HTTPException(status_code=401, detail="账号已被禁用")
     # 记录本次登录时间与地点（用用户资料里已有的真实城市）
     user.last_login_at = datetime.now()
@@ -117,7 +117,7 @@ def me(authorization: str = Header(None), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == uid).first()
     if not user:
         raise HTTPException(status_code=401, detail="用户不存在")
-    if getattr(user, "is_active", True) is False:
+    if not getattr(user, "is_active", True):
         raise HTTPException(status_code=403, detail="账号已被禁用")
     return {
         "user_id": user.id,
