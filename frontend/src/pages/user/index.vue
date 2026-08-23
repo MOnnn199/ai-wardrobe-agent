@@ -2972,7 +2972,8 @@ const COLOR_HEX_MAP = {
   '金色': '#ffd700', '银色': '#c0c0c0', '杏色': '#ffdead'
 }
 function getItemColorHex(item) {
-  return COLOR_HEX_MAP[item.color] || COLOR_HEX_MAP[item.color?.replace('系','')] || '#e0e0e0'
+  if (!item || !item.color) return '#e0e0e0'
+  return COLOR_HEX_MAP[item.color] || COLOR_HEX_MAP[item.color.replace('系', '')] || '#e0e0e0'
 }
 async function openHistoryDrawer() {
   fetchConversations()
