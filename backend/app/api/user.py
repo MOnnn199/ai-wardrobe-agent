@@ -75,8 +75,8 @@ def update_clothing(item_id: int, data: ClothingUpdate, db: Session = Depends(ge
     return item
 
 @router.delete('/wardrobe/{item_id}')
-def delete_clothing(item_id: int, db: Session = Depends(get_db)):
-    item = db.query(ClothingItem).filter(ClothingItem.id == item_id).first()
+def delete_clothing(item_id: int, user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
+    item = db.query(ClothingItem).filter(ClothingItem.id == item_id, ClothingItem.user_id == user_id).first()
     if not item:
         raise HTTPException(404, '衣物不存在')
     db.delete(item)
@@ -428,7 +428,8 @@ def outfit_review(data: dict = Body(default={}), user_id: int = Depends(resolve_
 # ===== Wardrobe Analysis =====
 @router.get('/wardrobe-analysis')
 def wardrobe_analysis(user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id).all()
+    items = db.query(ClothingItem).filter(
+        ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
     if not items:
         return WardrobeAnalysisResponse(
             total_items=0, category_distribution={}, season_distribution={},
@@ -498,7 +499,8 @@ def wardrobe_analysis(user_id: int = Depends(resolve_user_id), db: Session = Dep
 # ===== Shopping List Suggestions =====
 @router.get('/shopping-list')
 def shopping_list(user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id).all()
+    items = db.query(ClothingItem).filter(
+        ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
     cats = {i.category for i in items}
     has_upper = 'top' in cats or 'dress' in cats
     has_lower = 'bottom' in cats or 'dress' in cats

@@ -2547,7 +2547,7 @@ async function deleteItem(id) {
     title: '确定删除?',
     success: async (r) => {
       if (r.confirm) {
-        try { await del('/user/wardrobe/' + id); if (showDetail.value) showDetail.value = false; fetchWardrobe(); fetchShoppingList(); uni.showToast({ title: '已删除', icon: 'success' }) } catch (e) {}
+        try { await del('/user/wardrobe/' + id); if (showDetail.value) showDetail.value = false; fetchWardrobe(); fetchShoppingList(); fetchAnalysis(); uni.showToast({ title: '已删除', icon: 'success' }) } catch (e) {}
       }
     }
   })
