@@ -1653,7 +1653,10 @@ async function fetchWardrobe() {
 }
 function fmtShortTime(iso) {
   if (!iso) return ''
-  const d = new Date(iso)
+  const s = String(iso).trim()
+  // 后端 created_at 为 UTC，但返回的 ISO 字符串不带 Z；无偏移时视为 UTC
+  const hasTz = /Z$|[+-]\d{2}:?\d{2}$/.test(s)
+  const d = new Date(hasTz ? s : s + 'Z')
   if (isNaN(d.getTime())) return String(iso)
   const p = n => String(n).padStart(2, '0')
   return p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes())

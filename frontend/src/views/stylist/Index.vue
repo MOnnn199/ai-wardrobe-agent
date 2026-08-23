@@ -8,7 +8,9 @@
           <el-table-column prop="conversation_id" label="对话ID" width="80" />
           <el-table-column prop="error_type" label="错误类型" width="100" />
           <el-table-column prop="status" label="状态" width="80" />
-          <el-table-column prop="created_at" label="时间" />
+          <el-table-column label="时间">
+            <template #default="{row}">{{ fmtLocalTime(row.created_at) }}</template>
+          </el-table-column>
           <el-table-column label="操作">
             <template #default="{row}">
               <el-button size="small" @click="viewCorrection(row)">查看</el-button>
@@ -54,7 +56,9 @@
           <el-table-column prop="text" label="内容" min-width="400">
             <template #default="{row}">{{ row.text.substring(0,100) }}...</template>
           </el-table-column>
-          <el-table-column prop="created_at" label="上传时间" width="160" />
+          <el-table-column label="上传时间" width="160">
+            <template #default="{row}">{{ fmtLocalTime(row.created_at) }}</template>
+          </el-table-column>
           <el-table-column label="操作" width="80">
             <template #default="{row}">
               <el-button text type="danger" size="small" @click="deleteChunk(row.chunk_id)">删除</el-button>
@@ -108,6 +112,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+
+function fmtLocalTime(s) {
+  if (!s) return ''
+  const iso = String(s).trim()
+  const hasTz = /Z$|[+-]\d{2}:?\d{2}$/.test(iso)
+  const d = new Date(hasTz ? iso : iso + 'Z')
+  if (isNaN(d.getTime())) return s
+  const p = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+}
 
 const tab = ref('corrections')
 const corrections = ref([])

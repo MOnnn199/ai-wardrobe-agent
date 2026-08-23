@@ -198,7 +198,7 @@
             <div class="history-meta">
               <el-tag v-if="conv.score>=4" size="small" type="success">{{ conv.score }}分</el-tag>
               <el-tag v-else-if="conv.score<=2&&conv.score>0" size="small" type="danger">{{ conv.score }}分</el-tag>
-              <span style="font-size:12px;color:#999">{{ conv.created_at }}</span>
+              <span style="font-size:12px;color:#999">{{ fmtLocalTime(conv.created_at) }}</span>
             </div>
           </div>
           <el-empty v-if="conversations.length===0" description="暂无对话记录" />
@@ -308,6 +308,18 @@ async function fetchWardrobe() {
 }
 async function fetchConversations() {
   try { conversations.value = await get('/user/conversations') } catch {}
+}
+
+// 后端 created_at 为 UTC，但返回的 ISO 字符串不带 Z；转成浏览器本地时间显示
+function fmtLocalTime(s) {
+  if (!s) return ''
+  const iso = String(s).trim()
+  // 无偏移则视为 UTC
+  const hasTz = /Z$|[+-]\d{2}:?\d{2}$/.test(iso)
+  const d = new Date(hasTz ? iso : iso + 'Z')
+  if (isNaN(d.getTime())) return s
+  const p = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }
 async function fetchAnalysis() {
   try { analysis.value = await (await fetch('/api/user/wardrobe-analysis')).json() } catch {}
