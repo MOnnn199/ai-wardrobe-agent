@@ -345,7 +345,7 @@
             <template #default="{row}">
               <el-button size="small" @click="viewUserWardrobe(row)">衣橱</el-button>
               <el-button v-if="row.is_active" size="small" type="danger" plain @click="toggleUser(row, false)">禁用</el-button>
-              <el-button v-else size="small" type="success" plain @click="toggleUser(row, true)">恢复</el-button>
+              <el-button v-else size="small" type="primary" @click="toggleUser(row, true)">恢复</el-button>
             </template>
           </el-table-column>
         </el-table>
