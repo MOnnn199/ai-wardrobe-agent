@@ -42,6 +42,70 @@ def _user_location(user: User) -> dict:
     return {'city': user.city or '', 'lat': user.lat, 'lon': user.lon}
 
 
+# 场景推荐：每个场景适合的款式/颜色关键词（用于给单品打分）
+_SCENE_PREFERENCES = {
+    'commute':  {'styles': ['简约', '通勤', '商务', '休闲', '基础'], 'colors': ['黑', '白', '灰', '蓝', '米', '驼', '藏青']},
+    'date':     {'styles': ['优雅', '精致', '温柔', '浪漫', '气质'], 'colors': ['粉', '白', '米', '红', '黑', '蓝']},
+    'sport':    {'styles': ['运动', '休闲', '舒适', '透气'], 'colors': ['黑', '白', '灰', '蓝', '绿']},
+    'wedding':  {'styles': ['正式', '优雅', '礼服', '端庄'], 'colors': ['黑', '白', '米', '粉', '红', '藏青']},
+    'party':    {'styles': ['时尚', '亮眼', '个性', '酷'], 'colors': ['黑', '红', '金', '银', '白']},
+    'travel':   {'styles': ['舒适', '休闲', '百搭', '轻便'], 'colors': ['白', '米', '蓝', '黑', '卡其']},
+    'interview':{'styles': ['正式', '商务', '专业', '稳重', '简约'], 'colors': ['黑', '白', '灰', '藏青', '蓝', '米']},
+}
+
+
+def _score_item_for_scene(item: ClothingItem, scene: str) -> int:
+    """按场景给单品打适合分，分数越高越适合。"""
+    prefs = _SCENE_PREFERENCES.get(scene, _SCENE_PREFERENCES['commute'])
+    score = 0
+    text = f"{item.name or ''} {item.style or ''} {item.color or ''} {item.occasion or ''}"
+    text_lo = text.lower()
+    for kw in prefs['styles']:
+        if kw in text_lo: score += 3
+    for kw in prefs['colors']:
+        if kw in text_lo: score += 2
+    # 面试/婚礼等正式场合，贬抑过于休闲或童趣的元素
+    if scene in ('interview', 'wedding'):
+        casual_kws = ['卡通', '可爱', '短裤', '拖鞋', '运动', '睡衣', '居家']
+        for kw in casual_kws:
+            if kw in text_lo: score -= 5
+    return score
+
+
+def _pick_outfit_items(items: list[ClothingItem], scene: str) -> list[ClothingItem]:
+    """从衣橱中精选一套搭配：每品类最多一件，连衣裙可替代上装+下装。"""
+    by_cat: dict[str, list[ClothingItem]] = {}
+    for it in items:
+        by_cat.setdefault(it.category, []).append(it)
+    # 按场景适合度排序
+    for cat in by_cat:
+        by_cat[cat].sort(key=lambda x: _score_item_for_scene(x, scene), reverse=True)
+
+    picked: list[ClothingItem] = []
+    used_cats = set()
+
+    # 核心：连衣裙 or 上装+下装
+    if 'dress' in by_cat and by_cat['dress']:
+        picked.append(by_cat['dress'][0])
+        used_cats.update(['dress'])
+    else:
+        if 'top' in by_cat and by_cat['top']:
+            picked.append(by_cat['top'][0])
+            used_cats.add('top')
+        if 'bottom' in by_cat and by_cat['bottom']:
+            picked.append(by_cat['bottom'][0])
+            used_cats.add('bottom')
+
+    # 可选补充：外套、鞋子、配饰（每类最多一件，且按场景排序后取最搭）
+    for cat in ['outer', 'shoes', 'accessory']:
+        if cat in by_cat and cat not in used_cats:
+            # 在已有 picked 基础上，选颜色/风格最协调的；简单做法：取该类场景分最高者
+            picked.append(by_cat[cat][0])
+            used_cats.add(cat)
+
+    return picked[:5]  # 最多 5 件，避免过多
+
+
 @router.get('/scenes')
 def list_scenes():
     return [{'key': k, 'label': v['label'], 'prompt': v['prompt']} for k, v in SCENES.items()]
@@ -68,15 +132,24 @@ def quick_recommend(data: SceneRecommendRequest = None, scene: str = 'commute',
 
     from app.agent.init_tools import tool_registry
     from app.agent.react_agent import ReActAgent
-    item_desc = json.dumps([{
+
+    # 先程序化精选一套搭配（每品类一件），再让 AI 为这套搭配写推荐理由
+    picked = _pick_outfit_items(items, scene)
+    picked_desc = json.dumps([{
+        'id': i.id, 'name': i.name, 'category': i.category, 'color': i.color, 'style': i.style,
+        'season': i.season, 'occasion': i.occasion,
+    } for i in picked], ensure_ascii=False)
+    all_desc = json.dumps([{
         'name': i.name, 'category': i.category, 'color': i.color, 'style': i.style,
         'season': i.season, 'occasion': i.occasion,
     } for i in items], ensure_ascii=False)
     prompt = (
         f'用户需要【{meta["label"]}】场景的穿搭：{meta["prompt"]}。'
         f'{("补充需求：" + note + "。") if note else ""}'
-        f'我的衣橱里有这些衣服：{item_desc}。请结合天气与场合，从我的衣橱里挑选单品，'
-        f'推荐 2-3 套具体可穿的方案，每套列出用到的单品名称与推荐理由。'
+        f'我已经从他的衣橱里精选了这套搭配：{picked_desc}。'
+        f'完整衣橱：{all_desc}。'
+        f'请结合天气与场合，仅围绕这套精选搭配写一段推荐语：说明每件单品在整体中的作用、为什么这样搭、以及适合 {meta["label"]} 场合。'
+        f'不要推荐其他备选方案，只讲这一套。'
     )
     # 优先使用前端传来的实时定位，否则回退到用户资料里的城市/坐标
     loc_city = (body.city if body else None) or user.city or ''
@@ -93,13 +166,14 @@ def quick_recommend(data: SceneRecommendRequest = None, scene: str = 'commute',
 
     outfit_image = None
     try:
-        outfit_image = _render_collage(items, f'scene_{scene}_{user_id}', meta['label'],
+        outfit_image = _render_collage(picked, f'scene_{scene}_{user_id}', meta['label'],
                                        'http://localhost:8000')
     except Exception as e:
         print('quick recommend collage failed:', e)
 
     return {'recommendation': result, 'conversation_id': conv.id,
-            'outfit_image': outfit_image, 'scene': scene}
+            'outfit_image': outfit_image, 'scene': scene,
+            'item_ids': [i.id for i in picked]}
 
 
 # ===================== 自定义套装（FR-C2）=====================

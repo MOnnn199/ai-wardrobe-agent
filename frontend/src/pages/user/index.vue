@@ -1365,13 +1365,18 @@ function scrollMainToTop() {
 const sceneResult = ref(null)
 const sceneIcons = {}
 
-// 从场景推荐文案中匹配衣橱单品，用于卡片化展示
+// 场景推荐命中的单品：优先使用后端返回的 item_ids， Fallback 从文案中匹配
 const sceneItems = computed(() => {
   if (!sceneResult.value?.recommendation) return []
+  const ids = sceneResult.value.item_ids || []
+  if (ids && ids.length) {
+    const map = new Map(wardrobe.value.map(it => [it.id, it]))
+    return ids.map(id => map.get(id)).filter(Boolean)
+  }
+  // Fallback：按名称长度降序，避免短名被长名包含时误匹配
   const text = sceneResult.value.recommendation
   const matched = []
   const seen = new Set()
-  // 按名称长度降序，避免短名被长名包含时误匹配
   const sorted = [...wardrobe.value].sort((a, b) => b.name.length - a.name.length)
   for (const it of sorted) {
     if (text.includes(it.name) && !seen.has(it.id)) {
