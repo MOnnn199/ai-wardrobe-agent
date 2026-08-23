@@ -912,6 +912,18 @@
           </view>
           <view class="wh-dlg-row">
             <view class="wh-dlg-field">
+              <text class="wh-dlg-label">材质</text>
+              <input class="wh-dlg-input" :value="batchEditList[batchEditIndex].material" placeholder="例：棉"
+                     @input="e => onBatchFormInput(e, 'material')" />
+            </view>
+            <view class="wh-dlg-field">
+              <text class="wh-dlg-label">图案</text>
+              <input class="wh-dlg-input" :value="batchEditList[batchEditIndex].pattern" placeholder="例：纯色"
+                     @input="e => onBatchFormInput(e, 'pattern')" />
+            </view>
+          </view>
+          <view class="wh-dlg-row">
+            <view class="wh-dlg-field">
               <text class="wh-dlg-label">季节</text>
               <input class="wh-dlg-input" :value="batchEditList[batchEditIndex].season" placeholder="例：四季"
                      @input="e => onBatchFormInput(e, 'season')" />
@@ -925,10 +937,16 @@
           </view>
         </view>
       </view>
-      <view class="wh-batch-foot">
-        <view class="wh-dlg-btn cancel" :class="{ disabled: batchEditIndex === 0 }" @click="prevBatchItem">上一件</view>
-        <view class="wh-dlg-btn save" :class="{ disabled: batchEditIndex === batchEditList.length - 1 }" @click="nextBatchItem">下一件</view>
-        <view class="wh-dlg-btn primary" @click="confirmBatchEdit">全部保存</view>
+      <view class="wh-batch-foot two-row">
+        <view class="wh-batch-foot-row">
+          <view class="wh-dlg-btn cancel flex1" :class="{ disabled: batchEditIndex === 0 }" @click="prevBatchItem">上一件</view>
+          <view class="wh-dlg-btn save flex1" @click="skipBatchItem">跳过这件</view>
+          <view class="wh-dlg-btn cancel flex1" :class="{ disabled: batchEditIndex === batchEditList.length - 1 }" @click="nextBatchItem">下一件</view>
+        </view>
+        <view class="wh-batch-foot-row">
+          <view class="wh-dlg-btn primary flex1" @click="saveSingleBatchItem">保存这件</view>
+          <view class="wh-dlg-btn primary flex1" @click="confirmBatchEdit">保存全部</view>
+        </view>
       </view>
     </view>
   </view>
@@ -1080,6 +1098,14 @@
       </view>
     </view>
 
+    <!-- 批量上传识别加载层（与场景推荐同风格） -->
+    <view v-if="batchDetecting" class="scene-loading-mask">
+      <view class="scene-loading-card">
+        <view class="scene-loading-spinner"></view>
+        <text class="scene-loading-text">{{ batchDetectText }}</text>
+      </view>
+    </view>
+
     <!-- 结果层：非交互式遮罩 + 居中紧凑卡片，背景可滚动，按钮用配对色（薰衣草）渐变 -->
     <view v-if="sceneResult">
       <view class="scene-backdrop" @click="sceneResult = null"></view>
@@ -1180,6 +1206,9 @@ const uploadForm = ref({ name: '', category: 'top', color: '', style: '', materi
 const showBatchEdit = ref(false)
 const batchEditList = ref([])
 const batchEditIndex = ref(0)
+// 批量上传识别 loading（与场景推荐同风格）
+const batchDetecting = ref(false)
+const batchDetectText = ref('')
 
 // 衣物详情 / 编辑
 const showDetail = ref(false)
@@ -2275,12 +2304,13 @@ async function chooseBatchImages() {
     const res = await uni.chooseImage({ count: 10, sizeType: ['compressed'], sourceType: ['album', 'camera'] })
     const files = res.tempFilePaths
     if (!files || !files.length) return
-    uni.showLoading({ title: `正在识别 ${files.length} 张...`, mask: true })
+    batchDetectText.value = `正在识别 ${files.length} 张...`
+    batchDetecting.value = true
     const list = []
     let fail = 0
     for (const f of files) {
       try {
-        const d = await upload('/user/wardrobe/upload-and-tag', f)
+        const d = await upload('/user/wardrobe/upload-and-tag', f, 'file', { status: 'pending', purchase_date: new Date().toISOString().slice(0, 10) })
         const it = d.item || {}
         const t = d.tags || {}
         list.push({
@@ -2290,12 +2320,14 @@ async function chooseBatchImages() {
           category: t.category || 'top',
           color: t.color || '',
           style: t.style || '',
+          material: t.material || '',
+          pattern: t.pattern || '',
           season: t.season || '',
-          purchase_date: new Date().toISOString().slice(0, 10)
+          purchase_date: new Date().toISOString().slice(0, 10),
+          _saved: false
         })
       } catch (e) { fail++ }
     }
-    uni.hideLoading()
     if (list.length) {
       batchEditList.value = list
       batchEditIndex.value = 0
@@ -2305,6 +2337,9 @@ async function chooseBatchImages() {
       uni.showToast({ title: `${fail} 张识别失败`, icon: 'none' })
     }
   } catch (e) { /* 用户取消 */ }
+  finally {
+    batchDetecting.value = false
+  }
 }
 function onPurchaseDateChange(e) {
   purchaseDate.value = e.detail.value
@@ -2341,13 +2376,30 @@ function resetUpload() {
 }
 
 // ===== 批量编辑 =====
+// 将未保存的 pending 单品标记为 discarded，避免关闭弹窗后仍出现在衣橱
+async function discardPendingItems(items) {
+  const pending = (items || []).filter(it => it.id && !it._saved)
+  for (const it of pending) {
+    try { await put('/user/wardrobe/' + it.id, { status: 'discarded' }) } catch (e) {}
+  }
+}
 function closeBatchEdit() {
+  const remaining = batchEditList.value.slice()
   showBatchEdit.value = false
   batchEditList.value = []
   batchEditIndex.value = 0
+  discardPendingItems(remaining)
 }
-function prevBatchItem() { if (batchEditIndex.value > 0) batchEditIndex.value-- }
-function nextBatchItem() { if (batchEditIndex.value < batchEditList.value.length - 1) batchEditIndex.value++ }
+function prevBatchItem() {
+  let i = batchEditIndex.value - 1
+  while (i >= 0 && batchEditList.value[i] && batchEditList.value[i]._saved) i--
+  if (i >= 0) batchEditIndex.value = i
+}
+function nextBatchItem() {
+  let i = batchEditIndex.value + 1
+  while (i < batchEditList.value.length && batchEditList.value[i] && batchEditList.value[i]._saved) i++
+  if (i < batchEditList.value.length) batchEditIndex.value = i
+}
 function onBatchFormInput(e, key) {
   const v = e && e.detail && typeof e.detail.value === 'string' ? e.detail.value : e && typeof e.target.value === 'string' ? e.target.value : String(e || '')
   if (batchEditList.value[batchEditIndex.value]) batchEditList.value[batchEditIndex.value][key] = v
@@ -2358,24 +2410,83 @@ function onBatchCatChange(e) {
 function onBatchPurchaseDateChange(e) {
   if (batchEditList.value[batchEditIndex.value]) batchEditList.value[batchEditIndex.value].purchase_date = e.detail.value
 }
+async function saveSingleBatchItem() {
+  const it = batchEditList.value[batchEditIndex.value]
+  if (!it) return
+  try {
+    await put('/user/wardrobe/' + it.id, {
+      name: it.name || '衣物',
+      category: it.category || 'top',
+      color: it.color || '',
+      style: it.style || '',
+      material: it.material || '',
+      pattern: it.pattern || '',
+      season: it.season || '',
+      purchase_date: it.purchase_date || null,
+      status: 'confirmed'
+    })
+    it._saved = true
+    uni.showToast({ title: '已保存', icon: 'success' })
+    const nextIdx = batchEditList.value.findIndex((x, i) => i > batchEditIndex.value && !x._saved)
+    if (nextIdx !== -1) {
+      batchEditIndex.value = nextIdx
+    } else {
+      const firstIdx = batchEditList.value.findIndex(x => !x._saved)
+      if (firstIdx !== -1 && firstIdx !== batchEditIndex.value) {
+        batchEditIndex.value = firstIdx
+      } else {
+        // 全部已保存
+        showBatchEdit.value = false
+        batchEditList.value = []
+        batchEditIndex.value = 0
+        fetchWardrobe()
+        fetchShoppingList()
+      }
+    }
+  } catch (e) {
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
+}
+async function skipBatchItem() {
+  const it = batchEditList.value[batchEditIndex.value]
+  if (it && it.id) {
+    try { await put('/user/wardrobe/' + it.id, { status: 'discarded' }) } catch (e) {}
+  }
+  batchEditList.value.splice(batchEditIndex.value, 1)
+  if (!batchEditList.value.length) {
+    showBatchEdit.value = false
+    batchEditIndex.value = 0
+    return
+  }
+  if (batchEditIndex.value >= batchEditList.value.length) batchEditIndex.value = batchEditList.value.length - 1
+}
 async function confirmBatchEdit() {
   uni.showLoading({ title: '保存中...', mask: true })
   let success = 0, fail = 0
   for (const it of batchEditList.value) {
+    if (it._saved) continue
     try {
       await put('/user/wardrobe/' + it.id, {
         name: it.name || '衣物',
         category: it.category || 'top',
         color: it.color || '',
         style: it.style || '',
+        material: it.material || '',
+        pattern: it.pattern || '',
         season: it.season || '',
-        purchase_date: it.purchase_date || null
+        purchase_date: it.purchase_date || null,
+        status: 'confirmed'
       })
+      it._saved = true
       success++
     } catch (e) { fail++ }
   }
   uni.hideLoading()
-  closeBatchEdit()
+  showBatchEdit.value = false
+  const remaining = batchEditList.value.filter(it => !it._saved)
+  batchEditList.value = []
+  batchEditIndex.value = 0
+  await discardPendingItems(remaining)
   fetchWardrobe()
   fetchShoppingList()
   uni.showToast({ title: `成功保存 ${success} 件${fail ? `，失败 ${fail} 件` : ''}`, icon: success > 0 ? 'success' : 'none' })
@@ -4107,6 +4218,9 @@ onMounted(() => {
 .wh-batch-img-wrap { height: 320rpx; background: #eef5ff; border-radius: 14rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 20rpx; }
 .wh-batch-img { width: 100%; height: 100%; background-size: contain; background-position: center center; background-repeat: no-repeat; }
 .wh-batch-foot { display: flex; gap: 16rpx; padding: 20rpx 28rpx 28rpx; border-top: 1rpx solid #e1edff; }
+.wh-batch-foot.two-row { flex-direction: column; gap: 14rpx; }
+.wh-batch-foot-row { display: flex; gap: 14rpx; }
+.wh-batch-foot-row .flex1 { flex: 1; }
 .wh-dlg-btn.warn { background: #fdf0ed; color: #FF9E8E; }
 
 /* 单品纠错弹窗 */

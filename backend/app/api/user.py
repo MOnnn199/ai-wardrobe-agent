@@ -47,8 +47,10 @@ def resolve_user_id(authorization: str = Header(None), db: Session = Depends(get
 
 # ===== Wardrobe =====
 @router.get('/wardrobe', response_model=list[ClothingResponse])
-def list_wardrobe(user_id: int = Depends(resolve_user_id), category: str = '', db: Session = Depends(get_db)):
+def list_wardrobe(user_id: int = Depends(resolve_user_id), category: str = '', status: str = 'confirmed', db: Session = Depends(get_db)):
     q = db.query(ClothingItem).filter(ClothingItem.user_id == user_id)
+    if status:
+        q = q.filter(ClothingItem.status == status)
     if category:
         q = q.filter(ClothingItem.category == category)
     return q.order_by(ClothingItem.created_at.desc()).all()
@@ -531,7 +533,7 @@ async def analyze_image(file: UploadFile = File(...), user_id: int = Depends(res
 
 
 @router.post('/wardrobe/upload-and-tag')
-async def upload_and_tag(file: UploadFile = File(...), user_id: int = Depends(resolve_user_id), purchase_date: str = Form(None), db: Session = Depends(get_db)):
+async def upload_and_tag(file: UploadFile = File(...), user_id: int = Depends(resolve_user_id), purchase_date: str = Form(None), status: str = Form('confirmed'), db: Session = Depends(get_db)):
     import uuid, os, base64, json
     upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
@@ -607,7 +609,7 @@ async def upload_and_tag(file: UploadFile = File(...), user_id: int = Depends(re
         season=tags.get('season', ''),
         occasion=tags.get('occasion', ''),
         image_url=f'http://localhost:8000/uploads/{filename}',
-        status='confirmed',
+        status=status,
         purchase_date=pd,
         last_worn=None,
         wear_count=0
