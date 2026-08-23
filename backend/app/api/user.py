@@ -404,13 +404,8 @@ def outfit_review(data: dict = Body(default={}), user_id: int = Depends(resolve_
             # 解析失败：把原文整体作为评语兜底
             review["color_comment"] = content
 
-    # 生成搭配预览拼贴图（固定文件名覆盖写，避免堆积；支持同类多件/叠穿）
+    # 审核结果不再生成拼贴图，改由前端用衣橱卡片展示搭配单品
     image_url = None
-    try:
-        from app.utils.outfit_collage import _render_collage
-        image_url = _render_collage(items, f'my_outfit_{user_id}', '我的搭配', 'http://localhost:8000')
-    except Exception as e:
-        print("outfit review collage failed:", e)
 
     return {
         "score": review["score"],
