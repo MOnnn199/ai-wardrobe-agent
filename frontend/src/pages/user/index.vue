@@ -245,8 +245,9 @@
       <view v-if="showDetail" class="mask" @click="closeDetail">
         <view class="wh-detail" @click.stop>
           <view class="wh-dlg-head">
+            <text></text>
             <text class="wh-dlg-title">衣服详情</text>
-            <icon-svg class="wh-dlg-back" @click="closeDetail" name="close"></icon-svg>
+            <text class="wh-dlg-close" @click="closeDetail">×</text>
           </view>
           <scroll-view scroll-y class="wh-detail-scroll">
             <view class="wh-detail-img-wrap">
@@ -1114,7 +1115,7 @@
           <view class="wh-dlg-head">
             <text></text>
             <text class="wh-dlg-title">{{ sceneResult.sceneLabel }}推荐</text>
-            <icon-svg class="wh-dlg-back" @click="sceneResult = null" name="close"></icon-svg>
+            <text class="wh-dlg-close" @click="sceneResult = null">×</text>
           </view>
           <view class="scene-dialog-scroll">
             <rich-text class="pre" :nodes="md2html(sceneResult.recommendation)"></rich-text>
@@ -1509,7 +1510,8 @@ const groupedWardrobe = computed(() => {
     list = list.filter(i => (i.name || '').toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q))
   }
   if (seasonFilter.value !== 'all') {
-    list = list.filter(i => (i.season || '').includes(seasonFilter.value))
+    const kw = seasonFilter.value.replace('季', '')
+    list = list.filter(i => (i.season || '').includes(kw))
   }
   if (styleFilter.value !== 'all') {
     const kw = styleFilter.value
