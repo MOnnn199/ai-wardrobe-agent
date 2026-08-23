@@ -221,75 +221,152 @@ async def _trend(): run_trend_push()
 async def _gap(): run_knowledge_gap()
 
 
-# ===================== 恶劣天气提醒（FR-C6）=====================
+# ===================== 每日天气穿搭提醒（FR-C6）========================
+# Open-Meteo weathercode（精简版，基于 https://open-meteo.com/en/docs）
+_WMO = {
+    0:  '晴',         1:  '晴间多云',     2:  '多云',      3:  '阴',
+    45: '雾',         48: '冻雾',
+    51: '小毛毛雨',   53: '毛毛雨',       55: '浓毛毛雨',
+    56: '冻毛毛雨',   57: '强冻毛毛雨',
+    61: '小雨',       63: '中雨',         65: '大雨',
+    66: '冻雨',       67: '强冻雨',
+    71: '小雪',       73: '中雪',         75: '大雪',
+    77: '米雪',       80: '阵雨',         81: '强阵雨',    82: '暴阵雨',
+    85: '阵雪',       86: '强阵雪',
+    95: '雷暴',       96: '雷暴伴小冰雹', 99: '雷暴伴大冰雹',
+}
 _RAIN_CODES = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99}
 _SNOW_CODES = {71, 73, 75, 77, 85, 86}
 
 
 def _fetch_today_weather(lat: float, lon: float) -> dict | None:
-    """Open-Meteo 当日天气（无第三方 Key）。"""
+    """Open-Meteo 当日天气（无第三方 Key）。返回 code/t_max/t_min/precip/wind。"""
     import json
-    import urllib.parse
     import urllib.request
     try:
         url = (
             "https://api.open-meteo.com/v1/forecast"
             f"?latitude={lat}&longitude={lon}"
-            "&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1"
+            "&daily=weathercode,temperature_2m_max,temperature_2m_min,"
+            "precipitation_probability_max,windspeed_10m_max"
+            "&timezone=auto&forecast_days=1"
         )
         with urllib.request.urlopen(url, timeout=10) as resp:
             data = json.loads(resp.read().decode('utf-8'))
-        daily = data.get('daily', {})
+        d = data.get('daily', {})
         return {
-            'code': int((daily.get('weathercode') or [0])[0]),
-            't_max': (daily.get('temperature_2m_max') or [None])[0],
-            't_min': (daily.get('temperature_2m_min') or [None])[0],
+            'code': int((d.get('weathercode') or [0])[0]),
+            't_max': d.get('temperature_2m_max', [None])[0],
+            't_min': d.get('temperature_2m_min', [None])[0],
+            'pop':  (d.get('precipitation_probability_max') or [None])[0],
+            'wind': (d.get('windspeed_10m_max') or [None])[0],
         }
     except Exception as e:
         print(f"[weather-alert] fetch failed: {e}")
         return None
 
 
+def _compose_daily_advice(code: int, t_max, t_min, pop, wind) -> tuple[str, str]:
+    """根据今天天气返回 (title, content)：每天都出 advice，不再仅异常时推。"""
+    cond = _WMO.get(code, '多云')
+    tmax_v = float(t_max) if t_max is not None else None
+    tmin_v = float(t_min) if t_min is not None else None
+    pop_v  = float(pop)  if pop  is not None else None
+    wind_v = float(wind) if wind is not None else None
+
+    # 1) 关键词强度
+    severe_flags = []
+    if code in _RAIN_CODES: severe_flags.append('rain')
+    if code in _SNOW_CODES: severe_flags.append('snow')
+    if tmax_v is not None and tmax_v >= 33: severe_flags.append('hot')
+    if tmin_v is not None and tmin_v <= 5:  severe_flags.append('cold')
+
+    # 2) 体感温度区间
+    if tmax_v is not None and tmin_v is not None:
+        temp_text = f'今日 {cond}，{tmin_v:.0f}~{tmax_v:.0f}°C'
+    elif tmax_v is not None:
+        temp_text = f'今日 {cond}，最高 {tmax_v:.0f}°C'
+    else:
+        temp_text = f'今日 {cond}'
+
+    # 3) 核心建议（按强度叠加）
+    if 'snow' in severe_flags:
+        advice = (
+            '降雪预警：厚外套 + 保暖内搭 + 防滑靴是底线；'
+            '裤装优先深色防脏；少戴白色配件，避免被雪水打湿显狼狈。'
+        )
+    elif 'rain' in severe_flags:
+        base = (
+            f'降雨预警：出门带伞{("（降水概率约 " + str(int(pop_v)) + "%）") if pop_v is not None else ""}，'
+            '优先防水外套 / 防滑鞋，避免浅色与易皱单品；'
+        )
+        base += '降温则叠穿，热则换轻薄速干内搭。' if (tmax_v or 30) >= 30 else '可加薄针织外套防凉。'
+        advice = base
+    elif 'hot' in severe_flags:
+        advice = (
+            '高温预警：浅色 + 透气面料（棉麻/速干），多巴胺点缀在配饰而非主衣；'
+            '防晒帽/遮阳伞必备，避免深色吸热。'
+        )
+    elif 'cold' in severe_flags:
+        advice = (
+            '低温预警：叠穿三层（吸湿排汗内搭 + 保暖中层 + 防风外层），'
+            '围巾/手套/帽子别忘；鞋子防滑优先，避开单层薄外套。'
+        )
+    # —— 下面是「正常天气」给具体穿搭建议 ——
+    elif tmax_v is not None and tmax_v >= 28:
+        advice = '体感偏热：短袖 / 薄衬衫 + 高腰裤 / 阔腿裤是基操；可以亮色单品点缀。'
+    elif tmax_v is not None and tmax_v >= 22:
+        advice = '体感舒适：T恤 + 轻薄长裤 / 中长裙都 OK，早晚加一件薄针织或衬衫防温差。'
+    elif tmax_v is not None and tmax_v >= 15:
+        advice = '微凉：长袖打底 + 薄外套（针织/衬衫/西装）正好；配饰戴起来更有层次。'
+    else:
+        advice = '偏冷：毛呢 / 夹克 + 围巾是稳妥搭配，深色显瘦、亮色显气色。'
+
+    # 4) 风 / 降水小尾巴
+    extra = []
+    if wind_v is not None and wind_v >= 30:
+        extra.append(f'风偏大（{wind_v:.0f}km/h），避免长裙与宽松大摆单品')
+    if (pop_v is not None and pop_v >= 40) and 'rain' not in severe_flags:
+        extra.append(f'降水概率约 {int(pop_v)}%，包里放把折叠伞更稳')
+    if extra:
+        advice += '｜另：' + '；'.join(extra) + '。'
+
+    title = '今日天气穿搭'
+    content = f'{temp_text}。{advice}'
+    return title, content
+
+
 def run_weather_alerts():
-    """每 4 小时：对配置了定位的用户检查当日天气，降雨/降雪/极端温度时推送提醒（按天幂等）。"""
+    """每天早上：对有定位的用户统一推送一条今日天气穿搭（按天幂等）。"""
     from app.models.notification import Notification
     db = SessionLocal()
     today = date.today().strftime('%Y-%m-%d')
-    # 仅向 user 角色推送天气穿搭提醒（搭配师/运营端不收）
     users = db.query(User).filter(User.is_active == 1, User.role == 'user').all()
     for user in users:
         if not user.lat or not user.lon:
             continue
         wx = _fetch_today_weather(user.lat, user.lon)
-        if not wx:
+        if not wx or wx.get('code') is None:
             continue
-        code, t_max, t_min = wx['code'], wx['t_max'], wx['t_min']
-        title = content = None
-        if code in _RAIN_CODES:
-            title = '今日降雨提醒'
-            content = '今天有降雨，出门记得带伞，建议穿防水外套/防滑鞋，避免易皱易脏的浅色衣物。'
-        elif code in _SNOW_CODES:
-            title = '今日降雪提醒'
-            content = '今天有降雪，注意保暖防滑，建议厚外套+保暖内搭+防滑鞋靴。'
-        elif t_min is not None and float(t_min) <= 5:
-            title = '降温提醒'
-            content = f'今日最低温 {t_min}°C，明显降温，建议叠穿保暖（外套+内搭），避免单薄单品。'
-        elif t_max is not None and float(t_max) >= 33:
-            title = '高温提醒'
-            content = f'今日最高温 {t_max}°C，建议轻薄透气面料与浅色系，注意防晒。'
-        if title:
-            exists = db.query(Notification).filter(
-                Notification.user_id == user.id, Notification.type == 'weather_alert',
-                Notification.title == f'{today} {title}').first()
-            if not exists:
-                create_notification(db, user.id, 'weather_alert', f'{today} {title}', content)
-                try:
-                    from app.main import notify_user
-                    import asyncio
-                    asyncio.run(notify_user(user.id, {'type': 'weather_alert', 'title': title,
-                                                       'content': content}))
-                except Exception:
-                    pass
+        title_base, content = _compose_daily_advice(
+            wx['code'], wx.get('t_max'), wx.get('t_min'), wx.get('pop'), wx.get('wind'),
+        )
+        full_title = f'{today} {title_base}'
+        exists = db.query(Notification).filter(
+            Notification.user_id == user.id, Notification.type == 'weather_alert',
+            Notification.title == full_title,
+        ).first()
+        if exists:
+            continue
+        create_notification(db, user.id, 'weather_alert', full_title, content)
+        # 实时推送给在线用户（WebSocket）
+        try:
+            from app.main import notify_user
+            import asyncio
+            asyncio.run(notify_user(user.id, {'type': 'weather_alert',
+                                               'title': title_base, 'content': content}))
+        except Exception:
+            pass
     db.close()
 
 
@@ -334,6 +411,7 @@ def init_scheduler():
     scheduler.add_job(_monthly, 'cron', day=1, hour=8, minute=0, id='wardrobe_monthly_report')
     scheduler.add_job(_trend, 'cron', day=1, hour=9, minute=0, id='trend_push')
     scheduler.add_job(_gap, 'cron', day_of_week='mon', hour=9, minute=0, id='knowledge_gap')
-    scheduler.add_job(_weather, 'interval', hours=4, id='weather_alerts')
+    # 每天早上 7:30 给有定位的用户推一条「今日天气穿搭」（每天一条，按天幂等）
+    scheduler.add_job(_weather, 'cron', hour=7, minute=30, id='weather_alerts')
     scheduler.add_job(_events, 'cron', hour=7, minute=0, id='event_reminders')
     scheduler.start()
