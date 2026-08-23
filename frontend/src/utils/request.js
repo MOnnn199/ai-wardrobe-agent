@@ -14,6 +14,13 @@ function request(method, url, data = {}, options = {}) {
         options.header || {}
       ),
       success: (res) => {
+        if (res.statusCode === 401) {
+          // token 失效（如后端重启换密钥）→ 清登录态并跳登录页
+          uni.removeStorageSync('token')
+          uni.reLaunch({ url: '/pages/login/index' })
+          reject(res)
+          return
+        }
         if (res.statusCode >= 200 && res.statusCode < 300) {
           // uni-app H5 可能把 res.data 包成只读 Proxy，深拷贝剥离，避免 Vue 响应式化时报错
           try {
@@ -64,6 +71,12 @@ export function upload(url, filePath, name = 'file', formData = {}) {
       formData,
       header: token ? { Authorization: 'Bearer ' + token } : {},
       success: (res) => {
+        if (res.statusCode === 401) {
+          uni.removeStorageSync('token')
+          uni.reLaunch({ url: '/pages/login/index' })
+          reject(res)
+          return
+        }
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
             resolve(JSON.parse(res.data))

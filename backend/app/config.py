@@ -1,4 +1,5 @@
 import os
+import secrets
 from dotenv import load_dotenv
 
 load_dotenv(encoding="utf-8-sig")
@@ -11,7 +12,10 @@ TONGYI_API_BASE = os.getenv("TONGYI_API_BASE", "https://dashscope.aliyuncs.com/c
 # 智谱 AI（GLM 系列）：OpenAI 兼容接口，key 为 JWT 格式 "{id}.{secret}"
 ZHIPU_API_KEY = os.getenv("ZHIPU_API_KEY", "")
 ZHIPU_API_BASE = os.getenv("ZHIPU_API_BASE", "https://open.bigmodel.cn/api/paas/v4")
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "default-secret-key")
+# JWT 签名密钥：默认每次进程启动随机生成（仅存内存，不落库）。
+# 效果：重启后端后所有已签发 token 全部失效 → 用户端 / 运营端 / 搭配师端都必须重新登录。
+# 如需让登录态跨重启保持（生产部署），在 .env 中设置固定的 JWT_SECRET_KEY。
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or secrets.token_hex(32)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
 # ===== LLM 模型运行时配置（运营端「模型配置」页修改的同一份；内存态，重启恢复默认）=====
