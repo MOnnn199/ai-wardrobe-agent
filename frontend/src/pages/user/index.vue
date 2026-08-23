@@ -412,6 +412,29 @@
           </view>
           <image v-if="reviewResult.image_url" :src="reviewResult.image_url" mode="widthFix" class="review-img" />
 
+          <!-- 本次审核的搭配单品 -->
+          <view class="rv-block">
+            <text class="rv-h"> 搭配单品</text>
+            <view class="closet-items" style="padding: 0;">
+              <view v-for="item in selectedReviewItems" :key="item.id" class="closet-item" @click="openDetail(item)">
+                <view class="closet-item-img-wrap">
+                  <view v-if="item.image_url" class="closet-item-img" :style="{ backgroundImage: `url(${item.image_url})` }"></view>
+                  <view v-else class="closet-item-ph" :style="{ background: getItemColorHex(item) }">
+                    <text class="closet-item-ph-txt">{{ (item.name || '?')[0] }}</text>
+                  </view>
+                </view>
+                <view class="closet-item-body">
+                  <text class="closet-item-name">{{ item.name || '未知衣物' }}</text>
+                  <view class="closet-item-tags">
+                    <text class="closet-item-tag cat">{{ catMap[item.category] || item.category || '—' }}</text>
+                    <text v-if="item.color" class="closet-item-tag">{{ item.color }}</text>
+                    <text v-if="item.season" class="closet-item-tag">{{ item.season }}</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+
           <view class="rv-block"><text class="rv-h"> 色彩协调</text><text class="rv-c">{{ reviewResult.color_comment || reviewResult.raw }}</text></view>
           <view class="rv-block"><text class="rv-h"> 季节合适度</text><text class="rv-c">{{ reviewResult.season_comment }}</text></view>
           <view class="rv-block"><text class="rv-h"> 场合得体性</text><text class="rv-c">{{ reviewResult.occasion_comment }}</text></view>
