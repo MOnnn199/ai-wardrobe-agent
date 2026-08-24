@@ -168,6 +168,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { post } from '../../utils/request'
 
 const mode = ref('login')
@@ -199,8 +200,11 @@ function goRegister() { reset(); mode.value = 'register' }
 function goLogin() { reset(); mode.value = 'login' }
 function reset() {
   err.value = ''
-  username.value = ''
-  password.value = ''
+  // 勾选了「记住密码」时，切换登录/注册标签不要清空已回填的账号密码
+  if (!remember.value) {
+    username.value = ''
+    password.value = ''
+  }
   confirmPwd.value = ''
   nickname.value = ''
   showPwd.value = false
@@ -213,6 +217,18 @@ function onForgot() {
 function toggleRemember() {
   remember.value = !remember.value
 }
+
+// 进入登录页时，若之前勾选过「记住密码」，自动回填账号密码并勾上
+onLoad(() => {
+  try {
+    const saved = uni.getStorageSync('rememberedUser')
+    if (saved && saved.username) {
+      username.value = saved.username
+      password.value = saved.password || ''
+      remember.value = true
+    }
+  } catch (e) { /* 忽略本地存储异常 */ }
+})
 
 async function saveSession(d, uname) {
   uni.setStorageSync('token', d.token)
@@ -239,6 +255,12 @@ async function onLogin() {
       err.value = '该账号不是用户端账号，请用 user 账号登录'
       loading.value = false
       return
+    }
+    // 记住密码：勾选则持久化账号密码，否则清除之前的记录
+    if (remember.value) {
+      uni.setStorageSync('rememberedUser', { username: u, password: p })
+    } else {
+      uni.removeStorageSync('rememberedUser')
     }
     await saveSession(d, u)
   } catch (e) {

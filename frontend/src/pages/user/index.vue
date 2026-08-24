@@ -144,7 +144,7 @@
           <view v-if="chatLoading" class="msg msg-agent">
             <view class="bubble">
               <view class="ai-thinking-bubble">
-                <text class="ai-thinking-label">正在为你搭配…</text>
+                <text class="ai-thinking-label">正在思考…</text>
                 <view class="ai-thinking-dots">
                   <view class="ai-dot"></view>
                   <view class="ai-dot"></view>
@@ -644,7 +644,6 @@
           <view class="me-hero-content">
             <view class="me-hero-info">
               <text class="me-name-lg">{{ profile.nickname || '穿搭用户' }}</text>
-              <text class="me-sub-lg">尽享你的专属穿搭之旅~</text>
             </view>
             <view class="me-avatar-lg">
               <image v-if="profile.avatar_url" :src="profile.avatar_url" mode="aspectFill" class="me-avatar-img" />
@@ -1894,8 +1893,10 @@ async function sendChat(text) {
 async function chatChooseImage() {
   try {
     const path = await chooseImage()
+    // H5 上 path 是 blob URL，<image :src> 可直接渲染；上传完不要用服务端的 image_url 覆盖它
+    // ——后端 /uploads/temp/* 在 Vite dev 下没被代理，浏览器加载不到，反而会让预览消失
+    pendingChatImage.value = path
     const d = await upload('/user/analyze-image', path)
-    pendingChatImage.value = d.image_url || path
     pendingChatAnalysis.value = d.analysis || ''
     uni.showToast({ title: '图片已上传，请输入你的问题', icon: 'none' })
   } catch (e) {
@@ -2674,10 +2675,10 @@ async function submitItemCorrection() {
       note: itemCorrNote.value || ''
     })
     itemCorrVisible.value = false
-    uni.showToast({ title: '已提交，等待搭配师审核', icon: 'success' })
+    uni.showToast({ title: '已提交，待审核', icon: 'none', duration: 2000 })
   } catch (e) {
     const msg = e && e.data && e.data.detail ? e.data.detail : '提交失败，请重试'
-    uni.showToast({ title: String(msg).slice(0, 80), icon: 'none' })
+    uni.showToast({ title: String(msg).slice(0, 16), icon: 'none' })
   }
 }
 

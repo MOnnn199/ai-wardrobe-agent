@@ -49,6 +49,7 @@ class ReActAgent:
         self.llm = llm or get_llm_client()
         self.tool_registry = tool_registry
         self.logger = AgentLogger()
+        self.used_tools = set()   # 本轮对话实际调用过的工具名（用于判断是否需要返回衣橱卡片）
 
     # ---------- 提示词 / 上下文 ----------
     @staticmethod
@@ -109,8 +110,9 @@ class ReActAgent:
         messages.append(assistant_msg)
 
         out = {"messages": messages, "iteration": iteration}
-        if not msg.get("tool_calls"):
-            final = msg.get("content", "")
+        tool_calls = msg.get("tool_calls") or []
+        if not tool_calls:
+            final = msg.get("content") or ""
             out["final_answer"] = final
             self.logger.log_step(
                 state.get("conversation_id", 0), iteration, "final_answer",
@@ -124,6 +126,7 @@ class ReActAgent:
         last = messages[-1] if messages else {}
         for tc in last.get("tool_calls", []):
             func_name = tc["function"]["name"]
+            self.used_tools.add(func_name)   # 记录实际调用过的工具
             try:
                 func_args = json.loads(tc["function"]["arguments"])
             except Exception:
@@ -152,6 +155,7 @@ class ReActAgent:
             system_prompt: str = None, max_iterations: int = 10,
             city: str = None, lat: float = None, lon: float = None,
             history: list = None) -> str:
+        self.used_tools = set()   # 每轮对话重置
         if not system_prompt:
             system_prompt = self.load_online_prompt()
 
@@ -193,4 +197,36 @@ class ReActAgent:
             "iteration": 0,
             "max_iterations": max_iterations,
         })
-        return result.get("final_answer") or "抱歉，无法完成这个请求。"
+        final = result.get("final_answer")
+        if final and final.strip():
+            return final
+        # ── 二次追问：如果发生过 tool_call 但模型第 2 轮返回了空消息（智谱 glm-4.5/5.x 在长 system + 多 tools 时常见），
+        # 主动追加一条"请基于以上工具结果给出最终方案"的 prompt，让模型补一条正经回复。
+        if result.get("messages"):
+            had_tool_call = any(m.get("role") == "tool" for m in result["messages"])
+            if had_tool_call and not (final and final.strip()):
+                retry_msgs = list(result["messages"]) + [
+                    {"role": "user", "content": (
+                        "请直接以 markdown 的形式给出你的最终搭配方案（3 套搭配，每套说明单品 + 理由），"
+                        "不要再调用任何工具，只输出方案正文。"
+                    )}
+                ]
+                # 用纯文本模式（不传 tools）确保模型专心输出文字
+                retry = self.llm.chat(retry_msgs, tools=[])
+                c = retry.get("choices", [{}])[0].get("message", {})
+                txt = (c.get("content") or "").strip()
+                if txt:
+                    return txt
+        # ReAct 没拿到 final_answer：要么到了 max_iterations，要么模型返回了空消息。
+        last_msg = ""
+        if result.get("messages"):
+            for m in reversed(result["messages"]):
+                if m.get("role") == "assistant":
+                    last_msg = (m.get("content") or "").strip()
+                    break
+        if last_msg:
+            return f"模型未给出完整回复，请重试或换模型。（最后一条回复：{last_msg[:120]}）"
+        iterations = result.get("iteration", 0)
+        if iterations >= max_iterations:
+            return f"模型思考步数超过上限（{max_iterations}），可能是问题太复杂，可换更简单的问法或切换其它模型。"
+        return "模型未给出完整回复，请稍后重试或换模型试试。"

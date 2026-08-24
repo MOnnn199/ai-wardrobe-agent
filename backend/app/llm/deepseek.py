@@ -49,23 +49,36 @@ class DeepSeekClient:
         if tools:
             body["tools"] = tools
 
-        with httpx.Client(timeout=30) as client:
-            resp = client.post(
-                f"{self.api_base}/v1/chat/completions",
-                headers=headers,
-                json=body
-            )
-            if resp.status_code >= 400:
-                return {
-                    "choices": [{
-                        "message": {
-                            "role": "assistant",
-                            "content": f"模型调用失败（HTTP {resp.status_code}），请稍后重试或检查 API Key/余额。"
-                        },
-                        "finish_reason": "stop"
-                    }]
-                }
-        data = resp.json()
+        try:
+            # 周末/晚高峰 DeepSeek 网关也偶发 30s 读超时，对齐 zhipu 提到 90s
+            with httpx.Client(timeout=90) as client:
+                resp = client.post(
+                    f"{self.api_base}/v1/chat/completions",
+                    headers=headers,
+                    json=body
+                )
+                if resp.status_code >= 400:
+                    return {
+                        "choices": [{
+                            "message": {
+                                "role": "assistant",
+                                "content": f"模型调用失败（HTTP {resp.status_code}），请稍后重试或检查 API Key/余额。"
+                            },
+                            "finish_reason": "stop"
+                        }]
+                    }
+            data = resp.json()
+        except Exception as e:
+            # httpx.ReadTimeout / ConnectError 等一律转成友好提示，避免穿透到 FastAPI 成 500
+            return {
+                "choices": [{
+                    "message": {
+                        "role": "assistant",
+                        "content": f"模型调用异常：{e}"
+                    },
+                    "finish_reason": "stop"
+                }]
+            }
         # 记录 token 成本
         usage = data.get("usage", {})
         _track(user_id, self.model,

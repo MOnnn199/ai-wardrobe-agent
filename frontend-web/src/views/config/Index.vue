@@ -15,7 +15,6 @@
       <div class="dash-header">
         <div>
           <h1 class="dash-title">{{ greeting }}，{{ nickname || '管理员' }}！</h1>
-          <p class="dash-sub">这里是 AI 衣橱运营控制台，管理 Prompt、模型、审批与数据洞察。</p>
         </div>
         <div class="dash-actions">
           <el-button @click="reloadAll"><el-icon><Refresh /></el-icon> 刷新数据</el-button>
@@ -149,10 +148,11 @@
               <el-tag :type="row.status==='online'?'success':row.status==='history'?'info':''" size="small">{{ PROMPT_STATUS_NAME[row.status] || row.status }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="160">
+          <el-table-column label="操作" width="220">
             <template #default="{row}">
               <el-button size="small" @click="editPrompt(row)">编辑</el-button>
               <el-button size="small" type="success" @click="deployPrompt(row.id)" v-if="row.status!=='online'">发布</el-button>
+              <el-button size="small" type="danger" plain @click="deletePrompt(row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -181,11 +181,15 @@
               <el-option-group label="DeepSeek">
                 <el-option label="DeepSeek Chat" value="deepseek-chat" />
               </el-option-group>
+              <!-- 5.x 主推 / 4.x 兼容：账户里只有 4.5+/5.x；老 glm-4-flash/plus/air 多数会 403/503 -->
               <el-option-group label="智谱 AI（GLM）">
-                <el-option label="GLM-4-Flash（免费）" value="glm-4-flash" />
-                <el-option label="GLM-4-Plus" value="glm-4-plus" />
-                <el-option label="GLM-4-Air" value="glm-4-air" />
-                <el-option label="GLM-4-FlashX" value="glm-4-flashx" />
+                <el-option label="GLM-4.5（推荐·稳定）" value="glm-4.5" />
+                <el-option label="GLM-4.5-Air（更便宜）" value="glm-4.5-air" />
+                <el-option label="GLM-4.6" value="glm-4.6" />
+                <el-option label="GLM-4.7" value="glm-4.7" />
+                <el-option label="GLM-5（最强）" value="glm-5" />
+                <el-option label="GLM-5-Turbo" value="glm-5-turbo" />
+                <el-option label="GLM-4-FlashX（兼容老接口）" value="glm-4-flashx" />
               </el-option-group>
               <el-option-group label="通义千问（Qwen）">
                 <el-option label="Qwen-Plus（均衡）" value="qwen-plus" />
@@ -366,8 +370,6 @@
     <!-- ===== AI 推理轨迹 ===== -->
     <div v-if="active === 'traces'" class="page traces-page">
       <div class="sec-title" style="margin-bottom:14px"><span class="bar"></span><h2>AI 推理轨迹</h2><span class="sub">每一次推荐的完整推理步骤</span></div>
-      <el-alert type="info" :closable="false" style="margin-bottom:10px;padding:8px 12px"
-        title="这里记录每一次 AI 推荐的完整推理步骤（输入 / 工具调用 / 输出），让 AI 不再黑箱，便于排查“踩”的原因。" />
       <div class="card trace-card">
         <el-table :data="tracesPageData" style="width:100%" @row-click="openTrace" class="trace-table" size="small" :key="`tr-${tracesPage}-${tracesPageSize}`">
           <el-table-column label="时间" min-width="170">
@@ -426,7 +428,7 @@
 <script setup>
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import * as echarts from 'echarts'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import SidebarLayout from '@/components/SidebarLayout.vue'
 
 const ERROR_TYPE_NAME = { style: '风格', occasion: '场合', color: '颜色', size: '尺码', other: '其他' }
@@ -634,6 +636,20 @@ async function deployPrompt(id) {
   await fetch('/api/config/prompts/' + id + '/deploy', { method: 'POST' })
   loadPrompts()
   ElMessage.success('已上线')
+}
+async function deletePrompt(row) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除 Prompt「${row.name}」吗？此操作不可恢复。`,
+      '删除确认',
+      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+    )
+  } catch {
+    return
+  }
+  await fetch('/api/config/prompts/' + row.id, { method: 'DELETE' })
+  ElMessage.success('已删除')
+  loadPrompts()
 }
 
 /* 保存时按模型名自动推断供应商：glm-* → 智谱，qwen-* → 通义，其余 → DeepSeek；保存后回显实际生效的模型 */

@@ -28,9 +28,9 @@
     <div class="sl-body">
       <!-- 顶部栏：搜索 + 操作 + 用户 -->
       <header class="sl-header">
-        <div class="sl-search">
+        <div class="sl-search" @click="openPalette" title="搜索或跳转（Ctrl / Cmd + K）">
           <el-icon :size="16"><Search /></el-icon>
-          <input v-model="searchText" type="text" placeholder="搜索或输入命令..." @keyup.enter="onSearch" />
+          <input v-model="searchText" type="text" placeholder="搜索或输入命令..." @keyup.enter="onSearch" @click.stop />
         </div>
         <div class="sl-header-actions">
           <el-popover placement="bottom-end" :width="300" trigger="click" popper-class="noti-popover" :show-arrow="false">
@@ -78,12 +78,39 @@
       <main class="sl-content">
         <slot />
       </main>
+
+      <!-- 命令面板：Ctrl/Cmd+K 或搜索框回车打开，可跳转到任意侧栏页面 -->
+      <transition name="palette-fade">
+        <div v-if="paletteOpen" class="cmdk-mask" @click.self="closePalette">
+          <div class="cmdk-panel">
+            <div class="cmdk-input-row">
+              <el-icon :size="18"><Search /></el-icon>
+              <input ref="paletteInput" v-model="paletteQuery" class="cmdk-input"
+                placeholder="跳转到页面…" @input="paletteIndex = 0" @keydown="onPaletteKey" />
+              <span class="cmdk-kbd">ESC</span>
+            </div>
+            <div class="cmdk-list">
+              <div v-if="!filteredMenus.length" class="cmdk-empty">没有匹配的页面</div>
+              <div v-for="(m, i) in filteredMenus" :key="m.key"
+                :class="['cmdk-item', { active: i === paletteIndex }]"
+                @mouseenter="paletteIndex = i" @click="runItem(m)">
+                <el-icon :size="18"><component :is="m.icon" /></el-icon>
+                <span class="cmdk-label">{{ m.label }}</span>
+                <span v-if="i === paletteIndex" class="cmdk-enter">↵</span>
+              </div>
+            </div>
+            <div class="cmdk-foot">
+              <span><b>↑↓</b> 选择</span><span><b>↵</b> 跳转</span><span><b>Esc</b> 关闭</span>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Grid, SwitchButton, Search, Bell, ArrowDown
@@ -98,6 +125,55 @@ const props = defineProps({
 const emit = defineEmits(['update:active', 'export', 'add'])
 const router = useRouter()
 const searchText = ref('')
+
+// ===== 命令面板（跳转式搜索）=====
+const paletteOpen = ref(false)
+const paletteQuery = ref('')
+const paletteIndex = ref(0)
+const paletteInput = ref(null)
+
+const filteredMenus = computed(() => {
+  const q = (paletteQuery.value || '').trim().toLowerCase()
+  if (!q) return props.menus
+  return props.menus.filter(m => (m.label || '').toLowerCase().includes(q))
+})
+
+function openPalette() {
+  paletteQuery.value = searchText.value
+  paletteIndex.value = 0
+  paletteOpen.value = true
+  nextTick(() => { if (paletteInput.value) paletteInput.value.focus() })
+}
+function closePalette() {
+  paletteOpen.value = false
+}
+function runItem(m) {
+  emit('update:active', m.key)
+  closePalette()
+}
+function onPaletteKey(e) {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    paletteIndex.value = Math.min(paletteIndex.value + 1, filteredMenus.value.length - 1)
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    paletteIndex.value = Math.max(paletteIndex.value - 1, 0)
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    const m = filteredMenus.value[paletteIndex.value]
+    if (m) runItem(m)
+  } else if (e.key === 'Escape') {
+    closePalette()
+  }
+}
+function onGlobalKey(e) {
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault()
+    openPalette()
+  }
+}
+onMounted(() => window.addEventListener('keydown', onGlobalKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
 
 const nickname = sessionStorage.getItem('web_nickname') || ''
 const userInitial = computed(() => (nickname || props.role || 'U').slice(0, 1).toUpperCase())
@@ -117,8 +193,8 @@ function goHome() {
   emit('update:active', 'dashboard')
 }
 function onSearch() {
-  // 搜索事件可透传给父组件，目前仅做视觉占位
-  emit('search', searchText.value)
+  // 搜索框回车 → 打开命令面板（按关键字跳转到侧栏页面）
+  openPalette()
 }
 function onExport() {
   emit('export')
@@ -484,6 +560,52 @@ function onLogout() {
 .sl-user-role { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 
 .sl-content { flex: 1; overflow-y: auto; padding: 24px 28px 30px 24px; }
+
+/* ===== 命令面板（Ctrl/Cmd+K / 搜索框回车） ===== */
+.cmdk-mask {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(45, 58, 90, 0.18);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 14vh;
+}
+.cmdk-panel {
+  width: 560px; max-width: 92vw;
+  background: #fff; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(45, 58, 90, 0.22);
+  display: flex; flex-direction: column;
+}
+.cmdk-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 18px; border-bottom: 1px solid #e1edff; color: #6B7A9C;
+}
+.cmdk-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 16px; color: #2D3A5A; font-family: inherit;
+}
+.cmdk-input::placeholder { color: #8A9ABA; }
+.cmdk-kbd {
+  font-size: 11px; color: #8A9ABA; background: #eef5ff;
+  border: 1px solid #d6e5ff; border-radius: 6px; padding: 2px 7px; font-weight: 700;
+}
+.cmdk-list { max-height: 360px; overflow-y: auto; padding: 8px; }
+.cmdk-empty { padding: 28px; text-align: center; color: #8A9ABA; font-size: 14px; }
+.cmdk-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px; border-radius: 12px; cursor: pointer;
+  color: #2D3A5A; font-size: 14px; transition: background .12s ease;
+}
+.cmdk-item:hover { background: #f5f9ff; }
+.cmdk-item.active { background: #eef5ff; }
+.cmdk-label { flex: 1; }
+.cmdk-enter { color: #7aa8ff; font-weight: 700; }
+.cmdk-foot {
+  display: flex; gap: 18px; padding: 10px 16px; border-top: 1px solid #e1edff;
+  font-size: 12px; color: #8A9ABA; background: #fbfcff;
+}
+.cmdk-foot b { color: #6B7A9C; font-weight: 700; }
+.palette-fade-enter-active, .palette-fade-leave-active { transition: opacity .18s ease; }
+.palette-fade-enter-from, .palette-fade-leave-to { opacity: 0; }
 </style>
 
 <style>

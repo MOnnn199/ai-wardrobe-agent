@@ -15,7 +15,6 @@
       <div class="dash-header">
         <div>
           <h1 class="dash-title">{{ greeting }}，{{ nickname || '搭配师' }}！</h1>
-          <p class="dash-sub">今日用户穿搭反馈与知识维护工作台。</p>
         </div>
         <div class="dash-actions">
           <el-button @click="reloadAll"><el-icon><Refresh /></el-icon> 刷新数据</el-button>
@@ -272,8 +271,6 @@
     <!-- ===== 单品纠错 ===== -->
     <div v-if="active === 'itemcorrections'" class="page">
       <div class="sec-title"><span class="bar"></span><h2>单品纠错</h2><span class="sub">修正 AI 识别错误的衣橱单品</span></div>
-      <el-alert type="info" :closable="false" style="margin-bottom:14px"
-        title="对 AI 识别错误的衣橱单品进行人工修正（类别/颜色/材质等），修正记录形成反馈数据集。" />
       <div class="card">
         <el-table :data="itemCorrections" style="width:100%" :key="`ic-${itemCorrectionsPage}-${itemCorrectionsPageSize}`">
           <el-table-column prop="id" label="ID" width="60" />

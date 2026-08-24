@@ -222,16 +222,40 @@ def chat(
     db.commit()
 
     # 根据推荐文本生成搭配拼贴图，并返回推荐单品列表供前端卡片化展示
-    items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
-    selected = _pick_outfit_items(result, items)
-    outfit_image = generate_outfit_collage(result, items, conv.id, user_id=user_id)
-    item_dicts = [{
-        'id': it.id, 'name': it.name, 'category': it.category,
-        'color': it.color or '', 'season': it.season or '',
-        'image_url': it.image_url or '', 'style': it.style or '',
-        'material': getattr(it, 'material', None) or '',
-        'pattern': getattr(it, 'pattern', None) or '',
-    } for it in selected]
+    # 关键：只有本轮 agent 真正调取了「衣橱类工具」才返回卡片，
+    # 这样问"你好/天气/穿搭知识"等不涉及本人衣橱的问题，不会硬推衣柜单品卡片。
+    # 例外：用户表达的是「购买/添置」意图（如"我想买件通勤外套"），此时应推荐新买的，
+    # 而非展示衣橱里已有的单品，故即便 agent 调了衣橱工具也不出卡片。
+    WARDROBE_TOOLS = {'get_wardrobe', 'get_my_outfits', 'check_outfit', 'search_similar_clothes'}
+
+    def _is_shopping_intent(text: str) -> bool:
+        """判定用户是否表达购买/添置新衣物的意图。
+        命中则就算 agent 调了衣橱工具，也不展示「衣橱已有单品」卡片
+        （买衣服=推荐新买，不是推已有的）。"""
+        if not text:
+            return False
+        keys = ('买', '购', '下单', '添置', '入手', '剁手', '加购', '凑单',
+                '淘', '逛', '选购', '该买', '要买', '想买', '打算买', '准备买',
+                'shopping', 'purchase', 'buy')
+        t = (text or '').lower()
+        return any(k in t for k in keys)
+
+    shopping_intent = _is_shopping_intent(user_input)
+    used_wardrobe = bool(agent.used_tools & WARDROBE_TOOLS)
+
+    item_dicts = []
+    outfit_image = None
+    if used_wardrobe and not shopping_intent:
+        items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
+        selected = _pick_outfit_items(result, items)
+        outfit_image = generate_outfit_collage(result, items, conv.id, user_id=user_id)
+        item_dicts = [{
+            'id': it.id, 'name': it.name, 'category': it.category,
+            'color': it.color or '', 'season': it.season or '',
+            'image_url': it.image_url or '', 'style': it.style or '',
+            'material': getattr(it, 'material', None) or '',
+            'pattern': getattr(it, 'pattern', None) or '',
+        } for it in selected]
 
     return ChatResponse(response=result, conversation_id=conv.id, steps=agent.logger.steps, outfit_image=outfit_image, items=item_dicts)
 
@@ -526,7 +550,7 @@ async def analyze_image(file: UploadFile = File(...), user_id: int = Depends(res
     client = TongyiVLClient()
     prompt = '请详细描述这张图片中的衣物：类别（上装/下装/鞋子/配饰）、颜色、风格、适合的季节和场合。以JSON格式返回。'
     result = client.analyze_image(b64, prompt)
-    return {'image_url': f'/{path}', 'analysis': result}
+    return {'image_url': f'/uploads/temp/{filename}', 'analysis': result}
 
 
 @router.post('/wardrobe/upload-and-tag')
