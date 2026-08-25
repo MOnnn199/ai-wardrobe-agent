@@ -863,6 +863,27 @@ onMounted(() => {
 }
 .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+/* card-head 内的「查看全部」等小按钮：与 noti-item 胶囊按钮同款覆盖，
+   修复全局 .sl .el-button--primary 在 text 模式下的白字透明底问题。 */
+.card-head :deep(.el-button.is-text) {
+  border-radius: 999px;
+  padding: 4px 14px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  font-weight: 600 !important;
+  border: none !important;
+  background: transparent !important;
+  --el-button-text-color: inherit;
+  --el-button-hover-text-color: inherit;
+}
+.card-head :deep(.el-button.is-text span) { color: inherit !important; }
+.card-head :deep(.el-button.is-text.el-button--primary) {
+  background: #eef5ff !important;
+  color: var(--accent) !important;
+}
+.card-head :deep(.el-button.is-text.el-button--primary:hover) {
+  background: #d6e5ff !important;
+}
 .card-sub { font-size: 12px; color: var(--text-3); font-weight: 400; }
 .card:last-child { margin-bottom: 0; }
 
