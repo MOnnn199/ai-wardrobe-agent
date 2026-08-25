@@ -244,12 +244,17 @@ def approve_correction(data: PipelineAction, db: Session = Depends(get_db)):
 # ===== System Monitoring =====
 @router.get('/monitor')
 def system_monitor():
+    active = [t.name for t in tool_registry.all_tools() if t.enabled]
+    total = len(tool_registry.all_tools())
+    model = model_config.get('model_name')
+    # 运行健康：工具与模型任一缺失即降级，否则正常（前端据此显示「正常 / 需关注」）
+    status = 'ok' if (active and model) else 'degraded'
     return {
-        'status': 'running',
-        'active_tools': [t.name for t in tool_registry.all_tools() if t.enabled],
-        'total_tools': len(tool_registry.all_tools()),
-        'current_model': model_config['model_name'],
-        'temperature': model_config['temperature']
+        'status': status,
+        'active_tools': active,
+        'total_tools': total,
+        'current_model': model,
+        'temperature': model_config.get('temperature')
     }
 
 # ===== Cost Monitoring（成本监控：防 AI 成本失控）=====
