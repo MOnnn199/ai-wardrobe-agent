@@ -934,6 +934,36 @@ onMounted(() => {
 .noti-list { display: flex; flex-direction: column; gap: 12px; }
 .noti-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: #FDFBF7; transition: background 0.15s ease; }
 .noti-item:hover { background: #e1edff; }
+/* 「待审核纠错」胶囊按钮：覆盖全局 .sl .el-button--{primary,success}
+   强制 --el-button-text-color:#fff 在 text/plain 模式下变「白字透明底」的副作用。
+   与设计系统 .el-tag--primary/success 配色一致（浅蓝胶囊+蓝字 / 浅绿胶囊+绿字）。 */
+.noti-item :deep(.el-button.is-text) {
+  border-radius: 999px;
+  padding: 4px 14px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  font-weight: 600 !important;
+  border: none !important;
+  background: transparent !important;
+  --el-button-text-color: inherit;
+  --el-button-hover-text-color: inherit;
+}
+.noti-item :deep(.el-button.is-text span) { color: inherit !important; }
+.noti-item :deep(.el-button.is-text.el-button--primary) {
+  background: #eef5ff !important;
+  color: var(--accent) !important;
+}
+.noti-item :deep(.el-button.is-text.el-button--primary:hover) {
+  background: #d6e5ff !important;
+}
+.noti-item :deep(.el-button.is-text.el-button--success) {
+  background: #DCFCE7 !important;
+  color: #15803D !important;
+}
+.noti-item :deep(.el-button.is-text.el-button--success:hover) {
+  background: #BBF7D0 !important;
+  color: #14532D !important;
+}
 .noti-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; }
 .noti-dot.pending { background: var(--red); }
 .noti-dot.fixed { background: var(--orange); }
