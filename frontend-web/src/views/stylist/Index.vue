@@ -52,7 +52,8 @@
           <div class="metric-card"><div class="m-label">总对话</div><div class="m-value">{{ stats.total }}</div></div>
           <div class="metric-card"><div class="m-label">平均评分</div><div class="m-value">{{ stats.avg_score }}</div></div>
           <div class="metric-card danger"><div class="m-label">翻车案例</div><div class="m-value">{{ stats.failed }}</div></div>
-          <div class="metric-card ok"><div class="m-label">已修正</div><div class="m-value">{{ stats.fixed }}</div></div>
+          <div class="metric-card ok"><div class="m-label">我的提交</div><div class="m-value">{{ stats.fixed }}</div></div>
+          <div class="metric-card"><div class="m-label">已发布</div><div class="m-value">{{ stats.published }}</div></div>
         </div>
         <div class="card">
           <div class="card-title">评分分布 · 错误分布 · 7 日趋势</div>

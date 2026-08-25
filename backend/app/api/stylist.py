@@ -308,7 +308,10 @@ def stylist_stats(db: Session = Depends(get_db)):
     avg_row = db.query(sqlfunc.avg(Conversation.score)).filter(Conversation.score > 0).scalar()
     avg_score = round(avg_row, 2) if avg_row else 0
     failed = db.query(Conversation).filter(Conversation.score <= 2, Conversation.score > 0).count()
-    fixed = db.query(Correction).filter(Correction.status != 'pending').count()
+    # 「我的提交」只算真正修好的（fixed/approved/deployed），rejected 是被配置端驳回，
+    # 不应计入成功修正数——否则会把被驳回的也当成功，跟配置端审核口径不一致。
+    fixed = db.query(Correction).filter(Correction.status.in_(['fixed', 'approved', 'deployed'])).count()
+    published = db.query(Correction).filter(Correction.status == 'deployed').count()
 
     rating_rows = db.query(Conversation.score, sqlfunc.count(Conversation.id)).filter(Conversation.score > 0).group_by(Conversation.score).all()
     rating_dist = {str(i): 0 for i in range(1, 6)}
@@ -338,6 +341,7 @@ def stylist_stats(db: Session = Depends(get_db)):
         'avg_score': avg_score,
         'failed': failed,
         'fixed': fixed,
+        'published': published,
         'rating_dist': rating_dist,
         'error_dist': error_dist,
         'trend_7d': trend_7d
