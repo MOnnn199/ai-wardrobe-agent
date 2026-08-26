@@ -233,9 +233,13 @@ def delete_outfit(outfit_id: int, user_id: int = Depends(resolve_user_id), db: S
 
 
 # ===================== 采纳链路 + 穿搭日志（FR-C7）=====================
-@router.post('/outfits/adopt', response_model=AdoptionResponse)
+@router.post('/outfits/adopt')
 def adopt_outfit(data: AdoptionCreate, user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    """用户采纳一套搭配：记录采纳 + 给单品写穿着记录（驱动 wear_count/last_worn）。"""
+    """【穿搭日志功能已停用】原逻辑：记录采纳(AdoptionRecord) + 给单品写穿着记录(WearLog)。
+
+    现仅保留「穿着记录(WearLog)」写入，用于驱动「穿搭回顾」(wear-by-date) 与衣橱穿着统计；
+    不再写入 AdoptionRecord（穿搭日志采纳记录），因为用户端未提供穿搭日志入口。
+    """
     adopted_date = date.today()
     if data.adopted_date:
         try:
@@ -257,68 +261,74 @@ def adopt_outfit(data: AdoptionCreate, user_id: int = Depends(resolve_user_id), 
                 it.wear_count = (it.wear_count or 0) + 1
             if (it.last_worn is None) or (adopted_date > it.last_worn):
                 it.last_worn = adopted_date
+        db.commit()
 
-    record = AdoptionRecord(
-        user_id=user_id, source=data.source, scene=data.scene,
-        conversation_id=data.conversation_id,
-        item_ids=json.dumps(data.item_ids),
-        reason=data.reason, adopted_date=adopted_date)
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    return record
-
-
-@router.get('/adoptions', response_model=list[AdoptionResponse])
-def list_adoptions(user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    return db.query(AdoptionRecord).filter(AdoptionRecord.user_id == user_id)\
-        .order_by(AdoptionRecord.adopted_date.desc(), AdoptionRecord.id.desc()).limit(100).all()
+    # ===== 穿搭日志（AdoptionRecord）已停用，不再写入 =====
+    # record = AdoptionRecord(
+    #     user_id=user_id, source=data.source, scene=data.scene,
+    #     conversation_id=data.conversation_id,
+    #     item_ids=json.dumps(data.item_ids),
+    #     reason=data.reason, adopted_date=adopted_date)
+    # db.add(record)
+    # db.commit()
+    # db.refresh(record)
+    return {'message': '穿搭日志功能未启用，仅记录穿着', 'item_ids': data.item_ids,
+            'adopted_date': str(adopted_date)}
 
 
-@router.get('/wear-diary')
-def wear_diary(month: str = '', user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    """穿搭日志：按日期聚合（采纳的搭配 + 当天穿过的单品），附统计。"""
-    # 采纳记录（按日期）
-    adoptions = db.query(AdoptionRecord).filter(AdoptionRecord.user_id == user_id)\
-        .order_by(AdoptionRecord.adopted_date.desc()).all()
-    if month:
-        adoptions = [a for a in adoptions if str(a.adopted_date).startswith(month)]
-    # 穿着记录（按日期）
-    wear_rows = db.query(WearLog.worn_date, WearLog.item_id).filter(WearLog.user_id == user_id).all()
-    if month:
-        wear_rows = [w for w in wear_rows if str(w[0]).startswith(month)]
-    items_by_id = {i.id: i for i in db.query(ClothingItem).filter(ClothingItem.user_id == user_id).all()}
+# 【已停用】穿搭日志列表接口：用户端未提供穿搭日志入口，AdoptionRecord 不再写入。
+# @router.get('/adoptions', response_model=list[AdoptionResponse])
+# def list_adoptions(user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
+#     return db.query(AdoptionRecord).filter(AdoptionRecord.user_id == user_id)\
+#         .order_by(AdoptionRecord.adopted_date.desc(), AdoptionRecord.id.desc()).limit(100).all()
 
-    days: dict[str, dict] = {}
-    for a in adoptions:
-        key = str(a.adopted_date)
-        day = days.setdefault(key, {'date': key, 'adoptions': [], 'items': [], 'item_ids': set()})
-        ids = json.loads(a.item_ids or '[]')
-        day['adoptions'].append({
-            'id': a.id, 'source': a.source, 'scene': a.scene,
-            'reason': a.reason, 'item_ids': ids,
-        })
-        for iid in ids:
-            day['item_ids'].add(iid)
-    for wdate, iid in wear_rows:
-        key = str(wdate)
-        day = days.setdefault(key, {'date': key, 'adoptions': [], 'items': [], 'item_ids': set()})
-        day['item_ids'].add(iid)
-    for day in days.values():
-        day['items'] = [
-            {'id': i.id, 'name': i.name, 'category': i.category, 'color': i.color or '',
-             'image_url': i.image_url or ''}
-            for i in (items_by_id.get(x) for x in sorted(day['item_ids']))
-            if i is not None
-        ]
-        day.pop('item_ids', None)
 
-    days_list = sorted(days.values(), key=lambda d: d['date'], reverse=True)
-    total_adoptions = len(adoptions)
-    total_items = sum(len(d.get('items', [])) for d in days_list)
-    return {'days': days_list, 'stats': {'total_adoptions': total_adoptions,
-                                         'total_worn_records': total_items,
-                                         'days_active': len(days_list)}}
+# 【已停用】穿搭日志聚合接口：用户端未提供穿搭日志入口，且穿搭回顾(lookback) 改用
+# /user/wardrobe/wear-by-date 直接查 WearLog，故本接口不再使用，整体注释保留以备启用。
+# @router.get('/wear-diary')
+# def wear_diary(month: str = '', user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
+#     """穿搭日志：按日期聚合（采纳的搭配 + 当天穿过的单品），附统计。"""
+#     # 采纳记录（按日期）
+#     adoptions = db.query(AdoptionRecord).filter(AdoptionRecord.user_id == user_id)\
+#         .order_by(AdoptionRecord.adopted_date.desc()).all()
+#     if month:
+#         adoptions = [a for a in adoptions if str(a.adopted_date).startswith(month)]
+#     # 穿着记录（按日期）
+#     wear_rows = db.query(WearLog.worn_date, WearLog.item_id).filter(WearLog.user_id == user_id).all()
+#     if month:
+#         wear_rows = [w for w in wear_rows if str(w[0]).startswith(month)]
+#     items_by_id = {i.id: i for i in db.query(ClothingItem).filter(ClothingItem.user_id == user_id).all()}
+#
+#     days: dict[str, dict] = {}
+#     for a in adoptions:
+#         key = str(a.adopted_date)
+#         day = days.setdefault(key, {'date': key, 'adoptions': [], 'items': [], 'item_ids': set()})
+#         ids = json.loads(a.item_ids or '[]')
+#         day['adoptions'].append({
+#             'id': a.id, 'source': a.source, 'scene': a.scene,
+#             'reason': a.reason, 'item_ids': ids,
+#         })
+#         for iid in ids:
+#             day['item_ids'].add(iid)
+#     for wdate, iid in wear_rows:
+#         key = str(wdate)
+#         day = days.setdefault(key, {'date': key, 'adoptions': [], 'items': [], 'item_ids': set()})
+#         day['item_ids'].add(iid)
+#     for day in days.values():
+#         day['items'] = [
+#             {'id': i.id, 'name': i.name, 'category': i.category, 'color': i.color or '',
+#              'image_url': i.image_url or ''}
+#             for i in (items_by_id.get(x) for x in sorted(day['item_ids']))
+#             if i is not None
+#         ]
+#         day.pop('item_ids', None)
+#
+#     days_list = sorted(days.values(), key=lambda d: d['date'], reverse=True)
+#     total_adoptions = len(adoptions)
+#     total_items = sum(len(d.get('items', [])) for d in days_list)
+#     return {'days': days_list, 'stats': {'total_adoptions': total_adoptions,
+#                                          'total_worn_records': total_items,
+#                                          'days_active': len(days_list)}}
 
 
 # ===================== 应用内日程表（FR-C6 日程联动）=====================

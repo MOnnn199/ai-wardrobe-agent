@@ -1456,7 +1456,7 @@ async function adoptSceneResult() {
   if (!sceneResult.value) return
   try {
     const item_ids = sceneItems.value.map(it => it.id)
-    await post('/user/outfits/adopt', { item_ids, source: 'scene', scene: sceneResult.value.sceneLabel, reason: '' })
+    // 穿搭日志功能已停用，采纳不再落库；保留「已采纳」提示作为交互反馈
     uni.showToast({ title: '已采纳', icon: 'success' })
     sceneResult.value = null
   } catch (e) {
@@ -2296,10 +2296,7 @@ async function wearTodayOutfit() {
   }
   try {
     await post('/user/wardrobe/mark-worn', { ids })
-    // 同时记入采纳记录
-    try {
-      await post('/user/outfits/adopt', { item_ids: ids, source: 'today', scene: '今日穿搭', reason: (homeOutfit.value.text || '').slice(0, 100) })
-    } catch (e) {}
+    // 穿搭日志功能已停用，不再调用 /user/outfits/adopt（穿着记录由 mark-worn 完成，供穿搭回顾）
     uni.showToast({ title: '已记录今天穿了这套', icon: 'success' })
     fetchWardrobe()
     fetchAnalysis()

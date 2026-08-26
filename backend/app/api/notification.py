@@ -36,6 +36,12 @@ def _ensure_monthly_notifications(db, user_id: int):
             scheduled.run_trend_push(user_id)
         except Exception:
             pass
+    # 打开通知中心时按需补推当天天气穿搭（对手动启动的后端最可靠：
+    # 只要用户当天打开过铃铛，就能看到今日天气，不再依赖 7:30 后端必须在跑）
+    try:
+        scheduled.run_weather_alerts(user_id)
+    except Exception:
+        pass
 
 
 @router.get('/notifications', response_model=List[NotificationResponse])

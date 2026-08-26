@@ -8,8 +8,26 @@ from app.models.user import User
 from app.models.wardrobe import ClothingItem
 from app.services.notifications import create_notification
 from datetime import date
+import asyncio
 
 scheduler = AsyncIOScheduler()
+
+
+def _push_realtime(user_id: int, msg: dict):
+    """尽力做实时推送（需 H5 已连接 /ws/{user_id}）。
+
+    无运行中的事件循环（如后端启动期、纯同步触发）时静默跳过——
+    通知已写入 notifications 表，用户打开通知中心仍能看到，不影响送达。
+    """
+    try:
+        from app.main import notify_user
+        loop = asyncio.get_running_loop()
+        loop.create_task(notify_user(user_id, msg))
+    except RuntimeError:
+        pass
+    except Exception:
+        pass
+
 
 
 # ===================== 衣橱分析辅助 =====================
@@ -336,12 +354,21 @@ def _compose_daily_advice(code: int, t_max, t_min, pop, wind) -> tuple[str, str]
     return title, content
 
 
-def run_weather_alerts():
-    """每天早上：对有定位的用户统一推送一条今日天气穿搭（按天幂等）。"""
+def run_weather_alerts(user_id=None):
+    """每天：对有定位的用户推送一条今日天气穿搭（按天幂等）。
+
+    - 7:30 由 cron 触发（仅当后端当时在运行）；
+    - 后端启动时、用户打开通知中心时也会按需补跑（弥补手动启动导致的错过）；
+    - 传入 user_id 时只补推单个用户（通知中心按需场景）。
+    """
     from app.models.notification import Notification
     db = SessionLocal()
     today = date.today().strftime('%Y-%m-%d')
-    users = db.query(User).filter(User.is_active == 1, User.role == 'user').all()
+    if user_id:
+        users = [db.query(User).get(user_id)]
+    else:
+        users = db.query(User).filter(User.is_active == 1, User.role == 'user').all()
+    users = [u for u in users if u]
     for user in users:
         if not user.lat or not user.lon:
             continue
@@ -359,19 +386,17 @@ def run_weather_alerts():
         if exists:
             continue
         create_notification(db, user.id, 'weather_alert', full_title, content)
-        # 实时推送给在线用户（WebSocket）
-        try:
-            from app.main import notify_user
-            import asyncio
-            asyncio.run(notify_user(user.id, {'type': 'weather_alert',
-                                               'title': title_base, 'content': content}))
-        except Exception:
-            pass
+        # 实时推送给在线用户（WebSocket，循环感知，失败不影响库内通知）
+        _push_realtime(user.id, {'type': 'weather_alert', 'title': title_base, 'content': content})
     db.close()
 
 
 # ===================== 日程联动提醒（FR-C6）=====================
+# 【已弃用】日程推送功能未启用：当前用户端无「日程」入口，用户无法创建日程，
+# 故该定时任务永远不会产生有效数据，且 EventReminder 通知也无前端触达渠道。
+# 保留函数与调度注册仅作占位，避免误删 CalendarEvent 模型；如需启用再开放前端入口。
 def run_event_reminders():
+    return
     """每天早晨：当天有日程（remind=1）的用户推送穿搭提醒，按天幂等。"""
     from app.models.calendar import CalendarEvent
     from app.models.notification import Notification
@@ -393,18 +418,12 @@ def run_event_reminders():
             f'场合：{occasion_cn}，建议提前准备对应风格的穿搭。'
         )
         create_notification(db, ev.user_id, 'event_reminder', title, content)
-        try:
-            from app.main import notify_user
-            import asyncio
-            asyncio.run(notify_user(ev.user_id, {'type': 'event_reminder', 'title': title,
-                                                 'content': content}))
-        except Exception:
-            pass
+        _push_realtime(ev.user_id, {'type': 'event_reminder', 'title': title, 'content': content})
     db.close()
 
 
 async def _weather(): run_weather_alerts()
-async def _events(): run_event_reminders()
+# async def _events(): run_event_reminders()  # 见 run_event_reminders 说明（功能未启用）
 
 
 def init_scheduler():
@@ -413,5 +432,11 @@ def init_scheduler():
     scheduler.add_job(_gap, 'cron', day_of_week='mon', hour=9, minute=0, id='knowledge_gap')
     # 每天早上 7:30 给有定位的用户推一条「今日天气穿搭」（每天一条，按天幂等）
     scheduler.add_job(_weather, 'cron', hour=7, minute=30, id='weather_alerts')
-    scheduler.add_job(_events, 'cron', hour=7, minute=0, id='event_reminders')
+    # scheduler.add_job(_events, 'cron', hour=7, minute=0, id='event_reminders')  # 日程功能未启用
     scheduler.start()
+    # 后端启动即补推当天天气穿搭：对手动启动的后端，弥补 7:30 未运行而错过的推送。
+    # 按天幂等，重复启动不会重复生成；Open-Meteo 不可达时静默跳过，待打开通知中心时再补。
+    try:
+        run_weather_alerts()
+    except Exception as e:
+        print('[scheduler] startup weather backfill failed:', e)

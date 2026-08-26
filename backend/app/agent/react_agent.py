@@ -89,7 +89,8 @@ class ReActAgent:
                 if lon is not None and "lon" not in func_args:
                     func_args["lon"] = lon
         if func_name in ("get_wardrobe", "check_outfit", "search_similar_clothes",
-                         "get_user_profile", "get_my_outfits") and user_id:
+                         "get_user_profile", "get_my_outfits",
+                         "score_outfit_detailed", "get_seasonal_suitability") and user_id:
             # 强制覆盖，防止 LLM 自行传入错误/他人的 user_id，确保数据隔离
             func_args["user_id"] = user_id
 
