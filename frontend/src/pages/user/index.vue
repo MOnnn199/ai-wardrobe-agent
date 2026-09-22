@@ -1344,27 +1344,28 @@ function md2html(md) {
     html = html.replace(rows.join('\n'), tableHtml)
   }
   // 标题
-  html = html.replace(/^###### (.*)$/gm, '<h6 style="font-size:26rpx;font-weight:600;margin:14rpx 0 8rpx;color:#2D3A5A">$1</h6>')
-  html = html.replace(/^##### (.*)$/gm, '<h5 style="font-size:27rpx;font-weight:600;margin:16rpx 0 10rpx;color:#2D3A5A">$1</h5>')
-  html = html.replace(/^#### (.*)$/gm, '<h4 style="font-size:28rpx;font-weight:600;margin:18rpx 0 10rpx;color:#2D3A5A">$1</h4>')
-  html = html.replace(/^### (.*)$/gm, '<h3 style="font-size:30rpx;font-weight:700;margin:20rpx 0 12rpx;color:#2D3A5A">$1</h3>')
-  html = html.replace(/^## (.*)$/gm, '<h2 style="font-size:34rpx;font-weight:700;margin:24rpx 0 14rpx;color:#2D3A5A;border-bottom:1rpx solid #e1edff;padding-bottom:8rpx">$1</h2>')
-  html = html.replace(/^# (.*)$/gm, '<h1 style="font-size:38rpx;font-weight:800;margin:28rpx 0 16rpx;color:#2D3A5A">$1</h1>')
+  const hbreak = 'word-break:break-word;overflow-wrap:break-word;white-space:normal'
+  html = html.replace(/^###### (.*)$/gm, `<h6 style="font-size:26rpx;font-weight:600;margin:14rpx 0 8rpx;color:#2D3A5A;${hbreak}">$1</h6>`)
+  html = html.replace(/^##### (.*)$/gm, `<h5 style="font-size:27rpx;font-weight:600;margin:16rpx 0 10rpx;color:#2D3A5A;${hbreak}">$1</h5>`)
+  html = html.replace(/^#### (.*)$/gm, `<h4 style="font-size:28rpx;font-weight:600;margin:18rpx 0 10rpx;color:#2D3A5A;${hbreak}">$1</h4>`)
+  html = html.replace(/^### (.*)$/gm, `<h3 style="font-size:30rpx;font-weight:700;margin:20rpx 0 12rpx;color:#2D3A5A;${hbreak}">$1</h3>`)
+  html = html.replace(/^## (.*)$/gm, `<h2 style="font-size:34rpx;font-weight:700;margin:24rpx 0 14rpx;color:#2D3A5A;border-bottom:1rpx solid #e1edff;padding-bottom:8rpx;${hbreak}">$1</h2>`)
+  html = html.replace(/^# (.*)$/gm, `<h1 style="font-size:38rpx;font-weight:800;margin:28rpx 0 16rpx;color:#2D3A5A;${hbreak}">$1</h1>`)
   // 引用
   html = html.replace(/^> (.*)$/gm, '<blockquote style="margin:12rpx 0;padding:12rpx 16rpx;background:#eef5ff;border-left:6rpx solid #7aa8ff;color:#6B7A9C;font-size:26rpx">$1</blockquote>')
   // 粗体/斜体
-  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong style="word-break:break-word;overflow-wrap:break-word;white-space:normal"><em>$1</em></strong>')
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="word-break:break-word;overflow-wrap:break-word;white-space:normal">$1</strong>')
+  html = html.replace(/\*(.+?)\*/g, '<em style="word-break:break-word;overflow-wrap:break-word;white-space:normal">$1</em>')
   // 删除线
   html = html.replace(/~~(.+?)~~/g, '<del>$1</del>')
   // 行内代码
   html = html.replace(/`(.+?)`/g, '<code style="background:#F4EFFA;padding:2rpx 8rpx;border-radius:6rpx;color:#8B7AC0;font-size:24rpx">$1</code>')
-  // 无序列表
-  html = html.replace(/^(\s*)[-*+] (.*)$/gm, (m, sp, txt) => `<li style="margin:8rpx 0">${txt}</li>`)
-  html = html.replace(/(<li[^>]*>[\s\S]*?<\/li>\n?)+/g, m => `<ul style="padding-left:32rpx;margin:12rpx 0">${m}</ul>`)
+  // 无序列表：去掉 AI 自己写的“·/•”前导符号，避免和自定义圆点重复
+  html = html.replace(/^(\s*)[-*+]\s*[·•∙⋅]?\s*(.*)$/gm, (m, sp, txt) => `<li style="margin:8rpx 0;word-break:break-word;overflow-wrap:break-word;white-space:normal">${txt}</li>`)
+  html = html.replace(/(<li[^>]*>[\s\S]*?<\/li>\n?)+/g, m => `<ul style="padding-left:0;margin:12rpx 0;list-style:none">${m}</ul>`)
   // 有序列表
-  html = html.replace(/^\d+\. (.*)$/gm, '<li style="margin:8rpx 0">$1</li>')
+  html = html.replace(/^\d+\.\s*[·•∙⋅]?\s*(.*)$/gm, '<li style="margin:8rpx 0;word-break:break-word;overflow-wrap:break-word;white-space:normal">$1</li>')
   // 分隔线
   html = html.replace(/^-{3,}$/gm, '<hr style="border:none;border-top:1rpx solid #d6e5ff;margin:20rpx 0">')
   // 链接
@@ -2032,24 +2033,49 @@ async function reverseGeocode(lat, lon) {
     clearTimeout(t)
   }
 }
-// IP 自动定位（兜底）：按客户端公网 IP 反查城市，纯 HTTP、无需 GPS 授权、手机/桌面均可。
-// 用太平洋 IP 库 JSONP（无 key、国内可用、免 CORS），超时即放弃，绝不卡住首屏。
+// IP 自动定位（兜底）：按客户端公网 IP 反查城市，无需 GPS 授权、手机/桌面均可。
+// 优先高德 IP 定位 API（已有 VITE_AMAP_KEY），失败/返回空再回退搜狐 JSONP。
 function ipLocate() {
   return new Promise((resolve) => {
     let done = false
     const finish = (v) => { if (!done) { done = true; resolve(v) } }
-    const cb = '__ipgeo_cb_' + Date.now() + Math.floor(Math.random() * 1e4)
-    const s = document.createElement('script')
-    window[cb] = (data) => {
-      try { finish((data && (data.city || data.pro)) || null) }
-      catch (e) { finish(null) }
-      try { delete window[cb] } catch (e) {}
-      if (s.parentNode) s.parentNode.removeChild(s)
+    const amapKey = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_AMAP_KEY) || ''
+
+    // 通用兜底：搜狐 JSONP
+    function fallbackSohu() {
+      const s = document.createElement('script')
+      const read = () => {
+        try {
+          const sn = window.returnCitySN
+          finish(sn && sn.cname ? sn.cname : null)
+        } catch (e) { finish(null) }
+        try { delete window.returnCitySN } catch (e) {}
+        if (s.parentNode) s.parentNode.removeChild(s)
+      }
+      s.onload = read
+      s.onerror = () => { finish(null); if (s.parentNode) s.parentNode.removeChild(s) }
+      s.src = 'https://pv.sohu.com/cityjson?ie=utf-8'
+      document.body.appendChild(s)
+      setTimeout(() => { finish(null); if (s.parentNode) s.parentNode.removeChild(s) }, 4000)
     }
-    s.onerror = () => { finish(null); if (s.parentNode) s.parentNode.removeChild(s) }
-    s.src = 'https://whois.pconline.com.cn/ipJson.jsp?callback=' + cb
-    document.body.appendChild(s)
-    setTimeout(() => { finish(null); if (s.parentNode) s.parentNode.removeChild(s) }, 4000)
+
+    // 分支1：有高德 key 时走 REST API（CORS 友好）
+    if (amapKey) {
+      const ctrl = new AbortController()
+      const t = setTimeout(() => { ctrl.abort(); fallbackSohu() }, 4000)
+      fetch(`https://restapi.amap.com/v3/ip?key=${amapKey}&ip=`, { signal: ctrl.signal })
+        .then(r => r.json())
+        .then(j => {
+          clearTimeout(t)
+          if (j && j.status === '1' && (j.city || j.province)) finish(j.city || j.province)
+          else fallbackSohu()
+        })
+        .catch(() => { clearTimeout(t); fallbackSohu() })
+      return
+    }
+
+    // 无 key 直接搜狐
+    fallbackSohu()
   })
 }
 // 把 IP 反查到的“广东省/广州市”之类，匹配到内置城市表的经纬度
@@ -3171,21 +3197,22 @@ onMounted(() => {
 .chat-img { max-width: 360rpx; border-radius: 12rpx; }
 .bubble { max-width: 660rpx; }
 .msg-label { font-size: 22rpx; color: #8A9ABA; margin-bottom: 6rpx; display: block; }
-.msg-text { font-size: 28rpx; line-height: 1.7; padding: 18rpx 22rpx; border-radius: 16rpx; display: block; white-space: pre-wrap; word-break: break-word; }
+.msg-text { font-size: 28rpx; line-height: 1.7; padding: 18rpx 22rpx; border-radius: 16rpx; display: block; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; }
 .msg-user .msg-text { background: #7aa8ff; color: #fff; border-bottom-right-radius: 4rpx; }
 .msg-agent .msg-text { background: #F4EFFA; border: 1rpx solid #E8DEF3; border-bottom-left-radius: 4rpx; }
 /* AI 消息气泡里的富文本：让 md 加粗/标题/列表真正生效 */
-:deep(.msg-text) p { margin: 8rpx 0; line-height: 1.7; }
+:deep(.msg-text) p { margin: 8rpx 0; line-height: 1.7; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
 :deep(.msg-text) h1,
 :deep(.msg-text) h2,
-:deep(.msg-text) h3 { font-weight: 700; color: #2D3A5A; margin: 16rpx 0 10rpx; line-height: 1.4; }
+:deep(.msg-text) h3 { font-weight: 700; color: #2D3A5A; margin: 16rpx 0 10rpx; line-height: 1.4; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
 :deep(.msg-text) h1 { font-size: 34rpx; }
 :deep(.msg-text) h2 { font-size: 30rpx; }
 :deep(.msg-text) h3 { font-size: 28rpx; }
-:deep(.msg-text) strong { font-weight: 600; color: #5B8DEF; }
-:deep(.msg-text) ul { padding-left: 32rpx; margin: 10rpx 0; }
-:deep(.msg-text) ol { padding-left: 32rpx; margin: 10rpx 0; }
-:deep(.msg-text) li { margin: 6rpx 0; }
+:deep(.msg-text) strong { font-weight: 600; color: #5B8DEF; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+:deep(.msg-text) ul,
+:deep(.msg-text) ol { padding-left: 0; margin: 10rpx 0; list-style: none; }
+:deep(.msg-text) li { margin: 6rpx 0; padding-left: 24rpx; position: relative; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+:deep(.msg-text) li::before { content: '•'; position: absolute; left: 0; top: 0; color: #7aa8ff; font-weight: 700; font-size: 28rpx; line-height: 1.7; }
 .rate-row { margin-top: 8rpx; }
 .star { font-size: 32rpx; color: #d6e5ff; margin-right: 6rpx; }
 .star.active { color: #FF9E8E; }
@@ -3421,10 +3448,14 @@ onMounted(() => {
 .review-img { width: 100%; margin: 20rpx 0; border-radius: 12rpx; }
 .rv-block { margin-top: 18rpx; }
 .rv-h { font-size: 26rpx; font-weight: 600; color: #2D3A5A; display: block; margin-bottom: 6rpx; }
-.rv-c { font-size: 25rpx; color: #6B7A9C; line-height: 1.7; white-space: pre-wrap; }
-:deep(.rv-c) p { margin: 6rpx 0; line-height: 1.7; white-space: pre-wrap; }
-:deep(.rv-c) strong { font-weight: 600; color: #5B8DEF; }
-:deep(.rv-c) h3 { font-size: 26rpx; font-weight: 700; color: #2D3A5A; margin: 12rpx 0 6rpx; }
+.rv-c { font-size: 25rpx; color: #6B7A9C; line-height: 1.7; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; }
+:deep(.rv-c) p { margin: 6rpx 0; line-height: 1.7; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; }
+:deep(.rv-c) strong { font-weight: 600; color: #5B8DEF; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+:deep(.rv-c) h3 { font-size: 26rpx; font-weight: 700; color: #2D3A5A; margin: 12rpx 0 6rpx; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+:deep(.rv-c) ul,
+:deep(.rv-c) ol { padding-left: 0; margin: 8rpx 0; list-style: none; }
+:deep(.rv-c) li { margin: 4rpx 0; padding-left: 22rpx; position: relative; }
+:deep(.rv-c) li::before { content: '•'; position: absolute; left: 0; top: 0; color: #7aa8ff; font-weight: 700; }
 .review-actions { margin-top: 20rpx; display: flex; justify-content: flex-end; }
 .tag { font-size: 20rpx; padding: 4rpx 12rpx; background: #e1edff; color: #7aa8ff; border-radius: 6rpx; margin-right: 6rpx; }
 .tag.ok { background: #EEF0FA; color: #5B8DEF; }
