@@ -118,7 +118,8 @@
           <view v-for="(m,i) in messages" :key="i" :class="['msg','msg-'+m.role]">
             <view class="bubble">
               <text class="msg-label">{{ m.role==='user'?'你':'搭配师' }}</text>
-              <text class="msg-text">{{ m.content }}</text>
+              <rich-text v-if="m.role==='agent'" class="msg-text" :nodes="md2html(m.content)"></rich-text>
+              <text v-else class="msg-text">{{ m.content }}</text>
             </view>
             <view v-if="m.role==='agent' && m.items && m.items.length" class="chat-item-list">
               <view v-for="it in m.items" :key="it.id" class="chat-item-card" @click="openDetail(it)">
@@ -435,10 +436,10 @@
             </view>
           </view>
 
-          <view class="rv-block"><text class="rv-h"> 色彩协调</text><text class="rv-c">{{ reviewResult.color_comment || reviewResult.raw }}</text></view>
-          <view class="rv-block"><text class="rv-h"> 季节合适度</text><text class="rv-c">{{ reviewResult.season_comment }}</text></view>
-          <view class="rv-block"><text class="rv-h"> 场合得体性</text><text class="rv-c">{{ reviewResult.occasion_comment }}</text></view>
-          <view class="rv-block"><text class="rv-h"> 完整性</text><text class="rv-c">{{ reviewResult.completeness_comment }}</text></view>
+          <view class="rv-block"><text class="rv-h"> 色彩协调</text><rich-text class="rv-c" :nodes="md2html(reviewResult.color_comment || reviewResult.raw)"></rich-text></view>
+          <view class="rv-block"><text class="rv-h"> 季节合适度</text><rich-text class="rv-c" :nodes="md2html(reviewResult.season_comment)"></rich-text></view>
+          <view class="rv-block"><text class="rv-h"> 场合得体性</text><rich-text class="rv-c" :nodes="md2html(reviewResult.occasion_comment)"></rich-text></view>
+          <view class="rv-block"><text class="rv-h"> 完整性</text><rich-text class="rv-c" :nodes="md2html(reviewResult.completeness_comment)"></rich-text></view>
           <view v-if="reviewResult.suggestions && reviewResult.suggestions.length" class="rv-block">
             <text class="rv-h"> 改进建议</text>
             <text v-for="(s,i) in reviewResult.suggestions" :key="i" class="sug">{{ (i+1) }}. {{ s }}</text>
@@ -3173,6 +3174,18 @@ onMounted(() => {
 .msg-text { font-size: 28rpx; line-height: 1.7; padding: 18rpx 22rpx; border-radius: 16rpx; display: block; white-space: pre-wrap; word-break: break-word; }
 .msg-user .msg-text { background: #7aa8ff; color: #fff; border-bottom-right-radius: 4rpx; }
 .msg-agent .msg-text { background: #F4EFFA; border: 1rpx solid #E8DEF3; border-bottom-left-radius: 4rpx; }
+/* AI 消息气泡里的富文本：让 md 加粗/标题/列表真正生效 */
+:deep(.msg-text) p { margin: 8rpx 0; line-height: 1.7; }
+:deep(.msg-text) h1,
+:deep(.msg-text) h2,
+:deep(.msg-text) h3 { font-weight: 700; color: #2D3A5A; margin: 16rpx 0 10rpx; line-height: 1.4; }
+:deep(.msg-text) h1 { font-size: 34rpx; }
+:deep(.msg-text) h2 { font-size: 30rpx; }
+:deep(.msg-text) h3 { font-size: 28rpx; }
+:deep(.msg-text) strong { font-weight: 600; color: #5B8DEF; }
+:deep(.msg-text) ul { padding-left: 32rpx; margin: 10rpx 0; }
+:deep(.msg-text) ol { padding-left: 32rpx; margin: 10rpx 0; }
+:deep(.msg-text) li { margin: 6rpx 0; }
 .rate-row { margin-top: 8rpx; }
 .star { font-size: 32rpx; color: #d6e5ff; margin-right: 6rpx; }
 .star.active { color: #FF9E8E; }
@@ -3409,6 +3422,9 @@ onMounted(() => {
 .rv-block { margin-top: 18rpx; }
 .rv-h { font-size: 26rpx; font-weight: 600; color: #2D3A5A; display: block; margin-bottom: 6rpx; }
 .rv-c { font-size: 25rpx; color: #6B7A9C; line-height: 1.7; white-space: pre-wrap; }
+:deep(.rv-c) p { margin: 6rpx 0; line-height: 1.7; white-space: pre-wrap; }
+:deep(.rv-c) strong { font-weight: 600; color: #5B8DEF; }
+:deep(.rv-c) h3 { font-size: 26rpx; font-weight: 700; color: #2D3A5A; margin: 12rpx 0 6rpx; }
 .review-actions { margin-top: 20rpx; display: flex; justify-content: flex-end; }
 .tag { font-size: 20rpx; padding: 4rpx 12rpx; background: #e1edff; color: #7aa8ff; border-radius: 6rpx; margin-right: 6rpx; }
 .tag.ok { background: #EEF0FA; color: #5B8DEF; }
