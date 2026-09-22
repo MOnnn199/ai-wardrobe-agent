@@ -1,16 +1,16 @@
 /* =====================================================================
  * animations.css —— 全局动效（学习项目风格：淡入上移 + 悬浮上浮 + 按下回弹）
  * 配色复用 ai-wardrobe 浅蓝奶油色系：
- *   主蓝 #7aa8ff / 浅蓝 #a9c6ff / 奶油白 #FDFBF7 / 强调珊瑚 #FF9E8E
- *   墨蓝文字 #2D3A5A / 边框 #d6e5ff
+ *   主蓝 #4F46E5 / 浅蓝 #C7D2FE / 奶油白 #FFFFFF / 强调珊瑚 #EF4444
+ *   墨蓝文字 #18181B / 边框 #F4F4F5
  * ===================================================================== */
 :root {
-  --wb-blue: #7aa8ff;
-  --wb-blue-light: #a9c6ff;
-  --wb-cream: #FDFBF7;
-  --wb-orange: #FF9E8E;
-  --wb-ink: #2D3A5A;
-  --wb-border: #d6e5ff;
+  --wb-blue: #4F46E5;
+  --wb-blue-light: #C7D2FE;
+  --wb-cream: #FFFFFF;
+  --wb-orange: #EF4444;
+  --wb-ink: #18181B;
+  --wb-border: #F4F4F5;
 }
 
 /* 全局字体细节：抗锯齿 + 数字等宽对齐（价格/分数/日期不跳动） */
@@ -123,7 +123,7 @@ body {
 
 /* 表格：行悬浮浅蓝底 + 数据载入时逐行淡入 */
 .el-table tbody tr { transition: background-color .15s ease; }
-.el-table .el-table__row:hover > td.el-table__cell { background-color: #eef5ff !important; }
+.el-table .el-table__row:hover > td.el-table__cell { background-color: #F7F8FA !important; }
 .el-table__body-wrapper tbody tr { animation: fadeInSlide .3s ease both; }
 
 /* 加载/空态提示也柔和一点 */
@@ -150,18 +150,18 @@ html { overflow-y: scroll; }
 
 /* =====================================================================
  * 2026-08-21 扩展 —— 与 H5 三色系统 / 动效 token 对齐
- * 主蓝 #7aa8ff / 淡薰衣草 #8B7AC0 / 珊瑚 #FF9E8E / 墨蓝 #2D3A5A
+ * 主蓝 #4F46E5 / 淡薰衣草 #818CF8 / 珊瑚 #EF4444 / 墨蓝 #18181B
  * ===================================================================== */
 :root {
-  --lav-50:  #F4EFFA;
-  --lav-100: #E8DEF3;
-  --lav-200: #D4C0E8;
-  --lav-400: #B19CD9;
-  --lav-600: #8B7AC0;
-  --lav-800: #5D4F80;
-  --coral: #FF9E8E;
-  --coral-light: #FFE9E2;
-  --coral-ink: #D66A60;
+  --lav-50:  #F5F3FF;
+  --lav-100: #EDE9FE;
+  --lav-200: #DDD6FE;
+  --lav-400: #A5B4FC;
+  --lav-600: #818CF8;
+  --lav-800: #4F46E5;
+  --coral: #EF4444;
+  --coral-light: #FEE2E2;
+  --coral-ink: #DC2626;
 }
 
 /* ---- 动效曲线 token（学习自 Apple / Linear / 小红书） ---- */
@@ -224,7 +224,7 @@ html { overflow-y: scroll; }
 
 /* ---- 骨架屏 shimmer（Linear 风格） ---- */
 .wb-skel {
-  background: linear-gradient(90deg, #eef5ff 0%, #f4f8ff 50%, #eef5ff 100%);
+  background: linear-gradient(90deg, #F7F8FA 0%, #FAFAFB 50%, #F7F8FA 100%);
   background-size: 200% 100%;
   animation: wbShimmer 1.4s linear infinite;
   border-radius: 10px;

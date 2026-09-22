@@ -3,7 +3,7 @@
     <template #notifications>
       <div class="noti-task-list">
         <div v-for="(t, i) in taskList" :key="i" class="noti-task-item" @click="taskChecks[i] = !taskChecks[i]">
-          <span class="noti-task-dot" :style="{ background: t.done ? '#c5d9ff' : '#7aa8ff', boxShadow: t.done ? 'none' : '0 0 0 3px rgba(122,168,255,0.15)' }"></span>
+          <span class="noti-task-dot" :style="{ background: t.done ? '#E5E7EB' : '#4F46E5', boxShadow: t.done ? 'none' : '0 0 0 3px rgba(122,168,255,0.15)' }"></span>
           <span class="noti-task-text" :class="{ done: t.done }">{{ t.label }}</span>
           <el-checkbox v-model="taskChecks[i]" class="noti-task-check" @click.stop />
         </div>
@@ -24,22 +24,22 @@
 
       <div class="quick-cards">
         <div class="q-card" @click="active = 'corrections'">
-          <div class="q-icon" style="background:#FFE9E2;color:#D66A60"><el-icon :size="22"><Warning /></el-icon></div>
+          <div class="q-icon" style="background:#FEE2E2;color:#DC2626"><el-icon :size="22"><Warning /></el-icon></div>
           <div class="q-title">翻车案例</div>
           <div class="q-desc">{{ correctionsTotal }} 条待处理 · 平均评分 {{ stats.avg_score || 0 }}</div>
         </div>
         <div class="q-card" @click="active = 'knowledge'">
-          <div class="q-icon" style="background:#e1edff;color:#5B8DEF"><el-icon :size="22"><Files /></el-icon></div>
+          <div class="q-icon" style="background:#EEF2FF;color:#4F46E5"><el-icon :size="22"><Files /></el-icon></div>
           <div class="q-title">知识库</div>
           <div class="q-desc">{{ knowledgeTotal }} 条文档片段</div>
         </div>
         <div class="q-card" @click="active = 'tags'">
-          <div class="q-icon" style="background:#E8DEF3;color:#8B7AC0"><el-icon :size="22"><Collection /></el-icon></div>
+          <div class="q-icon" style="background:#EDE9FE;color:#818CF8"><el-icon :size="22"><Collection /></el-icon></div>
           <div class="q-title">标签管理</div>
           <div class="q-desc">{{ tags.length }} 个标签</div>
         </div>
         <div class="q-card add" @click="active = 'fewshot'">
-          <div class="q-icon" style="background:#D4C0E8;color:#5D4F80"><el-icon :size="22"><MagicStick /></el-icon></div>
+          <div class="q-icon" style="background:#DDD6FE;color:#4F46E5"><el-icon :size="22"><MagicStick /></el-icon></div>
           <div class="q-title">添加 Few-Shot</div>
           <div class="q-desc">{{ fewShotsTotal }} 条 · 点击添加</div>
         </div>
@@ -530,7 +530,7 @@ function renderDashboard() {
       grid: { left: 40, right: 20, top: 20, bottom: 30 },
       xAxis: { type: 'category', data: ['风格', '场合', '颜色', '尺码', '其他'] },
       yAxis: { type: 'value', minInterval: 1 },
-      series: [{ type: 'bar', data: [d.style || 0, d.occasion || 0, d.color || 0, d.size || 0, d.other || 0], barWidth: '45%', itemStyle: { color: '#a9c6ff', borderRadius: [6, 6, 0, 0] } }]
+      series: [{ type: 'bar', data: [d.style || 0, d.occasion || 0, d.color || 0, d.size || 0, d.other || 0], barWidth: '45%', itemStyle: { color: '#C7D2FE', borderRadius: [6, 6, 0, 0] } }]
     })
   }
   if (trendEl) {
@@ -541,7 +541,7 @@ function renderDashboard() {
       grid: { left: 40, right: 20, top: 20, bottom: 30 },
       xAxis: { type: 'category', data: t.map(x => x.date) },
       yAxis: { type: 'value', minInterval: 1 },
-      series: [{ type: 'line', smooth: true, data: t.map(x => x.count), itemStyle: { color: '#7aa8ff' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(122,168,255,0.25)' }, { offset: 1, color: 'rgba(122,168,255,0)' }] } } }]
+      series: [{ type: 'line', smooth: true, data: t.map(x => x.count), itemStyle: { color: '#4F46E5' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(122,168,255,0.25)' }, { offset: 1, color: 'rgba(122,168,255,0)' }] } } }]
     })
   }
 }
@@ -745,9 +745,9 @@ onMounted(() => {
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
 .gap-stat { font-size: 13px; color: var(--text-3); margin-left: 4px; }
 .kb-progress-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.kb-progress-bar { flex: 1; height: 10px; background: #eef5ff; border-radius: 5px; overflow: hidden; }
-.kb-progress-fill { height: 100%; background: #7aa8ff; border-radius: 5px; transition: width 0.2s linear; }
-.kb-progress-text { font-size: 13px; color: #6B7A9C; font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
+.kb-progress-bar { flex: 1; height: 10px; background: #F7F8FA; border-radius: 5px; overflow: hidden; }
+.kb-progress-fill { height: 100%; background: #4F46E5; border-radius: 5px; transition: width 0.2s linear; }
+.kb-progress-text { font-size: 13px; color: #6B7280; font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
 
 /* 标签管理 */
 .tag-group { margin-bottom: 14px; }
@@ -778,9 +778,9 @@ onMounted(() => {
 
 .metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .metric-row.compact { margin-bottom: 0; }
-.metric-card { background: #FDFBF7; border-radius: 12px; padding: 16px; }
-.metric-card.danger { background: #FFE9E2; }
-.metric-card.danger .m-value { color: #D66A60; }
+.metric-card { background: #FFFFFF; border-radius: 12px; padding: 16px; }
+.metric-card.danger { background: #FEE2E2; }
+.metric-card.danger .m-value { color: #DC2626; }
 .metric-card.ok { background: #DCFCE7; }
 .metric-card.ok .m-value { color: #15803D; }
 .m-label { font-size: 12px; color: var(--text-3); margin-bottom: 4px; }
@@ -801,7 +801,7 @@ onMounted(() => {
 :deep(.correction-dialog .el-dialog__body) { flex: 1; min-height: 0; max-height: calc(72vh - 132px); overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px; }
 :deep(.el-dialog__body h4) { margin: 0 0 8px; font-size: 14px; color: var(--text-2); font-weight: 600; }
 :deep(.el-dialog__body h4:not(:first-of-type)) { margin-top: 16px; }
-:deep(.el-dialog__body p) { margin: 0; padding: 12px 14px; background: #FDFBF7; border-radius: 10px; font-size: 14px; line-height: 1.7; color: var(--text); word-break: break-word; }
+:deep(.el-dialog__body p) { margin: 0; padding: 12px 14px; background: #FFFFFF; border-radius: 10px; font-size: 14px; line-height: 1.7; color: var(--text); word-break: break-word; }
 .op-note { font-size: 13px; color: var(--text-3); }
 
 /* 列表翻页器：与运营端一致，右对齐、与表格留间距 */

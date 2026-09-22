@@ -3,7 +3,7 @@
     <template #notifications>
       <div class="noti-task-list">
         <div v-for="(t, i) in taskList" :key="i" class="noti-task-item" @click="taskChecks[i] = !taskChecks[i]">
-          <span class="noti-task-dot" :style="{ background: t.done ? '#c5d9ff' : '#7aa8ff', boxShadow: t.done ? 'none' : '0 0 0 3px rgba(122,168,255,0.15)' }"></span>
+          <span class="noti-task-dot" :style="{ background: t.done ? '#E5E7EB' : '#4F46E5', boxShadow: t.done ? 'none' : '0 0 0 3px rgba(122,168,255,0.15)' }"></span>
           <span class="noti-task-text" :class="{ done: t.done }">{{ t.label }}</span>
           <el-checkbox v-model="taskChecks[i]" class="noti-task-check" @click.stop />
         </div>
@@ -24,17 +24,17 @@
 
       <div class="quick-cards">
         <div class="q-card" @click="active = 'prompts'">
-          <div class="q-icon" style="background:#e1edff;color:#7aa8ff"><el-icon :size="22"><Document /></el-icon></div>
+          <div class="q-icon" style="background:#EEF2FF;color:#4F46E5"><el-icon :size="22"><Document /></el-icon></div>
           <div class="q-title">Prompt 管理</div>
           <div class="q-desc">{{ promptsTotal }} 个版本 · {{ prompts.filter(p=>p.status==='online').length }} 个线上</div>
         </div>
         <div class="q-card" @click="active = 'pipeline'">
-          <div class="q-icon" style="background:#E8DEF3;color:#8B7AC0"><el-icon :size="22"><Operation /></el-icon></div>
+          <div class="q-icon" style="background:#EDE9FE;color:#818CF8"><el-icon :size="22"><Operation /></el-icon></div>
           <div class="q-title">审批流水线</div>
           <div class="q-desc">{{ pipeline.pending }} 待修正 · {{ pipeline.fixed }} 已修正</div>
         </div>
         <div class="q-card" @click="active = 'users'">
-          <div class="q-icon" style="background:#FFF0ED;color:#FF9E8E"><el-icon :size="22"><User /></el-icon></div>
+          <div class="q-icon" style="background:#FEE2E2;color:#EF4444"><el-icon :size="22"><User /></el-icon></div>
           <div class="q-title">用户管理</div>
           <div class="q-desc">{{ usersTotal }} 用户 · {{ users.filter(u=>u.is_active).length }} 活跃</div>
         </div>
@@ -264,7 +264,7 @@
         <div class="pipeline-bottleneck">当前瓶颈：<b>{{ bottleneckLabel }}</b> · 总计 {{ pipelineTotal }} 条</div>
         <div v-if="pipelineTotal > 0" ref="pipelineChart" class="chart-box pipeline-funnel"></div>
         <div v-else class="pipeline-empty">
-          <el-icon :size="56" color="#c5d9ff"><DataLine /></el-icon>
+          <el-icon :size="56" color="#E5E7EB"><DataLine /></el-icon>
           <div class="pe-title">暂无流转数据</div>
           <div class="pe-sub">纠错案例进入流水线后，这里会自动生成漏斗图</div>
         </div>
@@ -558,21 +558,21 @@ function renderPipelineChart() {
     pipeline.value.approved,
     pipeline.value.deployed
   ]
-  const colors = ['#7aa8ff', '#a9c6ff', '#FF9E8E', '#5B8DEF']
+  const colors = ['#4F46E5', '#C7D2FE', '#EF4444', '#4F46E5']
   chart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c} 条' },
     grid: { left: '2%', right: '2%', bottom: '2%', top: '12%', containLabel: true },
     xAxis: {
       type: 'category',
       data: stages,
-      axisLine: { lineStyle: { color: '#d6e5ff' } },
+      axisLine: { lineStyle: { color: '#F4F4F5' } },
       axisTick: { show: false },
-      axisLabel: { color: '#6B7A9C', fontSize: 13 }
+      axisLabel: { color: '#6B7280', fontSize: 13 }
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: '#eef5ff', type: 'dashed' } },
-      axisLabel: { color: '#8A9ABA' }
+      splitLine: { lineStyle: { color: '#F7F8FA', type: 'dashed' } },
+      axisLabel: { color: '#9CA3AF' }
     },
     series: [{
       type: 'bar',
@@ -581,7 +581,7 @@ function renderPipelineChart() {
         value: v,
         itemStyle: { color: colors[i], borderRadius: [10, 10, 0, 0] }
       })),
-      label: { show: true, position: 'top', color: '#2D3A5A', fontSize: 13, fontWeight: 700 },
+      label: { show: true, position: 'top', color: '#18181B', fontSize: 13, fontWeight: 700 },
       itemStyle: { borderRadius: [10, 10, 0, 0] }
     }]
   }, true)
@@ -731,8 +731,8 @@ function renderCostChart() {
       { type: 'value', name: '调用次数', nameTextStyle: { fontSize: 11 }, splitLine: { show: false } }
     ],
     series: [
-      { name: '成本(元)', type: 'line', smooth: true, yAxisIndex: 0, data: daily.map(d => d.cost), areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(122,168,255,0.25)' }, { offset: 1, color: 'rgba(122,168,255,0)' }] } }, itemStyle: { color: '#7aa8ff' } },
-      { name: '调用次数', type: 'bar', yAxisIndex: 1, data: daily.map(d => d.calls), itemStyle: { color: '#a9c6ff', borderRadius: [4, 4, 0, 0] } }
+      { name: '成本(元)', type: 'line', smooth: true, yAxisIndex: 0, data: daily.map(d => d.cost), areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(122,168,255,0.25)' }, { offset: 1, color: 'rgba(122,168,255,0)' }] } }, itemStyle: { color: '#4F46E5' } },
+      { name: '调用次数', type: 'bar', yAxisIndex: 1, data: daily.map(d => d.calls), itemStyle: { color: '#C7D2FE', borderRadius: [4, 4, 0, 0] } }
     ]
   })
   chart.resize()
@@ -766,7 +766,7 @@ function renderDashboardCharts() {
       grid: { left: 10, right: 20, top: 30, bottom: 30, containLabel: true },
       xAxis: { type: 'category', data: (dash.value.daily_recommendations || []).map(d => (d.date || '').slice(5)), axisLabel: { interval: 'auto', hideOverlap: true } },
       yAxis: { type: 'value', minInterval: 1 },
-      series: [{ type: 'bar', data: (dash.value.daily_recommendations || []).map(d => d.count), itemStyle: { color: '#7aa8ff', borderRadius: [6, 6, 0, 0] } }]
+      series: [{ type: 'bar', data: (dash.value.daily_recommendations || []).map(d => d.count), itemStyle: { color: '#4F46E5', borderRadius: [6, 6, 0, 0] } }]
     })
     chart.resize()
   }
@@ -777,15 +777,15 @@ function renderDashboardCharts() {
     const SOURCE_NAME = { today: '今日推荐', chat: '对话推荐', scene: '场景推荐', manual: '手动搭配' }
     const entries = Object.entries(src)
     pie.setOption({
-      color: ['#7aa8ff', '#8B7AC0', '#FF9E8E', '#5B8DEF', '#B19CD9'],
+      color: ['#4F46E5', '#818CF8', '#EF4444', '#4F46E5', '#A5B4FC'],
       tooltip: { trigger: 'item', formatter: p => `${p.name}: ${p.value} (${p.percent}%)` },
       legend: { bottom: 0, type: 'scroll' },
-      graphic: entries.length ? [] : [{ type: 'text', left: 'center', top: 'middle', style: { text: '暂无采纳数据', fill: '#66708a', fontSize: 14 } }],
+      graphic: entries.length ? [] : [{ type: 'text', left: 'center', top: 'middle', style: { text: '暂无采纳数据', fill: '#6B7280', fontSize: 14 } }],
       series: [{
         type: 'pie', radius: ['35%', '65%'], center: ['50%', '45%'],
         avoidLabelOverlap: true,
-        label: { formatter: '{b}\n{d}%', color: '#2D3A5A' },
-        labelLine: { length: 12, length2: 14, lineStyle: { color: '#d6e5ff' } },
+        label: { formatter: '{b}\n{d}%', color: '#18181B' },
+        labelLine: { length: 12, length2: 14, lineStyle: { color: '#F4F4F5' } },
         data: entries.map(([k, v]) => ({ name: SOURCE_NAME[k] || k, value: v }))
       }]
     })
@@ -878,11 +878,11 @@ onMounted(() => {
 }
 .card-head :deep(.el-button.is-text span) { color: inherit !important; }
 .card-head :deep(.el-button.is-text.el-button--primary) {
-  background: #eef5ff !important;
+  background: #F7F8FA !important;
   color: var(--accent) !important;
 }
 .card-head :deep(.el-button.is-text.el-button--primary:hover) {
-  background: #d6e5ff !important;
+  background: #F4F4F5 !important;
 }
 .card-sub { font-size: 12px; color: var(--text-3); font-weight: 400; }
 .card:last-child { margin-bottom: 0; }
@@ -897,16 +897,16 @@ onMounted(() => {
 .pipeline-status-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
 .flow-step { flex: 1; text-align: center; opacity: .55; transition: opacity .2s ease; }
 .flow-step.active { opacity: 1; }
-.flow-badge { width: 48px; height: 48px; border-radius: 50%; background: #eef5ff; color: #7aa8ff; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; border: 2px solid #d6e5ff; }
-.flow-step.active .flow-badge { background: #7aa8ff; color: #fff; border-color: transparent; box-shadow: 0 8px 20px rgba(122,168,255,.28); }
+.flow-badge { width: 48px; height: 48px; border-radius: 50%; background: #F7F8FA; color: #4F46E5; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; border: 2px solid #F4F4F5; }
+.flow-step.active .flow-badge { background: #4F46E5; color: #fff; border-color: transparent; box-shadow: 0 8px 20px rgba(122,168,255,.28); }
 .flow-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
 .flow-sub { font-size: 12px; color: var(--text-3); }
-.flow-line { flex: 1; height: 2px; background: #e1edff; border-radius: 2px; max-width: 90px; }
-.flow-line.active { background: #7aa8ff; }
+.flow-line { flex: 1; height: 2px; background: #EEF2FF; border-radius: 2px; max-width: 90px; }
+.flow-line.active { background: #4F46E5; }
 .pipeline-bottleneck { text-align: center; font-size: 13px; color: var(--text-2); margin-bottom: 14px; }
 .pipeline-bottleneck b { color: var(--text); font-weight: 700; }
 .pipeline-funnel { height: 260px; }
-.pipeline-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 44px 20px; background: #FDFBF7; border-radius: 16px; border: 1px dashed #d6e5ff; margin-bottom: 16px; }
+.pipeline-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 44px 20px; background: #FFFFFF; border-radius: 16px; border: 1px dashed #F4F4F5; margin-bottom: 16px; }
 .pipeline-empty .pe-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 14px 0 6px; }
 .pipeline-empty .pe-sub { font-size: 13px; color: var(--text-3); line-height: 1.5; }
 .corr-ans {
@@ -953,8 +953,8 @@ onMounted(() => {
 .empty-tip { color: var(--text-3); font-size: 12px; }
 
 .noti-list { display: flex; flex-direction: column; gap: 12px; }
-.noti-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: #FDFBF7; transition: background 0.15s ease; }
-.noti-item:hover { background: #e1edff; }
+.noti-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: #FFFFFF; transition: background 0.15s ease; }
+.noti-item:hover { background: #EEF2FF; }
 /* 「待审核纠错」胶囊按钮：覆盖全局 .sl .el-button--{primary,success}
    强制 --el-button-text-color:#fff 在 text/plain 模式下变「白字透明底」的副作用。
    与设计系统 .el-tag--primary/success 配色一致（浅蓝胶囊+蓝字 / 浅绿胶囊+绿字）。 */
@@ -971,11 +971,11 @@ onMounted(() => {
 }
 .noti-item :deep(.el-button.is-text span) { color: inherit !important; }
 .noti-item :deep(.el-button.is-text.el-button--primary) {
-  background: #eef5ff !important;
+  background: #F7F8FA !important;
   color: var(--accent) !important;
 }
 .noti-item :deep(.el-button.is-text.el-button--primary:hover) {
-  background: #d6e5ff !important;
+  background: #F4F4F5 !important;
 }
 .noti-item :deep(.el-button.is-text.el-button--success) {
   background: #DCFCE7 !important;
@@ -1014,8 +1014,8 @@ onMounted(() => {
 
 .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
 .kpi-card { background: #fff; border-radius: var(--radius-lg, 16px); padding: 18px 20px; box-shadow: var(--shadow); }
-.kpi-card.blue { background: #e1edff; }
-.kpi-card.blue .kpi-val { color: #7aa8ff; }
+.kpi-card.blue { background: #EEF2FF; }
+.kpi-card.blue .kpi-val { color: #4F46E5; }
 .kpi-label { font-size: 13px; color: var(--text-3); margin-bottom: 8px; }
 .kpi-val { font-size: 24px; font-weight: 700; color: var(--text); }
 
@@ -1030,7 +1030,7 @@ onMounted(() => {
 :deep(.el-table__row) { height: 56px; }
 :deep(.el-table .cell) { padding: 0 12px; }
 .trace-label { font-size: 12px; color: var(--text-2); margin: 6px 0 2px; }
-.trace-pre { background: #FDFBF7; border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; word-break: break-all; font-size: 12px; max-height: 240px; overflow: auto; margin: 0; color: var(--text-2); }
+.trace-pre { background: #FFFFFF; border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; word-break: break-all; font-size: 12px; max-height: 240px; overflow: auto; margin: 0; color: var(--text-2); }
 
 .trace-timeline { padding: 4px 0; }
 .tl-item { display: flex; gap: 12px; }
@@ -1041,16 +1041,16 @@ onMounted(() => {
 .tl-dot.tl-tool_call { background: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.18); }
 .tl-dot.tl-llm_response { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
 .tl-dot.tl-output { background: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.18); }
-.tl-rail::after { content: ''; flex: 1; width: 2px; background: #e1edff; margin-top: 4px; }
+.tl-rail::after { content: ''; flex: 1; width: 2px; background: #EEF2FF; margin-top: 4px; }
 .tl-item:last-child .tl-rail::after { display: none; }
-.tl-card { flex: 1; background: #fff; border: 1px solid #e1edff; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+.tl-card { flex: 1; background: #fff; border: 1px solid #EEF2FF; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
 .tl-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
 .tl-badge { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: var(--accent-light); color: var(--accent); }
-.badge-input { background: #e1edff; color: var(--text-2); }
-.badge-thought { background: var(--coral-light, #FFE9E2); color: var(--coral-ink, #D66A60); }
+.badge-input { background: #EEF2FF; color: var(--text-2); }
+.badge-thought { background: var(--coral-light, #FEE2E2); color: var(--coral-ink, #DC2626); }
 .badge-tool_call { background: #DCFCE7; color: #15803D; }
 .badge-llm_response { background: var(--accent-light); color: var(--accent); }
-.badge-output { background: var(--lav-100, #E8DEF3); color: var(--lav-800, #5D4F80); }
+.badge-output { background: var(--lav-100, #EDE9FE); color: var(--lav-800, #4F46E5); }
 .tl-tool { font-size: 12px; color: var(--green); }
 .tl-ms { font-size: 12px; color: var(--text-3); margin-left: auto; }
 .tl-block { margin-top: 8px; }

@@ -80,20 +80,20 @@
           <svg class="city-svg" viewBox="0 0 500 360" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#eef5ff"/>
-                <stop offset="100%" stop-color="#e1edff"/>
+                <stop offset="0%" stop-color="#F7F8FA"/>
+                <stop offset="100%" stop-color="#EEF2FF"/>
               </linearGradient>
               <linearGradient id="b1" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#a9c6ff"/>
-                <stop offset="100%" stop-color="#b8d0ff"/>
+                <stop offset="0%" stop-color="#C7D2FE"/>
+                <stop offset="100%" stop-color="#C7D2FE"/>
               </linearGradient>
               <linearGradient id="b2" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#c5d9ff"/>
-                <stop offset="100%" stop-color="#a9c6ff"/>
+                <stop offset="0%" stop-color="#E5E7EB"/>
+                <stop offset="100%" stop-color="#C7D2FE"/>
               </linearGradient>
               <linearGradient id="road" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#e1edff"/>
-                <stop offset="100%" stop-color="#d6e5ff"/>
+                <stop offset="0%" stop-color="#EEF2FF"/>
+                <stop offset="100%" stop-color="#F4F4F5"/>
               </linearGradient>
             </defs>
             <rect x="0" y="0" width="500" height="360" fill="url(#sky)" rx="24"/>
@@ -102,9 +102,9 @@
             <ellipse cx="380" cy="55" rx="40" ry="20" fill="#fff" opacity="0.8"/>
             <ellipse cx="420" cy="48" rx="30" ry="15" fill="#fff" opacity="0.8"/>
             <path d="M40 280 L250 180 L460 280 L250 340 Z" fill="url(#road)"/>
-            <path d="M40 280 L250 340 L250 180 Z" fill="#C9DCFF" opacity="0.4"/>
-            <path d="M250 180 L250 340" stroke="#BED3FF" stroke-width="3"/>
-            <path d="M140 230 L360 230" stroke="#BED3FF" stroke-width="2" stroke-dasharray="8 8"/>
+            <path d="M40 280 L250 340 L250 180 Z" fill="#C7D2FE" opacity="0.4"/>
+            <path d="M250 180 L250 340" stroke="#C7D2FE" stroke-width="3"/>
+            <path d="M140 230 L360 230" stroke="#C7D2FE" stroke-width="2" stroke-dasharray="8 8"/>
             <g transform="translate(120, 140)">
               <path d="M0 110 L0 30 L40 10 L80 30 L80 110 Z" fill="url(#b1)"/>
               <rect x="10" y="40" width="12" height="12" fill="#fff" opacity="0.5"/>
@@ -131,16 +131,16 @@
             </g>
             <!-- 小人 -->
             <g transform="translate(145, 255)">
-              <circle cx="0" cy="-14" r="5" fill="#2D3A5A"/>
-              <path d="M-6 -4 L6 -4 L4 18 L-4 18 Z" fill="#5B8DEF"/>
-              <path d="M-10 -2 L-6 -2 L-8 10 Z" fill="#2D3A5A" opacity="0.5"/>
-              <path d="M6 -2 L10 -2 L8 10 Z" fill="#2D3A5A" opacity="0.5"/>
+              <circle cx="0" cy="-14" r="5" fill="#18181B"/>
+              <path d="M-6 -4 L6 -4 L4 18 L-4 18 Z" fill="#4F46E5"/>
+              <path d="M-10 -2 L-6 -2 L-8 10 Z" fill="#18181B" opacity="0.5"/>
+              <path d="M6 -2 L10 -2 L8 10 Z" fill="#18181B" opacity="0.5"/>
             </g>
             <g transform="translate(355, 275)">
-              <circle cx="0" cy="-14" r="5" fill="#2D3A5A"/>
+              <circle cx="0" cy="-14" r="5" fill="#18181B"/>
               <path d="M-6 -4 L6 -4 L4 18 L-4 18 Z" fill="#7BD3A4"/>
-              <path d="M-10 -2 L-6 -2 L-8 10 Z" fill="#2D3A5A" opacity="0.5"/>
-              <path d="M6 -2 L10 -2 L8 10 Z" fill="#2D3A5A" opacity="0.5"/>
+              <path d="M-10 -2 L-6 -2 L-8 10 Z" fill="#18181B" opacity="0.5"/>
+              <path d="M6 -2 L10 -2 L8 10 Z" fill="#18181B" opacity="0.5"/>
             </g>
             <circle cx="100" cy="265" r="10" fill="#7BD3A4"/>
             <circle cx="115" cy="258" r="8" fill="#62C994"/>
@@ -221,10 +221,10 @@ async function onLogin() {
 <style scoped>
 /* ===== 运营端登录：全屏分栏，左白右图，S 曲线分隔（无外框） ===== */
 .login-wrap {
-  --text: #2D3A5A;
-  --text-2: #6B7A9C;
-  --text-3: #8A9ABA;
-  --accent: #8cb8ff;
+  --text: #18181B;
+  --text-2: #6B7280;
+  --text-3: #9CA3AF;
+  --accent: #6366F1;
 
   position: relative;
   min-height: 100vh;
@@ -272,13 +272,13 @@ async function onLogin() {
 .form-body :deep(.el-input__wrapper) {
   height: 48px;
   border-radius: 999px;
-  background: #eef5ff;
-  box-shadow: inset 0 0 0 1px #d6e5ff;
+  background: #F7F8FA;
+  box-shadow: inset 0 0 0 1px #F4F4F5;
   padding: 0 18px;
 }
 .form-body :deep(.el-input__inner) { font-size: 14px; color: var(--text); }
 .form-body :deep(.el-input__wrapper.is-focus) { box-shadow: inset 0 0 0 1px var(--accent); background: #fff; }
-.form-body :deep(.el-input__prefix) { color: #a9c6ff; }
+.form-body :deep(.el-input__prefix) { color: #C7D2FE; }
 
 /* 密码可视眼睛：圆形触控区 + 弹簧旋转切换动画 */
 .pwd-eye {
@@ -288,7 +288,7 @@ async function onLogin() {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  color: #a9c6ff;
+  color: #C7D2FE;
   cursor: pointer;
   transition: background .2s ease, color .2s ease, transform .2s cubic-bezier(.34, 1.56, .64, 1);
 }
@@ -303,11 +303,11 @@ async function onLogin() {
 
 /* 角色切换：胶囊圆角 */
 .form-body :deep(.el-segmented) {
-  --el-segmented-bg-color: #e1edff;
+  --el-segmented-bg-color: #EEF2FF;
   --el-segmented-item-selected-bg-color: #fff;
   --el-segmented-item-selected-color: var(--accent);
   --el-segmented-item-color: var(--text-2);
-  box-shadow: inset 0 0 0 1px #d6e5ff;
+  box-shadow: inset 0 0 0 1px #F4F4F5;
   border-radius: 999px;
   padding: 5px;
   width: 100%;
@@ -341,7 +341,7 @@ async function onLogin() {
   font-weight: 700;
   letter-spacing: 2px;
   /* 纯色浅蓝（去渐变）+ 拟物双投影 */
-  background: #7aa8ff;
+  background: #4F46E5;
   box-shadow:
     0 12px 28px rgba(122, 168, 255, .32),
     -3px -3px 8px rgba(255, 255, 255, .7),
@@ -369,7 +369,7 @@ async function onLogin() {
     inset 0 1px 0 rgba(255, 255, 255, .28);
 }
 .login-btn:active {
-  background: #6a98f5;
+  background: #4338CA;
   transform: scale(.97);
   box-shadow:
     inset 3px 3px 8px rgba(48, 49, 51, .14),
@@ -392,7 +392,7 @@ async function onLogin() {
   top: 0;
   bottom: 0;
   width: 56%;
-  background: linear-gradient(180deg, #eef5ff 0%, #d6e5ff 60%, #a9c6ff 100%);
+  background: linear-gradient(180deg, #F7F8FA 0%, #F4F4F5 60%, #C7D2FE 100%);
   clip-path: url(#sCurve);
   z-index: 2;
   display: flex;
@@ -419,8 +419,8 @@ async function onLogin() {
   padding-top: 58px;
   text-shadow: 0 2px 12px rgba(238, 245, 255, 0.9);
 }
-.brand-title { font-size: 26px; line-height: 1.25; font-weight: 800; margin: 0 0 6px; letter-spacing: 0.3px; color: #2D3A5A; }
-.brand-sub { font-size: 13px; color: #6B7A9C; margin: 0; }
+.brand-title { font-size: 26px; line-height: 1.25; font-weight: 800; margin: 0 0 6px; letter-spacing: 0.3px; color: #18181B; }
+.brand-sub { font-size: 13px; color: #6B7280; margin: 0; }
 .brand-illustration {
   position: absolute;
   left: 0;
