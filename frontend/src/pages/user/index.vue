@@ -1589,13 +1589,13 @@ function pct(v, total) {
 
 // ===== 分析页可视化 =====
 const CAT_CN = { top: '上装', bottom: '下装', shoes: '鞋子', accessory: '配饰', outer: '外套', dress: '连衣裙', bag: '包袋', hat: '帽子' }
-/* 品类分布调色板：三色轮换（蓝 / 珊瑚 / 薰衣草），相邻品类对比明显 */
-const PALETTE = ['#4F46E5', '#EF4444', '#DDD6FE', '#4F46E5', '#818CF8', '#C7D2FE', '#EDE9FE', '#A5B4FC']
+/* 品类分布调色板：商业靛蓝/岩灰/琥珀，克制克制不花哨 */
+const PALETTE = ['#4F46E5', '#64748B', '#94A3B8', '#CBD5E1', '#F59E0B', '#E2E8F0', '#818CF8', '#A5B4FC']
 const SEASON_CN = { spring: '春', summer: '夏', autumn: '秋', winter: '冬', all: '四季',
   'spring-summer': '春夏', 'spring-autumn': '春秋', 'summer-autumn': '夏秋', 'autumn-winter': '秋冬' }
-/* 季节分布用三色系统：浅蓝 / 珊瑚 / 薰衣草 / 深蓝；组合 key hash 自动选色 */
-const SEASON_COLOR = { spring: '#4F46E5', summer: '#EF4444', autumn: '#DDD6FE', winter: '#4F46E5', all: '#A5B4FC' }
-const SEASON_PALETTE = ['#4F46E5', '#EF4444', '#DDD6FE', '#4F46E5', '#A5B4FC', '#C7D2FE', '#EDE9FE', '#818CF8']
+/* 季节分布：同一套商业色， amber 留给"四季"做强调 */
+const SEASON_COLOR = { spring: '#4F46E5', summer: '#64748B', autumn: '#94A3B8', winter: '#CBD5E1', all: '#F59E0B' }
+const SEASON_PALETTE = ['#4F46E5', '#64748B', '#94A3B8', '#CBD5E1', '#F59E0B', '#E2E8F0', '#818CF8', '#A5B4FC']
 function seasonColorByKey(k) {
   if (SEASON_COLOR[k]) return SEASON_COLOR[k]
   let hash = 0
@@ -3156,13 +3156,14 @@ onMounted(() => {
 .panel { padding: 24rpx; box-sizing: border-box; width: 100%; }
 .panel-head { margin-bottom: 20rpx; position: relative; background: transparent; }
 .panel.analysis-panel .panel-head { position: relative; }
+.panel.analysis-panel .panel-title { font-weight: 700; font-size: 36rpx; letter-spacing: -.2rpx; }
 .panel-head.between { display: flex; justify-content: space-between; align-items: center; }
 .panel-title { font-size: 34rpx; font-weight: 600; }
 
 /* 通用按钮 */
-.mini-btn { padding: 10rpx 26rpx; background: #fff; border: 1rpx solid #F4F4F5; border-radius: 30rpx; font-size: 24rpx; color: #6B7280; box-shadow: 3rpx 3rpx 8rpx rgba(91,141,239,.08), -2rpx -2rpx 6rpx rgba(255,255,255,.9); }
-.mini-btn.primary { background: #4F46E5; color: #fff; border-color: #4F46E5; box-shadow: 3rpx 3rpx 8rpx rgba(91,141,239,.18), -2rpx -2rpx 6rpx rgba(255,255,255,.8); }
-.panel-head .mini-btn { background: linear-gradient(135deg, #A5B4FC, #818CF8); border: none; color: #fff; font-weight: 600; padding: 10rpx 28rpx; border-radius: 30rpx; box-shadow: 4rpx 4rpx 10rpx rgba(139,122,192,.28), -2rpx -2rpx 6rpx rgba(255,255,255,.6); }
+.mini-btn { padding: 10rpx 26rpx; background: #fff; border: 1rpx solid #E5E7EB; border-radius: 10rpx; font-size: 24rpx; color: #6B7280; box-shadow: 0 1rpx 2rpx rgba(16,24,40,.04); }
+.mini-btn.primary { background: #4F46E5; color: #fff; border-color: #4F46E5; box-shadow: 0 2rpx 8rpx rgba(79,70,229,.22); }
+.panel-head .mini-btn { background: #4F46E5; border: none; color: #fff; font-weight: 600; padding: 10rpx 28rpx; border-radius: 10rpx; box-shadow: 0 4rpx 12rpx rgba(79,70,229,.25); }
 .big-btn { background: #4F46E5; color: #fff; font-size: 32rpx; text-align: center; padding: 36rpx; border-radius: 16rpx; }
 .big-btn.loading { opacity: .7; }
 
@@ -3495,10 +3496,10 @@ onMounted(() => {
 :deep(.rv-c) .md-num { color: #4F46E5; }
 .review-actions { margin-top: 20rpx; display: flex; justify-content: flex-end; }
 .tag { font-size: 20rpx; padding: 4rpx 12rpx; background: #EEF2FF; color: #4F46E5; border-radius: 6rpx; margin-right: 6rpx; }
-.tag.ok { background: #EEF0FA; color: #4F46E5; }
-.tag.warn { background: #EDE9FE; color: #818CF8; border: 1rpx solid #DDD6FE; }
-.tag.danger { background: #f0eafa; color: #818CF8; }
-.tag.info { background: #f4f4f5; color: #9CA3AF; }
+.tag.ok { background: #EEF2FF; color: #4F46E5; }
+.tag.warn { background: #FEF3C7; color: #B45309; }
+.tag.danger { background: #FEE2E2; color: #DC2626; }
+.tag.info { background: #F4F4F5; color: #6B7280; }
 .card-act { padding: 12rpx 16rpx; border-top: 1rpx solid #F4F4F5; display: flex; justify-content: flex-end; gap: 24rpx; }
 .link { font-size: 24rpx; color: #4F46E5; }
 .link.danger { color: #EF4444; }
@@ -3524,11 +3525,16 @@ onMounted(() => {
 .form-foot, .dialog-foot { display: flex; justify-content: flex-end; gap: 16rpx; margin-top: 24rpx; }
 
 /* 分析（高级版）— 衣橱健康度卡已删除 */
-.analysis-wrap { padding: 4rpx 0; }
+.card-box.analysis-wrap { background: transparent; box-shadow: none; padding: 0; margin-top: 0; }
 
-.block { margin-bottom: 28rpx; }
-.block-title { font-size: 28rpx; font-weight: 700; color: #18181B; display: block; margin-bottom: 16rpx;
-  padding-left: 16rpx; border-left: 6rpx solid #A5B4FC; letter-spacing: .5rpx; }
+/* 每个数据区块：白底 + 细描边 + 克制阴影，区块之间用发丝线分隔 */
+.block {
+  margin-bottom: 24rpx; padding: 28rpx 26rpx;
+  background: #fff; border: 1rpx solid #F4F4F5; border-radius: 16rpx;
+  box-shadow: 0 1rpx 3rpx rgba(16,24,40,.04);
+}
+.block:last-child { margin-bottom: 0; }
+.block-title { font-size: 28rpx; font-weight: 600; color: #18181B; display: block; margin-bottom: 20rpx; letter-spacing: .2rpx; }
 
 /* 穿搭回顾面板 */
 .wh-day-lookup { margin: 20rpx 0 8rpx; background: #fff; border-radius: 16rpx; padding: 20rpx 22rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04); }
@@ -3546,10 +3552,10 @@ onMounted(() => {
 /* 我的套装样式已迁至 closet-*（独立 view） */
 
 .donut-row { display: flex; align-items: center; gap: 28rpx; }
-.donut { width: 200rpx; height: 200rpx; border-radius: 50%; flex-shrink: 0; position: relative;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,.08); }
+.donut { width: 190rpx; height: 190rpx; border-radius: 50%; flex-shrink: 0; position: relative;
+  box-shadow: 0 1rpx 4rpx rgba(16,24,40,.06); }
 .donut-hole { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  width: 138rpx; height: 138rpx; border-radius: 50%; background: #fff; display: flex; flex-direction: column;
+  width: 130rpx; height: 130rpx; border-radius: 50%; background: #fff; display: flex; flex-direction: column;
   align-items: center; justify-content: center; }
 .donut-num { font-size: 44rpx; font-weight: 800; color: #18181B; line-height: 1; }
 .donut-unit { font-size: 22rpx; color: #9CA3AF; }
@@ -3558,32 +3564,32 @@ onMounted(() => {
 .legend-name { font-size: 26rpx; color: #18181B; flex: 1; }
 .legend-val { font-size: 24rpx; color: #9CA3AF; }
 
-.stack-bar { display: flex; height: 28rpx; border-radius: 14rpx; overflow: hidden; background: #F4F4F5; }
+.stack-bar { display: flex; height: 20rpx; border-radius: 4rpx; overflow: hidden; background: #F4F4F5; }
 .stack-seg { height: 100%; }
-.stack-legend { display: flex; flex-wrap: wrap; gap: 20rpx; margin-top: 14rpx; }
+.stack-legend { display: flex; flex-wrap: wrap; gap: 20rpx; margin-top: 16rpx; }
 .stack-leg { display: flex; align-items: center; gap: 10rpx; }
 .stack-leg-t { font-size: 24rpx; color: #6B7280; }
-/* 季节 / 品类共用图例点：24rpx 圆形 + 2rpx 淡蓝描边，浅色块也能看清 */
-.legend-dot { width: 24rpx; height: 24rpx; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2rpx #F7F8FA; }
+/* 季节 / 品类共用图例点：细描边白环，浅色块在卡片上也能看清 */
+.legend-dot { width: 20rpx; height: 20rpx; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2rpx #fff, 0 0 0 3rpx #F4F4F5; }
 
 .color-wrap { display: flex; flex-wrap: wrap; gap: 16rpx; }
 .color-chip {
   display: flex; align-items: center; gap: 10rpx;
-  background: #fff; border: 1rpx solid #F7F8FA; border-radius: 30rpx;
+  background: #fff; border: 1rpx solid #F4F4F5; border-radius: 10rpx;
   padding: 10rpx 18rpx;
 }
-.color-dot { width: 26rpx; height: 26rpx; border-radius: 50%; border: 1rpx solid #F4F4F5; }
+.color-dot { width: 22rpx; height: 22rpx; border-radius: 50%; border: 1rpx solid #E5E7EB; }
 .color-name { font-size: 24rpx; color: #18181B; }
 .color-cnt { font-size: 22rpx; color: #9CA3AF; }
 
 .tag-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
 
 .sug-list { display: flex; flex-direction: column; gap: 12rpx; }
-.sug-item { display: flex; gap: 12rpx; background: linear-gradient(135deg,#F5F3FF,#EEF2FF); border-radius: 14rpx; padding: 18rpx 20rpx; }
+.sug-item { display: flex; gap: 12rpx; background: #F7F8FA; border: 1rpx solid #F4F4F5; border-radius: 14rpx; padding: 18rpx 20rpx; }
 .sug-bullet { color: #4F46E5; font-size: 24rpx; flex-shrink: 0; }
 .sug-text { font-size: 25rpx; color: #374151; line-height: 1.6; flex: 1; }
 .shop { display: flex; align-items: center; gap: 16rpx; }
-.card-box.shop { padding: 22rpx 26rpx; }
+.card-box.shop { background: #F7F8FA; border: 1rpx solid #F4F4F5; border-radius: 12rpx; box-shadow: none; margin-top: 12rpx; padding: 18rpx 20rpx; }
 .shop-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14rpx; }
 .shop-reason { font-size: 27rpx; color: #18181B; line-height: 1.5; flex: 1; min-width: 0; }
 
