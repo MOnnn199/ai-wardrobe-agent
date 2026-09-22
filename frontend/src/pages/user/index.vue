@@ -567,13 +567,16 @@
               <view class="donut" :style="{ background: categoryChart.gradient }">
                 <view class="donut-hole">
                   <text class="donut-num">{{ categoryChart.total }}</text>
+                  <text class="donut-unit">件</text>
                 </view>
               </view>
               <view class="legend">
                 <view v-for="it in categoryChart.items" :key="it.raw" class="legend-item">
-                  <view class="legend-dot" :style="{ background: it.color }"></view>
                   <text class="legend-name">{{ it.name }}</text>
-                  <text class="legend-val">{{ it.value }} · {{ it.pct }}%</text>
+                  <view class="legend-track">
+                    <view class="legend-fill" :style="{ width: it.pct + '%', background: it.color }"></view>
+                  </view>
+                  <text class="legend-val">{{ it.value }}·{{ it.pct }}%</text>
                 </view>
               </view>
             </view>
@@ -1589,13 +1592,14 @@ function pct(v, total) {
 
 // ===== 分析页可视化 =====
 const CAT_CN = { top: '上装', bottom: '下装', shoes: '鞋子', accessory: '配饰', outer: '外套', dress: '连衣裙', bag: '包袋', hat: '帽子' }
-/* 品类分布调色板：商业靛蓝/岩灰/琥珀，克制克制不花哨 */
-const PALETTE = ['#4F46E5', '#64748B', '#94A3B8', '#CBD5E1', '#F59E0B', '#E2E8F0', '#818CF8', '#A5B4FC']
+/* 品类分布：同色系靛蓝深浅阶（indigo 900→100），有品牌感且相邻品类仍可分辨 */
+const INDIGO_SCALE = ['#312E81', '#4338CA', '#4F46E5', '#6366F1', '#818CF8', '#A5B4FC', '#C7D2FE', '#E0E7FF']
+const PALETTE = INDIGO_SCALE
 const SEASON_CN = { spring: '春', summer: '夏', autumn: '秋', winter: '冬', all: '四季',
   'spring-summer': '春夏', 'spring-autumn': '春秋', 'summer-autumn': '夏秋', 'autumn-winter': '秋冬' }
-/* 季节分布：同一套商业色， amber 留给"四季"做强调 */
-const SEASON_COLOR = { spring: '#4F46E5', summer: '#64748B', autumn: '#94A3B8', winter: '#CBD5E1', all: '#F59E0B' }
-const SEASON_PALETTE = ['#4F46E5', '#64748B', '#94A3B8', '#CBD5E1', '#F59E0B', '#E2E8F0', '#818CF8', '#A5B4FC']
+/* 季节分布：同一套靛蓝深浅阶；琥珀只留给"四季"做唯一强调 */
+const SEASON_COLOR = { spring: '#4F46E5', summer: '#6366F1', autumn: '#818CF8', winter: '#A5B4FC', all: '#F59E0B' }
+const SEASON_PALETTE = ['#4338CA', '#4F46E5', '#6366F1', '#818CF8', '#F59E0B', '#A5B4FC', '#C7D2FE', '#E0E7FF']
 function seasonColorByKey(k) {
   if (SEASON_COLOR[k]) return SEASON_COLOR[k]
   let hash = 0
@@ -3557,12 +3561,15 @@ onMounted(() => {
 .donut-hole { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   width: 130rpx; height: 130rpx; border-radius: 50%; background: #fff; display: flex; flex-direction: column;
   align-items: center; justify-content: center; }
-.donut-num { font-size: 44rpx; font-weight: 800; color: #18181B; line-height: 1; }
-.donut-unit { font-size: 22rpx; color: #9CA3AF; }
-.legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14rpx; }
-.legend-item { display: flex; align-items: center; gap: 12rpx; }
-.legend-name { font-size: 26rpx; color: #18181B; flex: 1; }
-.legend-val { font-size: 24rpx; color: #9CA3AF; }
+.donut-num { font-size: 42rpx; font-weight: 800; color: #18181B; line-height: 1; }
+.donut-unit { font-size: 20rpx; color: #6B7280; margin-top: 4rpx; }
+.legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16rpx; }
+.legend-item { display: flex; align-items: center; gap: 10rpx; }
+.legend-name { font-size: 25rpx; color: #18181B; flex-shrink: 0; }
+/* 图例迷你占比条：让分布一眼可读，商业仪表盘常用做法 */
+.legend-track { flex: 1; min-width: 48rpx; height: 8rpx; border-radius: 4rpx; background: #F4F4F5; overflow: hidden; }
+.legend-fill { height: 100%; border-radius: 4rpx; }
+.legend-val { font-size: 22rpx; color: #6B7280; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
 .stack-bar { display: flex; height: 20rpx; border-radius: 4rpx; overflow: hidden; background: #F4F4F5; }
 .stack-seg { height: 100%; }
