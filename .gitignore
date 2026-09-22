@@ -6,14 +6,18 @@ backend/uploads/                # 运行时图片/上传文件
 .idea/                          # IDE 配置（可能含连接密码）
 
 # ===== 运行时产物 =====
+.venv/                          # 根目录误建的 venv（实际用 backend/.venv）
 backend/.venv/
 frontend/dist/
+frontend/dist.old.*/            # 历史构建备份目录
 frontend/node_modules/
 frontend-web/dist/
 frontend-web/dist.old.*/
 logs/
 archive/
+*.log                           # 散落运行日志
 _wh4.js                         # vite HMR 编译缓存
+.dsh-plugin-research/           # 与本项目无关的插件调研下载
 .workbuddy/                     # AI 助手项目记忆（本地保留，不入库）
 __pycache__/
 *.pyc

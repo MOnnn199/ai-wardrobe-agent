@@ -1,36 +1,0 @@
-E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\apscheduler\__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
-  from pkg_resources import get_distribution, DistributionNotFound
-INFO:     Started server process [25816]
-INFO:     Waiting for application startup.
-2026-08-18 22:30:17,701 | INFO    | modelscope_hub.download | Downloading 13 files from BAAI/bge-small-zh@master
-[init_tools] load tool states failed: (sqlite3.OperationalError) no such table: tool_configs
-[SQL: SELECT tool_configs.tool_name AS tool_configs_tool_name, tool_configs.enabled AS tool_configs_enabled, tool_configs.updated_at AS tool_configs_updated_at 
-FROM tool_configs]
-(Background on this error at: https://sqlalche.me/e/20/e3q8)
-[migrate] added column users.height
-[migrate] added column users.weight
-[migrate] added column users.skin_tone
-[migrate] added column users.body_type
-[migrate] added column users.style_preference
-Downloading:   0%|          | 0/13 [00:00<?, ?file/s]Downloading: 100%|██████████| 13/13 [00:00<00:00, 71.04file/s]Downloading: 100%|██████████| 13/13 [00:00<00:00, 70.66file/s]
-[embedding] Loading local model from: E:\models\models\BAAI--bge-small-zh\snapshots\master ...
-Loading weights:   0%|          | 0/71 [00:00<?, ?it/s]Loading weights: 100%|██████████| 71/71 [00:00<00:00, 6443.56it/s]
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8007 (Press CTRL+C to quit)
-[embedding] Local model loaded, dimension=512
-INFO:     127.0.0.1:53731 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58338 - "POST /api/auth/login HTTP/1.1" 422 Unprocessable Entity
-INFO:     127.0.0.1:52821 - "GET /api/config/tools HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:60324 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57948 - "GET /api/config/tools HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:57951 - "POST /api/config/tools/toggle HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:57953 - "GET /api/config/tools HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:50458 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60479 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59897 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50788 - "GET /api/config/tools HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61305 - "POST /api/config/tools/toggle HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58251 - "GET /api/config/tools HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64849 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53222 - "PUT /api/user/profile HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53224 - "GET /api/user/profile HTTP/1.1" 200 OK

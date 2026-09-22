@@ -1,3 +1,0 @@
-remaining: 2
-' class="wb-single-icon"><text class="wb-ico">�</text></view>\r\n        '
-'ass="ob-num">{{ selectedIds.length }}</text> �?\n            <text v-if'
