@@ -96,6 +96,7 @@ class ConversationResponse(BaseModel):
     score: int = 0
     feedback: str = ''
     status: str = 'normal'
+    user_image_url: Optional[str] = None
     history: Optional[list] = None
     created_at: Optional[datetime] = None
     turn_count: int = 1

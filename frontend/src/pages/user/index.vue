@@ -118,6 +118,9 @@
           <view v-for="(m,i) in messages" :key="i" :class="['msg','msg-'+m.role]">
             <view class="bubble">
               <text class="msg-label">{{ m.role==='user'?'你':'搭配师' }}</text>
+              <view v-if="m.role==='user' && m.image" class="chat-user-img-wrap">
+                <image :src="m.image" mode="widthFix" class="chat-user-img" @click="previewImage(m.image)" />
+              </view>
               <rich-text v-if="m.role==='agent'" class="msg-text" :nodes="md2html(m.content)"></rich-text>
               <text v-else class="msg-text">{{ m.content }}</text>
             </view>
@@ -1189,7 +1192,8 @@ const chatInput = ref('')
 const chatLoading = ref(false)
 const messages = shallowRef([])
 const currentConvId = ref(null)
-const pendingChatImage = ref('')
+const pendingChatImage = ref('')          // 本地预览 blob URL
+const pendingChatImageUrl = ref('')       // 后端返回的真实图片地址（用于历史记录）
 const pendingChatAnalysis = ref('')
 
 const wardrobe = ref([])
@@ -1871,20 +1875,20 @@ async function sendChat(text) {
   const rawQ = (typeof text === 'string' ? text : chatInput.value).trim()
   if ((!rawQ && !pendingChatImage.value) || chatLoading.value) return
   const hasImage = !!pendingChatImage.value
-  const imageUrl = pendingChatImage.value
+  const imageUrl = pendingChatImageUrl.value      // 后端真实图片地址
   const imageAnalysis = pendingChatAnalysis.value
-  // 组合问题：若有上传图片，把识别结果作为上下文前缀
-  const q = hasImage
-    ? (rawQ ? `[图片分析：${imageAnalysis}]\n${rawQ}` : `[图片分析：${imageAnalysis}]\n请分析这张图片并推荐搭配方案。`)
-    : rawQ
   chatInput.value = ''
   pendingChatImage.value = ''
+  pendingChatImageUrl.value = ''
   pendingChatAnalysis.value = ''
   messages.value.push(markRaw({ role: 'user', content: rawQ || '上传了一张图片', image: imageUrl || '' }))
   chatLoading.value = true
   try {
     const w = weather.value
-    let url = '/user/chat?user_input=' + encodeURIComponent(q)
+    // 把原始问题、图片分析、图片地址分开传给后端；原始问题存入历史，图片分析仅作为 LLM 上下文
+    let url = '/user/chat?user_input=' + encodeURIComponent(rawQ || '请分析这张图片并推荐搭配方案。')
+    if (imageUrl) url += '&image_url=' + encodeURIComponent(imageUrl)
+    if (imageAnalysis) url += '&image_analysis=' + encodeURIComponent(imageAnalysis)
     if (w.city) url += '&city=' + encodeURIComponent(w.city)
     if (w.lat != null) url += '&lat=' + w.lat
     if (w.lon != null) url += '&lon=' + w.lon
@@ -1899,6 +1903,13 @@ async function sendChat(text) {
   chatLoading.value = false
 }
 
+function toFullMediaUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url)) return url
+  if (url.startsWith('//')) return 'http:' + url
+  return 'http://localhost:8000' + url
+}
+
 async function chatChooseImage() {
   try {
     const path = await chooseImage()
@@ -1907,15 +1918,24 @@ async function chatChooseImage() {
     pendingChatImage.value = path
     const d = await upload('/user/analyze-image', path)
     pendingChatAnalysis.value = d.analysis || ''
+    pendingChatImageUrl.value = toFullMediaUrl(d.image_url || '')
     uni.showToast({ title: '图片已上传，请输入你的问题', icon: 'none' })
   } catch (e) {
+    pendingChatImage.value = ''
+    pendingChatImageUrl.value = ''
+    pendingChatAnalysis.value = ''
     uni.showToast({ title: '图片分析失败', icon: 'none' })
   }
 }
 
 function clearPendingChatImage() {
   pendingChatImage.value = ''
+  pendingChatImageUrl.value = ''
   pendingChatAnalysis.value = ''
+}
+function previewImage(url) {
+  if (!url) return
+  uni.previewImage({ urls: [url], current: url })
 }
 
 function rateByIndex(i, score) {
@@ -3086,9 +3106,12 @@ async function deleteConversation(id) {
 function firstQuestion(conv) {
   // 列表只显示用户首问摘要；图片分析等长文本截断为一行
   let q = conv.user_input || ''
-  q = q.replace(/^\[图片分析：\s*/, '[图片] ')
+  q = q.replace(/^\[图片分析：\s*/, '')
   q = q.replace(/```[\s\S]*?```/g, '[图片分析]')
   q = q.replace(/\n/g, ' ').trim()
+  if (conv.user_image_url) {
+    q = q ? `[图片] ${q}` : '[图片]'
+  }
   if (!q) return '（空对话）'
   return q.length > 26 ? q.slice(0, 26) + '…' : q
 }
@@ -3101,10 +3124,10 @@ function openHistoryChatById(id) {
   const hist = Array.isArray(conv.history) ? conv.history : []
   if (hist.length) {
     hist.forEach(h => {
-      messages.value.push(markRaw({ role: h.role, content: h.content, cid: id, rating: 0, image: '' }))
+      messages.value.push(markRaw({ role: h.role, content: h.content, cid: id, rating: 0, image: h.image_url || '' }))
     })
   } else {
-    messages.value.push(markRaw({ role: 'user', content: conv.user_input }))
+    messages.value.push(markRaw({ role: 'user', content: conv.user_input, image: conv.user_image_url || '' }))
     messages.value.push(markRaw({ role: 'agent', content: conv.agent_response || '（无回复）', cid: conv.id, rating: conv.score }))
   }
   currentView.value = 'chat'
@@ -3207,6 +3230,8 @@ onMounted(() => {
 .msg-text { font-size: 28rpx; line-height: 1.7; padding: 18rpx 22rpx; border-radius: 16rpx; display: block; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; }
 .msg-user .msg-text { background: #4F46E5; color: #fff; border-bottom-right-radius: 4rpx; }
 .msg-agent .msg-text { background: #F5F3FF; border: 1rpx solid #EDE9FE; border-bottom-left-radius: 4rpx; }
+.chat-user-img-wrap { margin-bottom: 12rpx; border-radius: 16rpx; overflow: hidden; max-width: 420rpx; background: #F7F8FA; }
+.chat-user-img { width: 100%; display: block; border-radius: 16rpx; }
 /* AI 消息气泡里的富文本：让 md 加粗/标题/列表真正生效 */
 :deep(.msg-text) p { margin: 8rpx 0; line-height: 1.7; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
 :deep(.msg-text) h1,

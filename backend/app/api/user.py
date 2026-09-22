@@ -129,14 +129,16 @@ def _aggregate_conversations(rows: list[Conversation]) -> list[dict]:
                 hist = json.loads(last.get('history') or '[]')
                 # 第一次被追问时，先把父会话自己的第一轮补进 history
                 if last.get('turn_count', 1) == 1 and not hist:
-                    hist.append({'role': 'user', 'content': last['user_input']})
+                    hist.append({'role': 'user', 'content': last['user_input'], 'image_url': last.get('user_image_url')})
                     hist.append({'role': 'agent', 'content': last.get('agent_response') or ''})
-                hist.append({'role': 'user', 'content': row.user_input})
+                hist.append({'role': 'user', 'content': row.user_input, 'image_url': row.user_image_url or None})
                 hist.append({'role': 'agent', 'content': row.agent_response or ''})
                 last['history'] = json.dumps(hist, ensure_ascii=False)
                 last['agent_response'] = row.agent_response
                 last['turn_count'] = last.get('turn_count', 1) + 1
                 last['created_at'] = max(last.get('created_at'), row.created_at) if last.get('created_at') and row.created_at else (last.get('created_at') or row.created_at)
+                if row.user_image_url and not last.get('user_image_url'):
+                    last['user_image_url'] = row.user_image_url
                 continue
         groups.append({
             'id': row.id,
@@ -146,6 +148,7 @@ def _aggregate_conversations(rows: list[Conversation]) -> list[dict]:
             'score': row.score,
             'feedback': row.feedback or '',
             'status': row.status or 'normal',
+            'user_image_url': row.user_image_url or None,
             'history': row.history or '[]',
             'created_at': row.created_at,
             'turn_count': 1,
@@ -192,6 +195,8 @@ def chat(
     lat: Optional[float] = None,
     lon: Optional[float] = None,
     conversation_id: Optional[int] = None,
+    image_url: Optional[str] = None,
+    image_analysis: Optional[str] = None,
     user_id: int = Depends(resolve_user_id),
     db: Session = Depends(get_db)
 ):
@@ -210,12 +215,21 @@ def chat(
         db.add(conv)
         db.commit()
 
+    # 保存原始问题与图片地址；把图片分析作为一次性上下文注入 LLM
+    conv.user_input = user_input
+    if image_url:
+        conv.user_image_url = image_url
+    final_input = user_input
+    if image_url or image_analysis:
+        final_input = f"[图片分析：{image_analysis or ''}]\n{user_input}"
+
     history = json.loads(conv.history or '[]')
     agent = ReActAgent(tool_registry)
-    result = agent.run(user_input, user_id=user_id, conversation_id=conv.id, city=city, lat=lat, lon=lon, history=history)
+    result = agent.run(final_input, user_id=user_id, conversation_id=conv.id, city=city, lat=lat, lon=lon, history=history)
 
-    # 追加历史并更新最新回复
-    history.append({"role": "user", "content": user_input})
+    # 追加历史并更新最新回复（保留原始问题与图片地址，不暴露图片分析文本）
+    user_hist = {"role": "user", "content": user_input, "image_url": image_url}
+    history.append(user_hist)
     history.append({"role": "agent", "content": result})
     conv.history = json.dumps(history, ensure_ascii=False)
     conv.agent_response = result

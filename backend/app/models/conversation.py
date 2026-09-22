@@ -12,7 +12,8 @@ class Conversation(Base):
     score = Column(Integer, default=0)
     feedback = Column(Text, default="")
     status = Column(String, default="normal")  # normal / pending / fixed / approved / deployed
-    history = Column(Text, default="[]")  # JSON [{role:user/agent, content:...}]
+    user_image_url = Column(Text)  # 用户上传的图片地址（聊天中用图片提问时）
+    history = Column(Text, default="[]")  # JSON [{role:user/agent, content:..., image_url?:...}]
     created_at = Column(DateTime, server_default=func.now())
 
 class AgentStep(Base):

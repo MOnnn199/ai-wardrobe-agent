@@ -23,6 +23,7 @@ _COLUMNS = [
     ("users", "style_preference", "TEXT", "DEFAULT ''"),
     ("users", "last_login_at", "DATETIME", ""),
     ("users", "last_login_city", "TEXT", "DEFAULT ''"),
+    ("conversations", "user_image_url", "TEXT", ""),
 ]
 
 
