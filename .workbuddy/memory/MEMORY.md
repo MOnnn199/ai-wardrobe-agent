@@ -48,4 +48,5 @@
 - 自主搭配审核结果不再后端生成“我的搭配”拼贴图；改由前端在审核结果里用衣橱卡片样式展示“搭配单品”（左侧图片 + 右侧名称 + 分类/颜色/季节标签）。
 - **产品决策（2026-08-24）：用户端不提供「日程」入口、也不提供独立「穿搭日志」Tab**。保留「穿搭回顾」（`GET /api/user/wardrobe/wear-by-date`，读 `wear_logs`，由 `mark-worn` 写入）。
 - **2026-09-22 死代码清理（提交 `85cf921`/`b23dab7`/`15fb99f`）**：日程(FR-C6)与采纳链路(FR-C7)的代码**已彻底删除**（不再是"保留但未启用"）——`models/calendar.py`、4 个 `/api/user/calendar`、`CalendarEvent*`/`Adoption*`/`ABTest*` schema、`services/{pipeline,ab_test}.py`、`scheduled.py` 的 `run_event_reminders`/`run_daily_push`、H5 的 `src/views/*`+`src/router/index.js`；另删 7 个零调用接口（logout、tools/reorder、ab-test、knowledge/sources、corrections/{id}/submit、wardrobe/upload-image、outfits/adopt）。接口数 93→80。
-- **清理后仍须保留**：`POST /api/user/notifications/trigger?job=monthly|trend|all`（答辩现场手动触发推送的唯一手段，前端不调用但勿删）；`models/adoption.py`+`adoption_records` 表（运营端「采纳数/采纳率/采纳来源分布」仍在读，但写入链路已移除→该 KPI 只反映历史数据、不再增长）。
+- **清理后仍须保留**：`POST /api/user/notifications/trigger?job=monthly|trend|all`（答辩现场手动触发推送的唯一手段，前端不调用但勿删）；`models/adoption.py`+`adoption_records` 表。
+- **采纳记录已重新接线（2026-09-22 提交 `5f5ca77`）**：写入挂在 `mark-worn`（「确认今日穿搭」/「标记穿过」，`backend/app/api/user.py`）成功后 → 补写一条 `AdoptionRecord`（`source='today'`、`scene='今日穿搭'`）。幂等口径=**同用户+同天+同批单品只记一次；点「换一套」后再确认会再记一条**。返回体带 `adoption_id`/`adoption_counted` 便于观察。**不要**再把它当成"冻结的历史数据"——运营端「采纳数/采纳率/采纳来源分布」现在会随演示增长（`admin.py:79,104` 读它）。用户端「穿搭日志」列表入口仍不提供。

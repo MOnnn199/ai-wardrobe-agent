@@ -275,7 +275,10 @@ npm run dev
 | 应用内日程 / 日程提醒推送 | FR-C6 | `models/calendar.py`、4 个 `/api/user/calendar` 接口、`CalendarEvent*` schema、`run_event_reminders` 定时任务**均已删除**；数据库 `calendar_events` 表将不作为有效数据来源 |
 | 采纳记录 / 穿搭日志 | FR-C7 | `POST /api/user/outfits/adopt`、`GET /api/user/adoptions`、`GET /api/user/wear-diary`、`AdoptionCreate/AdoptionResponse` schema**均已删除** |
 
-> ⚠️ 注意：`adoption_records` **表与 `models/adoption.py` 仍保留**——运营端「采纳数 / 采纳率 / 采纳来源分布」仍在读它。但由于采纳写入链路已移除，该 KPI 只会反映**历史数据**，不再增长。
+> 注意：`adoption_records` **表与 `models/adoption.py` 保留**——运营端「采纳数 / 采纳率 / 采纳来源分布」在读它。
+> 采纳记录由 `POST /api/user/wardrobe/mark-worn`（「确认今日穿搭」/「标记穿过」）成功后写入，
+> 幂等口径 = **同用户 + 同一天 + 同一批单品只记一次**，点「换一套」后再确认会再记一条。
+> 用户端仍**不提供**独立的「穿搭日志」列表入口。
 
 ---
 
@@ -333,7 +336,7 @@ npm run dev
 给「管理员」角色，管系统级配置与运维。顶部搜索框同样是命令面板。
 
 ### 5.1 概览 Dashboard
-用户数 / 今日推荐数 / 7 日活跃趋势 + 打卡日历热力。数据来自 `users / conversations / wear_logs`。采纳数 / 采纳率 / 采纳来源分布读 `adoption_records`（注：采纳写入链路已移除，该 KPI 仅反映历史数据，不再增长）。
+用户数 / 今日推荐数 / 7 日活跃趋势 + 打卡日历热力。数据来自 `users / conversations / wear_logs`。采纳数 / 采纳率 / 采纳来源分布读 `adoption_records`（由「确认今日穿搭」即 `mark-worn` 写入，随使用增长）。
 
 ### 5.2 Prompt 管理（增 / 删 / 改 / 发布）
 **使用步骤**
