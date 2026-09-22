@@ -735,6 +735,7 @@
             <icon-svg name="chevron-left" :size="32"></icon-svg>
           </view>
           <text class="panel-title">穿搭回顾</text>
+          <view class="head-right-spacer"></view>
         </view>
         <view class="lookback-card">
           <text class="lookback-tip">选一个日期，看看那天穿了什么</text>
@@ -3892,10 +3893,13 @@ onMounted(() => {
 }
 .head-back:active { background: #F7F8FA; opacity: .85; }
 .head-right-spacer { width: 64rpx; flex-shrink: 0; }
+/* 带返回箭头的面板头部统一用这一套：左返回 + 居中标题（右侧 spacer 用于配平居中）
+   新增此类头部时必须同时引用本规则，否则返回箭头和标题会上下错行 */
+.closet-head,
+.lookback-head { display: flex; align-items: center; justify-content: space-between; }
 
 /* ===== 我的套装独立面板 ===== */
 .closet-panel { padding: 24rpx 24rpx 0; animation: h5FadeUp .4s ease both; }
-.closet-head { display: flex; align-items: center; justify-content: space-between; }
 .closet-section {
   margin: 20rpx 0 8rpx; background: #fff; border-radius: 22rpx;
   padding: 28rpx 28rpx; box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, .04);
