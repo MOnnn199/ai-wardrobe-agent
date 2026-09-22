@@ -1361,22 +1361,29 @@ function md2html(md) {
   html = html.replace(/~~(.+?)~~/g, '<del>$1</del>')
   // 行内代码
   html = html.replace(/`(.+?)`/g, '<code style="background:#F4EFFA;padding:2rpx 8rpx;border-radius:6rpx;color:#8B7AC0;font-size:24rpx">$1</code>')
-  // 无序列表：去掉 AI 自己写的“·/•”前导符号，避免和自定义圆点重复
-  html = html.replace(/^(\s*)[-*+]\s*[·•∙⋅]?\s*(.*)$/gm, (m, sp, txt) => `<li style="margin:8rpx 0;word-break:break-word;overflow-wrap:break-word;white-space:normal">${txt}</li>`)
-  html = html.replace(/(<li[^>]*>[\s\S]*?<\/li>\n?)+/g, m => `<ul style="padding-left:0;margin:12rpx 0;list-style:none">${m}</ul>`)
-  // 有序列表
-  html = html.replace(/^\d+\.\s*[·•∙⋅]?\s*(.*)$/gm, '<li style="margin:8rpx 0;word-break:break-word;overflow-wrap:break-word;white-space:normal">$1</li>')
+  // 无序列表：用 div 模拟，彻底避开浏览器默认 marker 双圆点
+  html = html.replace(/^(\s*)[-*+]\s*[·•∙⋅]?\s*(.*)$/gm, (m, sp, txt) => `<div class="md-li"><span class="md-dot">•</span>${txt}</div>`)
+  // 有序列表：保留原序号，同样用 div 模拟
+  html = html.replace(/^(\d+)\.\s*[·•∙⋅]?\s*(.*)$/gm, (m, num, txt) => `<div class="md-oli"><span class="md-num">${num}.</span>${txt}</div>`)
+  // 把连续列表项包进统一容器（去掉内部换行，避免后续 split 拆开）
+  html = html.replace(/(<div class="md-(li|oli)">[\s\S]*?<\/div>\n?)+/g, m => `<div class="md-list">${m.replace(/\n/g, '')}</div>`)
   // 分隔线
   html = html.replace(/^-{3,}$/gm, '<hr style="border:none;border-top:1rpx solid #d6e5ff;margin:20rpx 0">')
   // 链接
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#7aa8ff">$1</a>')
-  // 段落
+  // 段落处理：先把列表块占位保护，避免被包进 <p>
+  const lists = []
+  html = html.replace(/<div class="md-(list|li|oli)">[\s\S]*?<\/div>/g, m => {
+    lists.push(m)
+    return `__MDLIST_${lists.length - 1}__`
+  })
   const blocks = html.split('\n').map(l => l.trim()).filter(l => l !== '')
-  return blocks.map(b => {
-    if (/^<(h[1-6]|ul|ol|li|blockquote|pre|hr|table)/.test(b)) return b
-    if (b.startsWith('<li')) return b
+  html = blocks.map(b => {
+    if (/^(__MDLIST_|<(h[1-6]|blockquote|pre|hr|table|div class="md-))/.test(b)) return b
     return `<p style="margin:12rpx 0;line-height:1.7">${b}</p>`
   }).join('')
+  html = html.replace(/__MDLIST_(\d+)__/g, (m, i) => lists[+i])
+  return html
 }
 
 // ===== 场景快捷推荐（FR-C4）====
@@ -3209,10 +3216,13 @@ onMounted(() => {
 :deep(.msg-text) h2 { font-size: 30rpx; }
 :deep(.msg-text) h3 { font-size: 28rpx; }
 :deep(.msg-text) strong { font-weight: 600; color: #5B8DEF; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
-:deep(.msg-text) ul,
-:deep(.msg-text) ol { padding-left: 0; margin: 10rpx 0; list-style: none; }
-:deep(.msg-text) li { margin: 6rpx 0; padding-left: 24rpx; position: relative; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
-:deep(.msg-text) li::before { content: '•'; position: absolute; left: 0; top: 0; color: #7aa8ff; font-weight: 700; font-size: 28rpx; line-height: 1.7; }
+/* md2html 列表：用 div 模拟，避免浏览器默认 marker 双圆点 */
+:deep(.msg-text) .md-list { margin: 10rpx 0; }
+:deep(.msg-text) .md-li,
+:deep(.msg-text) .md-oli { position: relative; padding-left: 30rpx; margin: 6rpx 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+:deep(.msg-text) .md-dot,
+:deep(.msg-text) .md-num { position: absolute; left: 0; top: 0; color: #7aa8ff; font-weight: 700; font-size: 28rpx; line-height: 1.7; }
+:deep(.msg-text) .md-num { color: #5B8DEF; }
 .rate-row { margin-top: 8rpx; }
 .star { font-size: 32rpx; color: #d6e5ff; margin-right: 6rpx; }
 .star.active { color: #FF9E8E; }
@@ -3452,10 +3462,12 @@ onMounted(() => {
 :deep(.rv-c) p { margin: 6rpx 0; line-height: 1.7; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; }
 :deep(.rv-c) strong { font-weight: 600; color: #5B8DEF; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
 :deep(.rv-c) h3 { font-size: 26rpx; font-weight: 700; color: #2D3A5A; margin: 12rpx 0 6rpx; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
-:deep(.rv-c) ul,
-:deep(.rv-c) ol { padding-left: 0; margin: 8rpx 0; list-style: none; }
-:deep(.rv-c) li { margin: 4rpx 0; padding-left: 22rpx; position: relative; }
-:deep(.rv-c) li::before { content: '•'; position: absolute; left: 0; top: 0; color: #7aa8ff; font-weight: 700; }
+:deep(.rv-c) .md-list { margin: 8rpx 0; }
+:deep(.rv-c) .md-li,
+:deep(.rv-c) .md-oli { position: relative; padding-left: 28rpx; margin: 4rpx 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+:deep(.rv-c) .md-dot,
+:deep(.rv-c) .md-num { position: absolute; left: 0; top: 0; color: #7aa8ff; font-weight: 700; }
+:deep(.rv-c) .md-num { color: #5B8DEF; }
 .review-actions { margin-top: 20rpx; display: flex; justify-content: flex-end; }
 .tag { font-size: 20rpx; padding: 4rpx 12rpx; background: #e1edff; color: #7aa8ff; border-radius: 6rpx; margin-right: 6rpx; }
 .tag.ok { background: #EEF0FA; color: #5B8DEF; }
@@ -4497,12 +4509,12 @@ onMounted(() => {
   background: rgba(232, 222, 243, .5);
   padding: 0 6rpx; border-radius: 4rpx;
 }
-.scene-dialog-scroll rich-text ul,
-.scene-dialog-scroll rich-text ol       { margin: 12rpx 0; padding-left: 8rpx; }
-.scene-dialog-scroll rich-text li       { margin: 8rpx 0; padding-left: 8rpx; }
-.scene-dialog-scroll rich-text li::before {
-  content: '·'; color: #a9c6ff; font-weight: 700; margin-right: 12rpx;
-}
+.scene-dialog-scroll rich-text .md-list  { margin: 12rpx 0; }
+.scene-dialog-scroll rich-text .md-li,
+.scene-dialog-scroll rich-text .md-oli    { position: relative; margin: 8rpx 0; padding-left: 28rpx; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+.scene-dialog-scroll rich-text .md-dot,
+.scene-dialog-scroll rich-text .md-num    { position: absolute; left: 0; top: 0; color: #a9c6ff; font-weight: 700; }
+.scene-dialog-scroll rich-text .md-num    { color: #5B8DEF; }
 .scene-dialog-scroll rich-text blockquote {
   margin: 16rpx 0; padding: 12rpx 18rpx;
   background: #eef5ff; border-left: 6rpx solid #a9c6ff;
