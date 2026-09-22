@@ -41,13 +41,13 @@
 
 | 前缀 | 文件 | 主要能力 |
 |------|------|----------|
-| `/api/auth` | `app/api/auth.py` | 登录 / 注册 / me / 退出 |
-| `/api/user` | `app/api/user.py` + `features.py` + `notification.py` | 用户端全部能力（对话、衣橱、分析、场景、套装、日程、通知、身形资料） |
+| `/api/auth` | `app/api/auth.py` | 登录 / 注册 / me（登出由前端清 token 完成，无服务端接口） |
+| `/api/user` | `app/api/user.py` + `features.py` + `notification.py` | 用户端全部能力（对话、衣橱、分析、场景、套装、通知、身形资料） |
 | `/api/stylist` | `app/api/stylist.py` | 搭配师端（翻车案例、知识库、标签、Few-Shot、知识缺口、单品纠错、统计） |
 | `/api/config` | `app/api/config.py` | 配置端（Prompt、模型、工具、审批、用户、成本、推理轨迹、监控） |
 | `/api/admin` | `app/api/admin.py` | 管理员专属 |
 | `/uploads` | `main.py` 挂载的静态目录 | 衣橱图、拼贴图：`http://localhost:8000/uploads/...` |
-| `/ws/{user_id}` | `main.py` WebSocket | 天气告警 / 日程提醒的实时推送 |
+| `/ws/{user_id}` | `main.py` WebSocket | 天气告警的实时推送 |
 
 > 用户端 H5 的 `request.js` 里 `BASE='/api'`，调用 `get('/user/xxx')` 实际请求 `/api/user/xxx`；uni-app 的 dev server **会**把 `/api` 代理到 `localhost:8000`（这是它唯一生效的代理）。运营端 `frontend-web` 的 vite 同样代理 `/api`。两个前端**都不会**代理 `/uploads`，所以图片 `<image :src>` 必须用后端返回的完整地址 `http://localhost:8000/uploads/...`。
 
@@ -145,7 +145,7 @@ npm run dev
 
 **数据怎么走**
 - 进首页前端调 `GET /api/user/today-outfit`，后端取该用户 `status='confirmed'` 衣橱 → 必要时取真实天气（Open-Meteo，需用户授权 GPS）→ `ReActAgent.run` 生成推荐文案 + `_render_collage` 拼贴图。
-- 「确认今日穿搭」= 前端 `POST /api/user/wardrobe/mark-worn {ids,+worn_date?}`（标记穿过，写 WearLog 供穿搭回顾）；`POST /api/user/outfits/adopt` 仅保留穿着记录写入，不再写采纳日志。
+- 「确认今日穿搭」= 前端 `POST /api/user/wardrobe/mark-worn {ids,+worn_date?}`（标记穿过，写 WearLog 供穿搭回顾）。采纳链路（原 `POST /api/user/outfits/adopt`）已随 FR-C7 一并移除。
 - 天气胶囊走 `get_weather` 工具；GPS 仅在 `localhost` / `HTTPS` 可用，否则退回 IP 反查。
 
 ### 3.3 AI 对话（chat Tab）
@@ -212,13 +212,13 @@ npm run dev
 **使用步骤**
 1. 首页点 6 个场景入口之一（通勤 / 约会 / 运动 / 聚会 / 旅行 / 面试），或对话里让 AI 按场景推荐。
 2. 底部弹层展示 AI 推荐的多套穿搭（基于你衣橱单品）。
-3. 点「采纳」仅做交互反馈（提示「已采纳」），采纳日志功能已停用，不再落库。
+3. 点「采纳」仅做交互反馈（提示「已采纳」），采纳日志功能已停用（相关接口已于本次清理移除），不再落库。
 
 **数据怎么走**
 - 前端 `GET /api/user/scenes`（拿场景列表）→ 选场景后 `POST /api/user/quick-recommend {scene, note?, city?, lat?, lon?}`。
 - 后端 `features.py`：**先** `_pick_outfit_items(items, scene)`（场景打分版：按场景风格/颜色加权，每类取一件、最多 5 件）程序化精选一套 → 再把「精选集 + 完整衣橱」交给 `ReActAgent.run` 只围绕精选集写推荐语。
 - 返回 `{recommendation, conversation_id, outfit_image, scene, item_ids}`；前端用 `item_ids` 直接拉衣橱卡片展示（**不是** agent 返回的，是程序化精选结果）。
-- 采纳：`POST /api/user/outfits/adopt {item_ids, source:'scene', scene}` → 仅写 WearLog（穿搭回顾数据源），`adoptions` 表已停用不再写入；接口返回「功能未启用」提示。
+- 采纳：仅前端交互反馈；采纳链路接口（`POST /api/user/outfits/adopt`）与 `adoptions` 写入均已停用并移除（FR-C7）。
 
 ### 3.7 个人中心 / 身形资料（我的 Tab）
 
@@ -237,14 +237,15 @@ npm run dev
 
 **使用步骤**
 1. 首页铃铛或「我的」未读通知卡点开通知抽屉。
-2. 列表分类型（系统 / 衣橱月报 / 穿搭热点 / 天气告警 / 日程提醒），未读有左侧色条。（注：当前用户端未提供建日程入口，故「日程提醒」类型实际不会产生；其余类型正常。）
+2. 列表分类型（系统 / 衣橱月报 / 穿搭热点 / 天气告警），未读有左侧色条。
 3. 点单条标记已读，或「全部已读」。
 
 **数据怎么走**
 - 读取：`GET /api/user/notifications`、`GET /api/user/notifications/unread-count`；已读：`POST /api/user/notifications/{id}/read`、`POST /api/user/notifications/read-all`。
 - 通知统一由 `create_notification(db, user_id, type, title, content)` 写 `notifications` 表，来源有二：
-  - **定时任务**（`services/scheduled.py`）：每日 07:30 天气告警、每月 1 日月报 / 热点 → 同时经 **WebSocket `/ws/{user_id}`** 实时推（在线用户立刻弹）。（注：后端另含每日 07:00「日程提醒」任务，但当前用户端未提供日程入口，故默认不会触发。）
+  - **定时任务**（`services/scheduled.py`）：每日 07:30 天气告警、每月 1 日月报 / 热点 → 同时经 **WebSocket `/ws/{user_id}`** 实时推（在线用户立刻弹）。
   - **业务触发**（如单品纠错被应用等）。
+- 演示/测试：`POST /api/user/notifications/trigger?job=monthly|trend|all` 可**手动触发**上述推送，无需等 cron 到点（前端不调用，专供现场演示）。
 - 新用户首次进通知中心会 `_ensure_monthly_notifications` 自动补生成当月月报 + 热点（幂等，按 `(user_id, type, title)` 去重）。
 
 ### 3.9 搭配审核 / 单品纠错上报
@@ -257,23 +258,24 @@ npm run dev
 - 搭配审核：`POST /api/user/outfit-review {ids}` → 后端 `check_outfit` / `score_outfit_detailed` 工具逐维度评分返回建议。
 - 单品纠错上报：`POST /api/user/item-corrections {item_id, error_fields[], correct_attrs{}, note}` → 校验 `item` 属当前用户 → 落 `item_corrections` 表（`status='pending'`）→ 搭配师端审核。
 
-### 3.10 穿搭回顾 / 采纳记录（附：「日程」说明）
+### 3.10 穿搭回顾（附：已下线功能的说明）
 
-> 产品决策：用户端正交「日程」与独立的「穿搭日志」Tab，**当前均不提供**。以下为实际现状。
+> 产品决策：用户端**不提供**「日程」入口、也**不提供**独立的「穿搭日志」Tab。
+> 相关后端代码已随本次清理一并移除（不再是「保留但未启用」）。
 
 **穿搭回顾（真实功能，保留）**
 - **使用步骤**：在「我的」页点「穿搭回顾」，选一个日期 → 回看那天穿过哪些单品（来自 `wear_logs`）。
-- **数据怎么走**：前端按日期查 `wear_logs`（`GET /api/user/wear-log?date=YYYY-MM-DD`，`user.py`）；「确认今日穿搭」「标记穿过」都会写入 `wear_logs`。
+- **数据怎么走**：前端按日期查 `GET /api/user/wardrobe/wear-by-date?date=YYYY-MM-DD`（`user.py`）；「确认今日穿搭」「标记穿过」（`/user/wardrobe/mark-worn`）都会写入 `wear_logs`。
 
-**采纳记录（已停用）**
-- 穿搭日志（采纳记录）功能已停用：前端不再依赖、后端 `adopt` 接口仅写 WearLog（供穿搭回顾），不再写 `adoptions` 表；`GET /api/user/adoptions`、`GET /api/user/wear-diary` 接口已注释停用。
-- 用户端**没有**独立的「穿搭日志」列表页；按日回顾穿搭请用「穿搭回顾」（读 `mark-worn` 写入的 WearLog，正常可用）。
+**套装**：`GET/POST/PUT/DELETE /api/user/outfits`（手动建套装，正常可用）。
 
-**套装**：`GET/POST/PUT/DELETE /api/user/outfits`（手动建套装）。
+**已下线并已移除代码的功能**
+| 功能 | 原需求编号 | 现状 |
+|------|-----------|------|
+| 应用内日程 / 日程提醒推送 | FR-C6 | `models/calendar.py`、4 个 `/api/user/calendar` 接口、`CalendarEvent*` schema、`run_event_reminders` 定时任务**均已删除**；数据库 `calendar_events` 表将不作为有效数据来源 |
+| 采纳记录 / 穿搭日志 | FR-C7 | `POST /api/user/outfits/adopt`、`GET /api/user/adoptions`、`GET /api/user/wear-diary`、`AdoptionCreate/AdoptionResponse` schema**均已删除** |
 
-**日程（后端支持，前端未开放）**
-- 后端已具备：`GET/POST/PUT/DELETE /api/user/calendar` → 落 `calendar_events`；每日 07:00 定时任务扫 `remind=1` 的当天事件 → 通知。
-- 但**用户端未提供任何「日程」入口**（底部导航只有 首页/对话/衣橱/分析/我的），用户无法建提醒，该通知链路实际不会触发。如需启用，需先把日程 UI 接回前端。
+> ⚠️ 注意：`adoption_records` **表与 `models/adoption.py` 仍保留**——运营端「采纳数 / 采纳率 / 采纳来源分布」仍在读它。但由于采纳写入链路已移除，该 KPI 只会反映**历史数据**，不再增长。
 
 ---
 
@@ -331,7 +333,7 @@ npm run dev
 给「管理员」角色，管系统级配置与运维。顶部搜索框同样是命令面板。
 
 ### 5.1 概览 Dashboard
-用户数 / 今日推荐数 / 7 日活跃趋势 + 打卡日历热力。数据来自 `users / conversations / wear_logs / calendar_events`（注：采纳率原依赖 `adoptions` 表，该表已停用，运营端采纳率统计暂不可用）。
+用户数 / 今日推荐数 / 7 日活跃趋势 + 打卡日历热力。数据来自 `users / conversations / wear_logs`。采纳数 / 采纳率 / 采纳来源分布读 `adoption_records`（注：采纳写入链路已移除，该 KPI 仅反映历史数据，不再增长）。
 
 ### 5.2 Prompt 管理（增 / 删 / 改 / 发布）
 **使用步骤**
@@ -425,7 +427,6 @@ npm run dev
 | 任务 | 时间 | 行为 |
 |------|------|------|
 | 每日天气穿搭 | 07:30 | Open-Meteo 取有定位用户的天气 → 生成建议 → 通知 + WebSocket 实时推 |
-| 日程提醒 | 07:00 | 扫当天 `calendar_events(remind=1)` → 通知（**需用户端建日程才触发；当前前端无日程入口，实际不触发**） |
 | 衣橱月报 | 每月 1 日 08:00 | 扫衣橱生成健康月报 → 通知 |
 | 穿搭热点 | 每月 1 日 09:00 | DeepSeek 联网 + RAG 生成当月热点 → 通知 |
 | 知识缺口 | 每周一 09:00 | 低分对话聚类检测缺口（仅打印） |
@@ -434,7 +435,7 @@ npm run dev
 
 ### 6.7 通知
 - 统一入口 `create_notification(...)` 写 `notifications` 表，按 `(user_id, type, title)` 幂等。
-- 实时通道：`WebSocket /ws/{user_id}` + `notify_user()`，天气告警同时推（日程提醒也走该通道，但当前前端无日程入口，不会触发）。
+- 实时通道：`WebSocket /ws/{user_id}` + `notify_user()`，天气告警同时推。
 
 ---
 
@@ -464,7 +465,7 @@ ai-wardrobe-agent/
 │   │   ├── llm/            # deepseek / zhipu / tongyi / tongyi_vl / embeddings
 │   │   ├── vision/         # detector(YOLO) / clothing_embedder(CLIP)
 │   │   ├── models/         # SQLAlchemy 表 + migrate.py（启动幂等加列）
-│   │   ├── services/       # cost_tracker / moderation / scheduled / clothing_search / notifications
+│   │   ├── services/       # cost_tracker / scheduled / clothing_search / notifications / knowledge_gap
 │   │   ├── schemas/        # Pydantic 请求/响应
 │   │   ├── utils/          # 拼图 / 抠图 / LLM JSON 提取
 │   │   └── uploads/        # 运行时图片（衣物图/拼贴图）
@@ -476,9 +477,7 @@ ai-wardrobe-agent/
 │   └── src/pages/          # login（登录/注册/记住密码） / user（SPA 五 Tab）
 ├── frontend-web/           # 运营端 Vue3 + EP（:5175）
 │   └── src/views/          # Login.vue / stylist/Index.vue / config/Index.vue / components/SidebarLayout.vue
-├── scripts/                # 工具脚本（生成 PDF、测试等）
-├── logs/                   # 运行日志（可清空）
-├── archive/                # 历史遗留（不参与运行）
+├── scripts/                # 工具脚本（backfill_clothing_vectors / generate_fashion_pdf / run_backend / smoke_p0 / smoke_p1 / test_api）
 └── .workbuddy/             # AI 助手项目记忆（勿手动改）
 ```
 
@@ -511,7 +510,7 @@ ai-wardrobe-agent/
 - `delete_clothing` 当前不清理 CLIP 向量（孤儿向量，技术债）。
 - 模型配置是内存态，重启恢复 `.env`；工具开关 `tool_configs` 持久化。
 - 用户端 GPS 定位仅在 `localhost` / `HTTPS` 下可用。
-- `archive/`、`scripts/legacy/` 为历史遗留，可忽略。
+- `scripts/` 下只保留仍在用的工具脚本；`archive/`、`scripts/legacy/`、`frontend/dist.old.*` 等历史遗留已于 2026-09 清理删除。
 
 ---
 
