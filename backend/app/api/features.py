@@ -1,21 +1,21 @@
-"""P1 新增用户端 API：自定义套装 / 场景快捷推荐 / 采纳链路与穿搭日志 / 日程表 / 个人设置。"""
+"""P1 新增用户端 API：自定义套装 / 场景快捷推荐 / 个人设置。
+
+已移除（按产品决策不再提供用户端入口，故随代码一并清理）：
+- 采纳链路与穿搭日志（FR-C7）：穿搭回顾改由 /user/wardrobe/wear-by-date 查 WearLog 驱动
+- 应用内日程表（FR-C6）：用户端无日程入口
+"""
 import json
-from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.models import get_db
 from app.models.user import User
-from app.models.wardrobe import ClothingItem, WearLog
+from app.models.wardrobe import ClothingItem
 from app.models.conversation import Conversation
 from app.models.outfit import Outfit
-from app.models.calendar import CalendarEvent
-from app.models.adoption import AdoptionRecord
 from app.schemas import (
     OutfitCreate, OutfitUpdate, OutfitResponse,
-    CalendarEventCreate, CalendarEventUpdate, CalendarEventResponse,
-    AdoptionCreate, AdoptionResponse,
     UserProfileUpdate, SceneRecommendRequest,
 )
 from app.api.user import resolve_user_id
@@ -231,164 +231,6 @@ def delete_outfit(outfit_id: int, user_id: int = Depends(resolve_user_id), db: S
     db.commit()
     return {'message': 'ok'}
 
-
-# ===================== 采纳链路 + 穿搭日志（FR-C7）=====================
-@router.post('/outfits/adopt')
-def adopt_outfit(data: AdoptionCreate, user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    """【穿搭日志功能已停用】原逻辑：记录采纳(AdoptionRecord) + 给单品写穿着记录(WearLog)。
-
-    现仅保留「穿着记录(WearLog)」写入，用于驱动「穿搭回顾」(wear-by-date) 与衣橱穿着统计；
-    不再写入 AdoptionRecord（穿搭日志采纳记录），因为用户端未提供穿搭日志入口。
-    """
-    adopted_date = date.today()
-    if data.adopted_date:
-        try:
-            adopted_date = date.fromisoformat(str(data.adopted_date)[:10])
-        except Exception:
-            adopted_date = date.today()
-
-    if data.item_ids:
-        items = db.query(ClothingItem).filter(
-            ClothingItem.user_id == user_id, ClothingItem.id.in_(data.item_ids)).all()
-        if not items:
-            raise HTTPException(400, '选中的衣物无效')
-        for it in items:
-            exists = db.query(WearLog).filter(
-                WearLog.item_id == it.id, WearLog.user_id == user_id,
-                WearLog.worn_date == adopted_date).first()
-            if not exists:
-                db.add(WearLog(user_id=user_id, item_id=it.id, worn_date=adopted_date))
-                it.wear_count = (it.wear_count or 0) + 1
-            if (it.last_worn is None) or (adopted_date > it.last_worn):
-                it.last_worn = adopted_date
-        db.commit()
-
-    # ===== 穿搭日志（AdoptionRecord）已停用，不再写入 =====
-    # record = AdoptionRecord(
-    #     user_id=user_id, source=data.source, scene=data.scene,
-    #     conversation_id=data.conversation_id,
-    #     item_ids=json.dumps(data.item_ids),
-    #     reason=data.reason, adopted_date=adopted_date)
-    # db.add(record)
-    # db.commit()
-    # db.refresh(record)
-    return {'message': '穿搭日志功能未启用，仅记录穿着', 'item_ids': data.item_ids,
-            'adopted_date': str(adopted_date)}
-
-
-# 【已停用】穿搭日志列表接口：用户端未提供穿搭日志入口，AdoptionRecord 不再写入。
-# @router.get('/adoptions', response_model=list[AdoptionResponse])
-# def list_adoptions(user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-#     return db.query(AdoptionRecord).filter(AdoptionRecord.user_id == user_id)\
-#         .order_by(AdoptionRecord.adopted_date.desc(), AdoptionRecord.id.desc()).limit(100).all()
-
-
-# 【已停用】穿搭日志聚合接口：用户端未提供穿搭日志入口，且穿搭回顾(lookback) 改用
-# /user/wardrobe/wear-by-date 直接查 WearLog，故本接口不再使用，整体注释保留以备启用。
-# @router.get('/wear-diary')
-# def wear_diary(month: str = '', user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-#     """穿搭日志：按日期聚合（采纳的搭配 + 当天穿过的单品），附统计。"""
-#     # 采纳记录（按日期）
-#     adoptions = db.query(AdoptionRecord).filter(AdoptionRecord.user_id == user_id)\
-#         .order_by(AdoptionRecord.adopted_date.desc()).all()
-#     if month:
-#         adoptions = [a for a in adoptions if str(a.adopted_date).startswith(month)]
-#     # 穿着记录（按日期）
-#     wear_rows = db.query(WearLog.worn_date, WearLog.item_id).filter(WearLog.user_id == user_id).all()
-#     if month:
-#         wear_rows = [w for w in wear_rows if str(w[0]).startswith(month)]
-#     items_by_id = {i.id: i for i in db.query(ClothingItem).filter(ClothingItem.user_id == user_id).all()}
-#
-#     days: dict[str, dict] = {}
-#     for a in adoptions:
-#         key = str(a.adopted_date)
-#         day = days.setdefault(key, {'date': key, 'adoptions': [], 'items': [], 'item_ids': set()})
-#         ids = json.loads(a.item_ids or '[]')
-#         day['adoptions'].append({
-#             'id': a.id, 'source': a.source, 'scene': a.scene,
-#             'reason': a.reason, 'item_ids': ids,
-#         })
-#         for iid in ids:
-#             day['item_ids'].add(iid)
-#     for wdate, iid in wear_rows:
-#         key = str(wdate)
-#         day = days.setdefault(key, {'date': key, 'adoptions': [], 'items': [], 'item_ids': set()})
-#         day['item_ids'].add(iid)
-#     for day in days.values():
-#         day['items'] = [
-#             {'id': i.id, 'name': i.name, 'category': i.category, 'color': i.color or '',
-#              'image_url': i.image_url or ''}
-#             for i in (items_by_id.get(x) for x in sorted(day['item_ids']))
-#             if i is not None
-#         ]
-#         day.pop('item_ids', None)
-#
-#     days_list = sorted(days.values(), key=lambda d: d['date'], reverse=True)
-#     total_adoptions = len(adoptions)
-#     total_items = sum(len(d.get('items', [])) for d in days_list)
-#     return {'days': days_list, 'stats': {'total_adoptions': total_adoptions,
-#                                          'total_worn_records': total_items,
-#                                          'days_active': len(days_list)}}
-
-
-# ===================== 应用内日程表（FR-C6 日程联动）=====================
-@router.get('/calendar', response_model=list[CalendarEventResponse])
-def list_calendar(start: str = '', end: str = '',
-                  user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    q = db.query(CalendarEvent).filter(CalendarEvent.user_id == user_id)
-    if start:
-        q = q.filter(CalendarEvent.event_date >= start)
-    if end:
-        q = q.filter(CalendarEvent.event_date <= end)
-    return q.order_by(CalendarEvent.event_date.asc()).all()
-
-
-@router.post('/calendar', response_model=CalendarEventResponse)
-def create_calendar_event(data: CalendarEventCreate, user_id: int = Depends(resolve_user_id),
-                          db: Session = Depends(get_db)):
-    try:
-        ev_date = date.fromisoformat(str(data.event_date)[:10])
-    except Exception:
-        raise HTTPException(400, 'event_date 格式应为 YYYY-MM-DD')
-    ev = CalendarEvent(user_id=user_id, title=data.title, event_date=ev_date,
-                       start_time=data.start_time, end_time=data.end_time,
-                       occasion=data.occasion, location=data.location,
-                       note=data.note, remind=data.remind)
-    db.add(ev)
-    db.commit()
-    db.refresh(ev)
-    return ev
-
-
-@router.put('/calendar/{event_id}', response_model=CalendarEventResponse)
-def update_calendar_event(event_id: int, data: CalendarEventUpdate,
-                          user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    ev = db.query(CalendarEvent).filter(CalendarEvent.id == event_id,
-                                        CalendarEvent.user_id == user_id).first()
-    if not ev:
-        raise HTTPException(404, '日程不存在')
-    for k, v in data.model_dump(exclude_unset=True).items():
-        if k == 'event_date' and v:
-            try:
-                v = date.fromisoformat(str(v)[:10])
-            except Exception:
-                raise HTTPException(400, 'event_date 格式应为 YYYY-MM-DD')
-        setattr(ev, k, v)
-    db.commit()
-    db.refresh(ev)
-    return ev
-
-
-@router.delete('/calendar/{event_id}')
-def delete_calendar_event(event_id: int, user_id: int = Depends(resolve_user_id),
-                          db: Session = Depends(get_db)):
-    ev = db.query(CalendarEvent).filter(CalendarEvent.id == event_id,
-                                        CalendarEvent.user_id == user_id).first()
-    if not ev:
-        raise HTTPException(404, '日程不存在')
-    db.delete(ev)
-    db.commit()
-    return {'message': 'ok'}
 
 
 # ===================== 个人设置（定位用于天气提醒/场景推荐）=====================

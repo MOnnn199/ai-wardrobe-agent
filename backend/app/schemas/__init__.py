@@ -237,20 +237,6 @@ class ToolToggle(BaseModel):
     order: int = 0
 
 
-class ABTestRequest(BaseModel):
-    test_name: str
-    config_a: dict
-    config_b: dict
-    test_cases: list
-
-
-class ABTestResponse(BaseModel):
-    config_a_score: float
-    config_b_score: float
-    difference: float
-    recommendation: str
-
-
 class PipelineAction(BaseModel):
     correction_id: int
     action: str
@@ -320,43 +306,6 @@ class OutfitResponse(BaseModel):
         return v
 
 
-class CalendarEventCreate(BaseModel):
-    title: str
-    event_date: str  # YYYY-MM-DD
-    start_time: str = ''
-    end_time: str = ''
-    occasion: str = ''
-    location: str = ''
-    note: str = ''
-    remind: int = 1
-
-
-class CalendarEventUpdate(BaseModel):
-    title: Optional[str] = None
-    event_date: Optional[str] = None
-    start_time: Optional[str] = None
-    end_time: Optional[str] = None
-    occasion: Optional[str] = None
-    location: Optional[str] = None
-    note: Optional[str] = None
-    remind: Optional[int] = None
-
-
-class CalendarEventResponse(BaseModel):
-    model_config = {'from_attributes': True}
-    id: int
-    user_id: int
-    title: str
-    event_date: date
-    start_time: str = ''
-    end_time: str = ''
-    occasion: str = ''
-    location: str = ''
-    note: str = ''
-    remind: int = 1
-    created_at: Optional[datetime] = None
-
-
 class ItemCorrectionCreate(BaseModel):
     item_id: int
     error_fields: list[str] = []
@@ -394,38 +343,6 @@ class ItemCorrectionResponse(BaseModel):
                 return json.loads(v or '{}')
             except Exception:
                 return {}
-        return v
-
-
-class AdoptionCreate(BaseModel):
-    item_ids: list[int] = []
-    source: str = 'chat'
-    scene: str = ''
-    conversation_id: int = 0
-    reason: str = ''
-    adopted_date: Optional[str] = None  # YYYY-MM-DD，默认今天
-
-
-class AdoptionResponse(BaseModel):
-    model_config = {'from_attributes': True}
-    id: int
-    user_id: int
-    source: str
-    scene: str
-    conversation_id: int
-    item_ids: list = []
-    reason: str = ''
-    adopted_date: date
-    created_at: Optional[datetime] = None
-
-    @field_validator('item_ids', mode='before')
-    @classmethod
-    def parse_ids(cls, v):
-        if isinstance(v, str):
-            try:
-                return json.loads(v or '[]')
-            except Exception:
-                return []
         return v
 
 

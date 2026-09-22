@@ -6,7 +6,6 @@ from app.models.conversation import Conversation
 from app.schemas import (
     PromptCreate, PromptUpdate, PromptResponse,
     ModelConfigUpdate, ToolToggle,
-    ABTestRequest, ABTestResponse,
     PipelineAction
 )
 from app.agent.init_tools import tool_registry
@@ -121,21 +120,6 @@ def toggle_tool(data: ToolToggle):
     except Exception as e:
         print(f"[config] persist tool state failed: {e}")
     return {'name': data.tool_name, 'enabled': tool.enabled}
-
-@router.post('/tools/reorder')
-def reorder_tools(data: list[ToolToggle]):
-    for item in data:
-        tool = tool_registry.get(item.tool_name)
-        if tool:
-            tool.enabled = item.enabled
-    return {'message': 'ok'}
-
-# ===== A/B Test =====
-@router.post('/ab-test', response_model=ABTestResponse)
-def run_ab_test(data: ABTestRequest):
-    from app.services.ab_test import ABTestEngine
-    engine = ABTestEngine()
-    return engine.run(data.test_cases, data.config_a, data.config_b)
 
 # ===== Pipeline (Approval Workflow) =====
 @router.get('/pipeline')

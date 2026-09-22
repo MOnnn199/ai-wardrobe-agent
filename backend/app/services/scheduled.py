@@ -62,10 +62,7 @@ def _analyze_wardrobe(items):
 
 # ===================== 1. 今日穿搭（不进通知中心）=====================
 # 今日穿搭推荐由用户端首页实时调用 /user/outfit-by-weather 展示，
-# 无需写入通知中心，故不再生成 daily_push 通知。
-def run_daily_push(user_id=None):
-    """保留空实现以兼容旧引用；今日穿搭在首页实时展示，不写通知。"""
-    return
+# 无需写入通知中心，故不生成 daily_push 通知（原 run_daily_push 空实现已随清理移除）。
 
 
 # ===================== 2. 衣橱健康月报（每月一条）=====================
@@ -391,39 +388,7 @@ def run_weather_alerts(user_id=None):
     db.close()
 
 
-# ===================== 日程联动提醒（FR-C6）=====================
-# 【已弃用】日程推送功能未启用：当前用户端无「日程」入口，用户无法创建日程，
-# 故该定时任务永远不会产生有效数据，且 EventReminder 通知也无前端触达渠道。
-# 保留函数与调度注册仅作占位，避免误删 CalendarEvent 模型；如需启用再开放前端入口。
-def run_event_reminders():
-    return
-    """每天早晨：当天有日程（remind=1）的用户推送穿搭提醒，按天幂等。"""
-    from app.models.calendar import CalendarEvent
-    from app.models.notification import Notification
-    db = SessionLocal()
-    today = date.today()
-    events = db.query(CalendarEvent).filter(
-        CalendarEvent.event_date == today, CalendarEvent.remind == 1).all()
-    for ev in events:
-        title = f'今日日程：{ev.title}'
-        exists = db.query(Notification).filter(
-            Notification.user_id == ev.user_id, Notification.type == 'event_reminder',
-            Notification.title == title).first()
-        if exists:
-            continue
-        occasion_cn = ev.occasion or '该场合'
-        content = (
-            f'{ev.start_time or "今天"} 有日程「{ev.title}」'
-            f'{(" @" + ev.location) if ev.location else ""}。'
-            f'场合：{occasion_cn}，建议提前准备对应风格的穿搭。'
-        )
-        create_notification(db, ev.user_id, 'event_reminder', title, content)
-        _push_realtime(ev.user_id, {'type': 'event_reminder', 'title': title, 'content': content})
-    db.close()
-
-
 async def _weather(): run_weather_alerts()
-# async def _events(): run_event_reminders()  # 见 run_event_reminders 说明（功能未启用）
 
 
 def init_scheduler():
@@ -432,7 +397,6 @@ def init_scheduler():
     scheduler.add_job(_gap, 'cron', day_of_week='mon', hour=9, minute=0, id='knowledge_gap')
     # 每天早上 7:30 给有定位的用户推一条「今日天气穿搭」（每天一条，按天幂等）
     scheduler.add_job(_weather, 'cron', hour=7, minute=30, id='weather_alerts')
-    # scheduler.add_job(_events, 'cron', hour=7, minute=0, id='event_reminders')  # 日程功能未启用
     scheduler.start()
     # 后端启动即补推当天天气穿搭：对手动启动的后端，弥补 7:30 未运行而错过的推送。
     # 按天幂等，重复启动不会重复生成；Open-Meteo 不可达时静默跳过，待打开通知中心时再补。

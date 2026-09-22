@@ -95,14 +95,6 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     )
 
 
-@router.post("/logout")
-def logout():
-    # 采用无状态 JWT：登录态由 token 自身有效期保证，无需服务端存储。
-    # 默认 JWT_SECRET_KEY 每次后端启动随机生成，因此重启后端即全员强制重新登录；
-    # 前端清除本地 token 即完成登出。如需登录态跨重启保持，在 .env 设置固定 JWT_SECRET_KEY。
-    return {"ok": True}
-
-
 @router.get("/me")
 def me(authorization: str = Header(None), db: Session = Depends(get_db)):
     if not authorization or not authorization.startswith("Bearer "):

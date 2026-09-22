@@ -100,8 +100,11 @@ def delete_notification(nid: int, user_id: int = Depends(resolve_user_id), db: S
 
 @router.post('/notifications/trigger')
 def trigger_notifications(job: str = 'daily', user_id: int = 1, db: Session = Depends(get_db)):
-    """
-    手动触发推送（用于演示/测试，无需等待 cron）。
+    """【演示/测试专用，保留勿删】手动触发定时推送，无需等待 cron 到点。
+
+    前端不调用此接口，但答辩/演示时需要现场生成「衣橱健康月报」「穿搭热点推送」，
+    否则只能等每月 1 号 08:00/09:00 由 apscheduler 触发。
+
     job: monthly / idle(同 monthly) / trend / all
     注：今日穿搭不写通知，由首页实时展示，job='daily' 不再生成通知。
     """

@@ -100,18 +100,6 @@ def update_correction(correction_id: int, data: CorrectionUpdate, db: Session = 
     db.refresh(corr)
     return corr
 
-@router.post('/corrections/{correction_id}/submit')
-def submit_correction(correction_id: int, db: Session = Depends(get_db)):
-    corr = db.query(Correction).filter(Correction.id == correction_id).first()
-    if not corr:
-        raise HTTPException(404)
-    corr.status = 'fixed'
-    conv = db.query(Conversation).filter(Conversation.id == corr.conversation_id).first()
-    if conv:
-        conv.status = 'fixed'
-    db.commit()
-    return {'message': '已提交审批'}
-
 # ===== Few-Shot Examples =====
 @router.get('/few-shot-examples')
 def list_few_shot(category: str = '', page: int = 1, page_size: int = 20, db: Session = Depends(get_db)):
@@ -221,11 +209,6 @@ def knowledge_stats(db: Session = Depends(get_db)):
     total = db.query(KnowledgeChunk).count()
     source_counts = db.query(KnowledgeChunk.source, sqlfunc.count(KnowledgeChunk.id)).group_by(KnowledgeChunk.source).all()
     return {'total_chunks': total, 'sources': [{'source': s, 'count': c} for s, c in source_counts]}
-
-@router.get('/knowledge/sources')
-def list_knowledge_sources(db: Session = Depends(get_db)):
-    source_counts = db.query(KnowledgeChunk.source, sqlfunc.count(KnowledgeChunk.id)).group_by(KnowledgeChunk.source).all()
-    return [{'source': s, 'count': c} for s, c in source_counts]
 
 # ===== Tags =====
 @router.get('/tags', response_model=list[TagResponse])

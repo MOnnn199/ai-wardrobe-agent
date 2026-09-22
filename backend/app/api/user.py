@@ -83,19 +83,6 @@ def delete_clothing(item_id: int, user_id: int = Depends(resolve_user_id), db: S
     db.commit()
     return {'message': 'ok'}
 
-@router.post('/wardrobe/upload-image')
-async def upload_image(file: UploadFile = File(...), user_id: int = Depends(resolve_user_id)):
-    import uuid, os
-    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
-    os.makedirs(upload_dir, exist_ok=True)
-    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f'{uuid.uuid4()}.{ext}'
-    path = f'{upload_dir}/{filename}'
-    content = await file.read()
-    with open(path, 'wb') as f:
-        f.write(content)
-    return {'url': f'/{path}'}
-
 # ===== Conversation =====
 
 def _is_follow_up(curr: Conversation, prev: Conversation) -> bool:

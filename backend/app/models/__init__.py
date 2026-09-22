@@ -27,7 +27,6 @@ from app.models.knowledge import KnowledgeChunk
 from app.models.notification import Notification
 from app.models.cost import CostLog
 from app.models.outfit import Outfit
-from app.models.calendar import CalendarEvent
 from app.models.item_correction import ClothingItemCorrection
 from app.models.adoption import AdoptionRecord
 from app.models.trace import AgentTrace
