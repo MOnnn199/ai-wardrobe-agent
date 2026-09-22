@@ -140,7 +140,7 @@
                 </view>
               </view>
             </view>
-            <image v-if="m.image && !(m.items && m.items.length)" :src="m.image" mode="widthFix" class="chat-img" />
+            <image v-if="m.role==='agent' && m.image && !(m.items && m.items.length)" :src="m.image" mode="widthFix" class="chat-img" />
             <view v-if="m.role==='agent'&&m.cid" class="rate-row">
               <text v-for="n in 5" :key="n" :class="['star',{active:n<=m.rating}]" @click="rateByIndex(i,n)">★</text>
             </view>
