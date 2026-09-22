@@ -9,6 +9,7 @@ from app.models import get_db
 from app.models.user import User
 from app.models.wardrobe import ClothingItem, WearLog
 from app.models.conversation import Conversation, AgentStep
+from app.models.adoption import AdoptionRecord
 from app.schemas import (
     ClothingCreate, ClothingUpdate, ClothingResponse,
     ConversationResponse, RatingRequest,
@@ -19,7 +20,6 @@ from app.auth.jwt import verify_token
 from app.agent.tool_registry import ToolRegistry
 from app.utils.outfit_collage import generate_outfit_collage, outfit_from_wardrobe, _pick_outfit_items
 from app.services.scheduled import check_duplicate_purchase
-import json
 
 router = APIRouter(prefix='/api/user', tags=['user'])
 
@@ -693,12 +693,14 @@ def mark_worn(data: dict, user_id: int = Depends(resolve_user_id), db: Session =
         except Exception:
             worn_date = date.today()
     updated = 0
+    valid_ids = []
     for iid in ids:
         item = db.query(ClothingItem).filter(
             ClothingItem.id == iid, ClothingItem.user_id == user_id
         ).first()
         if not item:
             continue
+        valid_ids.append(iid)
         # 同件同天只记一次，避免重复计数
         exists = db.query(WearLog).filter(
             WearLog.item_id == iid, WearLog.user_id == user_id, WearLog.worn_date == worn_date
@@ -711,7 +713,43 @@ def mark_worn(data: dict, user_id: int = Depends(resolve_user_id), db: Session =
             item.last_worn = worn_date
         updated += 1
     db.commit()
-    return {'updated': updated, 'worn_date': str(worn_date)}
+
+    # ===== 采纳记录：驱动运营端「采纳数 / 采纳率 / 采纳来源分布」=====
+    # 「确认今日穿搭」/「标记穿过」= 用户实际采纳了一套搭配，落一条 adoption_records。
+    # （此处曾在 2026-08-24 随「穿搭日志」下线而注释停用，导致运营端 KPI 冻结在 5；
+    #   现按产品需要重新接线，只写采纳记录，不恢复用户端「穿搭日志」入口。）
+    # 幂等口径：同一用户 + 同一天 + 同一批单品只记一次；换一套后再确认会再记一条。
+    adopted = None
+    if valid_ids:
+        signature = json.dumps(sorted(set(valid_ids)))
+        same_day = db.query(AdoptionRecord).filter(
+            AdoptionRecord.user_id == user_id,
+            AdoptionRecord.adopted_date == worn_date,
+        ).all()
+        already = False
+        for r in same_day:
+            try:
+                if json.dumps(sorted(json.loads(r.item_ids or '[]'))) == signature:
+                    already = True
+                    break
+            except Exception:
+                continue
+        if not already:
+            adopted = AdoptionRecord(
+                user_id=user_id, source='today', scene='今日穿搭',
+                item_ids=signature, reason='用户确认今日穿搭',
+                adopted_date=worn_date,
+            )
+            db.add(adopted)
+            db.commit()
+            db.refresh(adopted)
+
+    return {
+        'updated': updated,
+        'worn_date': str(worn_date),
+        'adoption_id': adopted.id if adopted else None,
+        'adoption_counted': bool(adopted),
+    }
 
 
 # ===== 穿着历史：某件衣服都在哪些天穿过 =====
