@@ -226,7 +226,7 @@ class ModelConfigUpdate(BaseModel):
     model_name: str = 'deepseek-chat'
     temperature: float = 0.7
     top_p: float = 1.0
-    vision_model: str = 'qwen-vl-plus'
+    vision_model: str = 'qwen3-vl-plus'
 
     model_config = {'protected_namespaces': ()}
 

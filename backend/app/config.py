@@ -35,7 +35,7 @@ MODEL_CONFIG = {
     "model_name": os.getenv("DEFAULT_LLM_MODEL", "deepseek-chat"),
     "temperature": float(os.getenv("DEFAULT_TEMPERATURE", "0.7")),
     "top_p": float(os.getenv("DEFAULT_TOP_P", "1.0")),
-    "vision_model": os.getenv("VISION_MODEL", "qwen-vl-plus"),
+    "vision_model": os.getenv("VISION_MODEL", "qwen3-vl-plus"),
 }
 
 # 跨域白名单（前端 dev 端口 5173/5175；可按需通过 CORS_ORIGINS=逗号分隔覆盖）

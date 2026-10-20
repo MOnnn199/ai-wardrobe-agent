@@ -9,9 +9,9 @@ class TongyiVLClient:
     def _model_name(self) -> str:
         try:
             from app.config import MODEL_CONFIG
-            return MODEL_CONFIG.get("vision_model") or "qwen-vl-plus"
+            return MODEL_CONFIG.get("vision_model") or "qwen3-vl-plus"
         except Exception:
-            return "qwen-vl-plus"
+            return "qwen3-vl-plus"
 
     def analyze_image(self, image_base64: str, prompt: str = "请描述这张图片中的商品") -> str:
         if not self.api_key or not self.api_key.strip():
