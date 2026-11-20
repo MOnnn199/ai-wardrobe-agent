@@ -214,14 +214,6 @@ def chat(
     agent = ReActAgent(tool_registry)
     result = agent.run(final_input, user_id=user_id, conversation_id=conv.id, city=city, lat=lat, lon=lon, history=history)
 
-    # 追加历史并更新最新回复（保留原始问题与图片地址，不暴露图片分析文本）
-    user_hist = {"role": "user", "content": user_input, "image_url": image_url}
-    history.append(user_hist)
-    history.append({"role": "agent", "content": result})
-    conv.history = json.dumps(history, ensure_ascii=False)
-    conv.agent_response = result
-    db.commit()
-
     # 根据推荐文本生成搭配拼贴图，并返回推荐单品列表供前端卡片化展示
     # 关键：只有本轮 agent 真正调取了「衣橱类工具」才返回卡片，
     # 这样问"你好/天气/穿搭知识"等不涉及本人衣橱的问题，不会硬推衣柜单品卡片。
@@ -257,6 +249,15 @@ def chat(
             'material': getattr(it, 'material', None) or '',
             'pattern': getattr(it, 'pattern', None) or '',
         } for it in selected]
+
+    # 追加历史并更新最新回复（保留原始问题与图片地址，不暴露图片分析文本）
+    # items / outfit_image 一并落进 agent 历史条目，历史对话打开时才能恢复单品卡片
+    user_hist = {"role": "user", "content": user_input, "image_url": image_url}
+    history.append(user_hist)
+    history.append({"role": "agent", "content": result, "items": item_dicts, "outfit_image": outfit_image})
+    conv.history = json.dumps(history, ensure_ascii=False)
+    conv.agent_response = result
+    db.commit()
 
     return ChatResponse(response=result, conversation_id=conv.id, steps=agent.logger.steps, outfit_image=outfit_image, items=item_dicts)
 

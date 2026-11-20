@@ -124,18 +124,21 @@
               <rich-text v-if="m.role==='agent'" class="msg-text" :nodes="md2html(m.content)"></rich-text>
               <text v-else class="msg-text">{{ m.content }}</text>
             </view>
-            <view v-if="m.role==='agent' && m.items && m.items.length" class="chat-item-list">
-              <view v-for="it in m.items" :key="it.id" class="chat-item-card" @click="openDetail(it)">
-                <view class="chat-item-img-wrap">
-                  <image v-if="it.image_url" :src="it.image_url" mode="aspectFill" class="chat-item-img" />
-                  <view v-else class="chat-item-ph" :style="{ background: getItemColorHex(it) }">{{ (it.name || '?')[0] }}</view>
+            <view v-if="m.role==='agent' && m.items && m.items.length" class="chat-outfit">
+              <view v-for="g in groupChatItems(m.items)" :key="g.key" class="hero-group">
+                <view class="hero-group-head">
+                  <text class="hero-group-title">{{ g.label }}</text>
+                  <text class="hero-group-count">{{ g.items.length }}/{{ g.items.length }}</text>
                 </view>
-                <view class="chat-item-info">
-                  <text class="chat-item-name">{{ it.name }}</text>
-                  <view class="chat-item-tags">
-                    <text class="chat-item-tag cat">{{ catMap[it.category] || it.category }}</text>
-                    <text class="chat-item-tag">{{ it.color }}</text>
-                    <text class="chat-item-tag">{{ it.season }}</text>
+                <view class="hero-group-scroll">
+                  <view class="hero-group-list">
+                    <view v-for="item in g.items" :key="item.id" class="hero-big-card" @click="openDetail(item)">
+                      <view class="hero-big-img-wrap">
+                        <image v-if="item.image_url" :src="item.image_url" mode="aspectFit" class="hero-big-img" />
+                        <view v-else class="hero-big-ph" :style="{ background: getItemColorHex(item) }">{{ (item.name || '?')[0] }}</view>
+                      </view>
+                      <text class="hero-big-name">{{ item.name }}</text>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -1582,6 +1585,20 @@ const outfitGroups = computed(() => {
   }
   return groups
 })
+
+// 聊天里 AI 推荐单品：按品类分组（与首页「今天穿什么」同一套大图卡片样式）
+function groupChatItems(items) {
+  const groups = []
+  const known = new Set()
+  for (const c of catList.filter(x => x.k !== 'all')) {
+    const arr = items.filter(i => i.category === c.k)
+    if (arr.length) { groups.push({ key: c.k, label: c.l, items: arr }); known.add(c.k) }
+  }
+  // 兜底：catList 之外的品类（包袋/帽子等）归入「其他」，避免卡片被静默丢弃
+  const rest = items.filter(i => !known.has(i.category))
+  if (rest.length) groups.push({ key: '_other', label: '其他', items: rest })
+  return groups
+}
 
 const wardrobeMap = computed(() => {
   const m = {}
@@ -3131,12 +3148,25 @@ function openHistoryChatById(id) {
   currentConvId.value = id
   const hist = Array.isArray(conv.history) ? conv.history : []
   if (hist.length) {
+    // 旧对话的 agent 条目可能没有 items/outfit_image（字段是后来才落 history 的），用空值兜底
     hist.forEach(h => {
-      messages.value.push(markRaw({ role: h.role, content: h.content, cid: id, rating: 0, image: h.image_url || '' }))
+      const isAgent = h.role === 'agent'
+      messages.value.push(markRaw({
+        role: h.role,
+        content: h.content,
+        cid: isAgent ? id : null,
+        rating: 0,
+        image: isAgent ? (h.outfit_image || '') : (h.image_url || ''),
+        items: isAgent ? (h.items || []) : []
+      }))
     })
+    // 对话级评分（conv.score）回填到最后一条 agent 消息，重进历史不丢已评状态
+    for (let i = messages.value.length - 1; i >= 0; i--) {
+      if (messages.value[i].role === 'agent') { messages.value[i].rating = conv.score || 0; break }
+    }
   } else {
     messages.value.push(markRaw({ role: 'user', content: conv.user_input, image: conv.user_image_url || '' }))
-    messages.value.push(markRaw({ role: 'agent', content: conv.agent_response || '（无回复）', cid: conv.id, rating: conv.score }))
+    messages.value.push(markRaw({ role: 'agent', content: conv.agent_response || '（无回复）', cid: conv.id, rating: conv.score, items: [] }))
   }
   currentView.value = 'chat'
   closeHistoryDrawer()
@@ -3279,18 +3309,11 @@ onMounted(() => {
   50% { opacity: 1; transform: translateY(-8rpx); }
 }
 
-/* 对话中的推荐单品卡片 */
-.chat-item-list { margin-top: 18rpx; display: flex; flex-direction: column; gap: 14rpx; }
-.chat-item-card { display: flex; align-items: center; gap: 20rpx; background: #FFFFFF; border: 1rpx solid #F7F8FA; border-radius: 20rpx; padding: 16rpx 18rpx; box-shadow: 0 4rpx 14rpx rgba(0,0,0,.04); }
-.chat-item-card:active { opacity: .92; }
-.chat-item-img-wrap { width: 120rpx; height: 120rpx; border-radius: 16rpx; background: #fff; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1rpx solid #EEF2FF; }
-.chat-item-img { width: 100%; height: 100%; display: block; }
-.chat-item-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 42rpx; color: #fff; font-weight: 600; }
-.chat-item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12rpx; }
-.chat-item-name { font-size: 30rpx; font-weight: 600; color: #18181B; line-height: 1.35; }
-.chat-item-tags { display: flex; flex-wrap: wrap; gap: 10rpx; }
-.chat-item-tag { font-size: 22rpx; color: #6B7280; background: #fff; padding: 5rpx 14rpx; border-radius: 10rpx; border: 1rpx solid #F4F4F5; }
-.chat-item-tag.cat { color: #4F46E5; border-color: #C7D2FE; background: #F7F8FA; }
+/* 对话中的推荐单品：白底大卡片容器 + 首页 hero 分组大图（复用 .hero-group/.hero-big-card） */
+.chat-outfit { margin-top: 18rpx; max-width: 660rpx; background: #FFFFFF; border: 1rpx solid #F4F4F5; border-radius: 22rpx; padding: 20rpx 20rpx 8rpx; box-shadow: 0 4rpx 14rpx rgba(0,0,0,.04); }
+.chat-outfit .hero-group:last-child { margin-bottom: 12rpx; }
+.chat-outfit .hero-big-card { width: 220rpx; }
+.chat-outfit .hero-big-img-wrap { width: 220rpx; height: 260rpx; }
 
 .chat-input-wrap { background: #F7F8FA; border: 1rpx solid #EEF2FF; border-radius: 16rpx; padding: 12rpx; margin-top: 12rpx; box-shadow: inset 3rpx 3rpx 8rpx rgba(91,141,239,.10), inset -2rpx -2rpx 6rpx rgba(255,255,255,.9); }
 .chat-input { display: flex; align-items: center; gap: 12rpx; }
