@@ -141,8 +141,11 @@
               </view>
             </view>
             <image v-if="m.role==='agent' && m.image && !(m.items && m.items.length)" :src="m.image" mode="widthFix" class="chat-img" />
-            <view v-if="m.role==='agent'&&m.cid" class="rate-row">
-              <text v-for="n in 5" :key="n" :class="['star',{active:n<=m.rating}]" @click="rateByIndex(i,n)">★</text>
+            <view v-if="m.role==='agent'&&m.cid" :class="['rate-row',{done:m.rating}]">
+              <text class="rate-hint">{{ m.rating ? '感谢你的评分' : '这条回复有帮助吗？' }}</text>
+              <view class="rate-stars">
+                <text v-for="n in 5" :key="n" :class="['star',{active:n<=m.rating}]" @click="rateByIndex(i,n)">★</text>
+              </view>
             </view>
           </view>
           <view v-if="chatLoading" class="msg msg-agent">
@@ -3254,9 +3257,14 @@ onMounted(() => {
 :deep(.msg-text) .md-dot,
 :deep(.msg-text) .md-num { position: absolute; left: 0; top: 0; color: #4F46E5; font-weight: 700; font-size: 28rpx; line-height: 1.7; }
 :deep(.msg-text) .md-num { color: #4F46E5; }
-.rate-row { margin-top: 8rpx; }
-.star { font-size: 32rpx; color: #F4F4F5; margin-right: 6rpx; }
-.star.active { color: #EF4444; }
+.rate-row { margin-top: 12rpx; width: fit-content; display: inline-flex; align-items: center; padding: 10rpx 22rpx; background: #FFFFFF; border: 1rpx solid #EEF2FF; border-radius: 999rpx; }
+.rate-hint { font-size: 22rpx; color: #9CA3AF; margin-right: 14rpx; }
+.rate-row.done { background: #EEF2FF; border-color: #C7D2FE; }
+.rate-row.done .rate-hint { color: #4F46E5; font-weight: 600; }
+.rate-stars { display: flex; align-items: center; }
+.star { font-size: 30rpx; color: #D1D5DB; margin-right: 4rpx; transition: transform .15s ease, color .15s ease; }
+.star.active { color: #F59E0B; }
+.star:active { transform: scale(1.3); }
 .loading-text { color: #9CA3AF; font-size: 28rpx; }
 
 /* AI 思考冒泡动画 */
