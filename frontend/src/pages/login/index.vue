@@ -163,6 +163,9 @@
 
       <view class="tip">演示账号：user / 123456</view>
     </view>
+
+    <!-- 全局轻提示：与用户端一致的白色圆角卡片 -->
+    <app-toast />
   </view>
 </template>
 
@@ -170,6 +173,8 @@
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { post } from '../../utils/request'
+import AppToast from '../../components/AppToast.vue'
+import { showToast } from '../../utils/toast.js'
 
 const mode = ref('login')
 const username = ref('')
@@ -211,7 +216,7 @@ function reset() {
 }
 
 function onForgot() {
-  uni.showToast({ title: '请联系管理员重置密码', icon: 'none' })
+  showToast({ title: '请联系管理员重置密码', icon: 'none' })
 }
 
 function toggleRemember() {

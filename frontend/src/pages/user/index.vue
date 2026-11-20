@@ -1180,12 +1180,17 @@
         </view>
       </view>
     </view>
+
+    <!-- 全局轻提示：白色圆角卡片，替代系统黑色 toast -->
+    <app-toast />
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, shallowRef, markRaw, nextTick } from 'vue'
 import { get, post, del, put, upload } from '../../utils/request.js'
 import IconSvg from '../../components/IconSvg.vue'
+import AppToast from '../../components/AppToast.vue'
+import { showToast } from '../../utils/toast.js'
 
 const currentView = ref('today')
 
@@ -1471,7 +1476,7 @@ async function runScene(key, fallbackLabel) {
     ])
     sceneResult.value = { ...d, sceneLabel: fallbackLabel || key, sceneKey: key }
   } catch (e) {
-    uni.showToast({ title: '推荐失败，请重试', icon: 'none' })
+    showToast({ title: '推荐失败，请重试', icon: 'none' })
   }
   sceneLoading.value = false
 }
@@ -1480,10 +1485,10 @@ async function adoptSceneResult() {
   try {
     const item_ids = sceneItems.value.map(it => it.id)
     // 穿搭日志功能已停用，采纳不再落库；保留「已采纳」提示作为交互反馈
-    uni.showToast({ title: '已采纳', icon: 'success' })
+    showToast({ title: '已采纳', icon: 'success' })
     sceneResult.value = null
   } catch (e) {
-    uni.showToast({ title: '采纳失败', icon: 'none' })
+    showToast({ title: '采纳失败', icon: 'none' })
   }
 }
 
@@ -1500,14 +1505,14 @@ function toggleOutfitItem(id) {
   if (idx >= 0) ids.splice(idx, 1); else ids.push(id)
 }
 async function createOutfit() {
-  if (!outfitForm.value.item_ids.length) { uni.showToast({ title: '至少选 1 件衣物', icon: 'none' }); return }
+  if (!outfitForm.value.item_ids.length) { showToast({ title: '至少选 1 件衣物', icon: 'none' }); return }
   try {
     await post('/user/outfits', outfitForm.value)
     showOutfitForm.value = false
     outfitForm.value = { name: '我的套装', item_ids: [] }
     loadOutfits()
-    uni.showToast({ title: '套装已创建', icon: 'success' })
-  } catch (e) { uni.showToast({ title: '创建失败', icon: 'none' }) }
+    showToast({ title: '套装已创建', icon: 'success' })
+  } catch (e) { showToast({ title: '创建失败', icon: 'none' }) }
 }
 async function deleteOutfit(id) {
   try { await del('/user/outfits/' + id); loadOutfits() } catch (e) {}
@@ -1781,7 +1786,7 @@ const outfitScoreRing = computed(() => {
 })
 async function reviewOutfit() {
   if (selectedIds.value.length < 2) {
-    uni.showToast({ title: '至少选择 2 件衣物', icon: 'none' })
+    showToast({ title: '至少选择 2 件衣物', icon: 'none' })
     return
   }
   reviewLoading.value = true
@@ -1790,25 +1795,25 @@ async function reviewOutfit() {
     const d = await post('/user/outfit-review', { ids: selectedIds.value })
     reviewResult.value = d
   } catch (e) {
-    uni.showToast({ title: '审核失败，请重试', icon: 'none' })
+    showToast({ title: '审核失败，请重试', icon: 'none' })
   }
   reviewLoading.value = false
 }
 
 async function confirmWearSelected() {
   if (!selectedIds.value.length) {
-    uni.showToast({ title: '请先选择衣物', icon: 'none' })
+    showToast({ title: '请先选择衣物', icon: 'none' })
     return
   }
   try {
     await post('/user/wardrobe/mark-worn', { ids: selectedIds.value })
-    uni.showToast({ title: '已记录今天穿了的衣物', icon: 'success' })
+    showToast({ title: '已记录今天穿了的衣物', icon: 'success' })
     selectedIds.value = []
     reviewResult.value = null
     fetchWardrobe()
     fetchAnalysis()
   } catch (e) {
-    uni.showToast({ title: '记录失败，请重试', icon: 'none' })
+    showToast({ title: '记录失败，请重试', icon: 'none' })
   }
 }
 
@@ -1850,7 +1855,7 @@ async function markAllRead() {
     await post('/user/notifications/read-all')
     notifications.value.forEach(x => { x.is_read = true })
     unreadCount.value = 0
-    uni.showToast({ title: '已全部标记已读', icon: 'success' })
+    showToast({ title: '已全部标记已读', icon: 'success' })
   } catch (e) {}
 }
 function openNotifyDrawer() {
@@ -1944,12 +1949,12 @@ async function chatChooseImage() {
     const d = await upload('/user/analyze-image', path)
     pendingChatAnalysis.value = d.analysis || ''
     pendingChatImageUrl.value = toFullMediaUrl(d.image_url || '')
-    uni.showToast({ title: '图片已上传，请输入你的问题', icon: 'none' })
+    showToast({ title: '图片已上传，请输入你的问题', icon: 'none' })
   } catch (e) {
     pendingChatImage.value = ''
     pendingChatImageUrl.value = ''
     pendingChatAnalysis.value = ''
-    uni.showToast({ title: '图片分析失败', icon: 'none' })
+    showToast({ title: '图片分析失败', icon: 'none' })
   }
 }
 
@@ -1970,7 +1975,7 @@ function rateByIndex(i, score) {
   messages.value = [...messages.value]
   try {
     post('/user/conversations/rate', { conversation_id: msg.cid, score })
-    uni.showToast({ title: '评分已提交', icon: 'success' })
+    showToast({ title: '评分已提交', icon: 'success' })
   } catch (e) {}
 }
 
@@ -2325,7 +2330,7 @@ async function reLocate() {
       try { uni.setStorageSync('user_city', { city, lat: gpsLat, lon: gpsLon }) } catch (e) {}
       await applyLocation(gpsLat, gpsLon, city, true) // GPS 确实拿到了，located=true
       syncProfileLocation(city, gpsLat, gpsLon)
-      uni.showToast({ title: city === '当前位置' ? '已使用实时定位' : '已定位到：' + city, icon: 'none' })
+      showToast({ title: city === '当前位置' ? '已使用实时定位' : '已定位到：' + city, icon: 'none' })
       return
     }
 
@@ -2337,12 +2342,12 @@ async function reLocate() {
     const m = matchCity(ipc)
     if (m) {
       await applyLocation(m.lat, m.lon, m.name, false)
-      uni.showToast({ title: '已定位到：' + m.name, icon: 'none' })
+      showToast({ title: '已定位到：' + m.name, icon: 'none' })
     } else {
-      uni.showToast({ title: '自动定位失败，请手动选择城市', icon: 'none' })
+      showToast({ title: '自动定位失败，请手动选择城市', icon: 'none' })
     }
   } catch (e) {
-    uni.showToast({ title: '定位失败，请手动选择城市', icon: 'none' })
+    showToast({ title: '定位失败，请手动选择城市', icon: 'none' })
   } finally {
     weatherLoading.value = false
   }
@@ -2370,17 +2375,17 @@ async function wearTodayOutfit() {
   const items = homeOutfit.value?.items || []
   const ids = items.map(it => it.id).filter(Boolean)
   if (!ids.length) {
-    uni.showToast({ title: '没有可标记的衣物', icon: 'none' })
+    showToast({ title: '没有可标记的衣物', icon: 'none' })
     return
   }
   try {
     await post('/user/wardrobe/mark-worn', { ids })
     // 穿搭日志功能已停用，不再调用 /user/outfits/adopt（穿着记录由 mark-worn 完成，供穿搭回顾）
-    uni.showToast({ title: '已记录今天穿了这套', icon: 'success' })
+    showToast({ title: '已记录今天穿了这套', icon: 'success' })
     fetchWardrobe()
     fetchAnalysis()
   } catch (e) {
-    uni.showToast({ title: '记录失败，请重试', icon: 'none' })
+    showToast({ title: '记录失败，请重试', icon: 'none' })
   }
 }
 
@@ -2410,12 +2415,12 @@ async function chooseWardrobeImage() {
         season: d.tags.season || ''
       }
       uploadTags.value = d.tags
-      uni.showToast({ title: 'AI识别完成，请确认后保存', icon: 'none' })
+      showToast({ title: 'AI识别完成，请确认后保存', icon: 'none' })
     }
   } catch (e) {
     uploadTags.value = {}
     uploadForm.value = { name: '', category: 'top', color: '', style: '', material: '', pattern: '', season: '' }
-    uni.showToast({ title: 'AI识别失败，可手动填写', icon: 'none' })
+    showToast({ title: 'AI识别失败，可手动填写', icon: 'none' })
   }
   uploadDetecting.value = false
 }
@@ -2455,7 +2460,7 @@ async function chooseBatchImages() {
       showBatchEdit.value = true
     }
     if (fail) {
-      uni.showToast({ title: `${fail} 张识别失败`, icon: 'none' })
+      showToast({ title: `${fail} 张识别失败`, icon: 'none' })
     }
   } catch (e) { /* 用户取消 */ }
   finally {
@@ -2467,7 +2472,7 @@ function onPurchaseDateChange(e) {
 }
 async function confirmUpload() {
   if (!uploadedItemId.value) {
-    uni.showToast({ title: '请先上传图片', icon: 'none' })
+    showToast({ title: '请先上传图片', icon: 'none' })
     return
   }
   try {
@@ -2481,9 +2486,9 @@ async function confirmUpload() {
       season: uploadForm.value.season,
       purchase_date: purchaseDate.value || null
     })
-    uni.showToast({ title: '已保存到衣橱', icon: 'success' })
+    showToast({ title: '已保存到衣橱', icon: 'success' })
   } catch (e) {
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    showToast({ title: '保存失败', icon: 'none' })
   }
   showUpload.value = false
   resetUpload()
@@ -2547,7 +2552,7 @@ async function saveSingleBatchItem() {
       status: 'confirmed'
     })
     it._saved = true
-    uni.showToast({ title: '已保存', icon: 'success' })
+    showToast({ title: '已保存', icon: 'success' })
     const nextIdx = batchEditList.value.findIndex((x, i) => i > batchEditIndex.value && !x._saved)
     if (nextIdx !== -1) {
       batchEditIndex.value = nextIdx
@@ -2565,7 +2570,7 @@ async function saveSingleBatchItem() {
       }
     }
   } catch (e) {
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    showToast({ title: '保存失败', icon: 'none' })
   }
 }
 async function skipBatchItem() {
@@ -2610,7 +2615,7 @@ async function confirmBatchEdit() {
   await discardPendingItems(remaining)
   fetchWardrobe()
   fetchShoppingList()
-  uni.showToast({ title: `成功保存 ${success} 件${fail ? `，失败 ${fail} 件` : ''}`, icon: success > 0 ? 'success' : 'none' })
+  showToast({ title: `成功保存 ${success} 件${fail ? `，失败 ${fail} 件` : ''}`, icon: success > 0 ? 'success' : 'none' })
 }
 
 // ===== 衣橱操作 =====
@@ -2653,7 +2658,7 @@ async function deleteItem(id) {
     title: '确定删除?',
     success: async (r) => {
       if (r.confirm) {
-        try { await del('/user/wardrobe/' + id); if (showDetail.value) showDetail.value = false; fetchWardrobe(); fetchShoppingList(); fetchAnalysis(); uni.showToast({ title: '已删除', icon: 'success' }) } catch (e) {}
+        try { await del('/user/wardrobe/' + id); if (showDetail.value) showDetail.value = false; fetchWardrobe(); fetchShoppingList(); fetchAnalysis(); showToast({ title: '已删除', icon: 'success' }) } catch (e) {}
       }
     }
   })
@@ -2734,13 +2739,13 @@ function onItemCorrNote(e) {
 async function submitItemCorrection() {
   if (!itemCorrItem.value) return
   if (!itemCorrSel.value.length) {
-    uni.showToast({ title: '请先勾选认错的字段', icon: 'none' })
+    showToast({ title: '请先勾选认错的字段', icon: 'none' })
     return
   }
   const correct_attrs = {}
   itemCorrSel.value.forEach(k => { if (itemCorrVals.value[k]) correct_attrs[k] = itemCorrVals.value[k] })
   if (!Object.keys(correct_attrs).length) {
-    uni.showToast({ title: '请填写至少一个正确值', icon: 'none' })
+    showToast({ title: '请填写至少一个正确值', icon: 'none' })
     return
   }
   try {
@@ -2751,10 +2756,10 @@ async function submitItemCorrection() {
       note: itemCorrNote.value || ''
     })
     itemCorrVisible.value = false
-    uni.showToast({ title: '已提交，待审核', icon: 'none', duration: 2000 })
+    showToast({ title: '已提交，待审核', icon: 'none', duration: 2000 })
   } catch (e) {
     const msg = e && e.data && e.data.detail ? e.data.detail : '提交失败，请重试'
-    uni.showToast({ title: String(msg).slice(0, 16), icon: 'none' })
+    showToast({ title: String(msg).slice(0, 16), icon: 'none' })
   }
 }
 
@@ -2788,9 +2793,9 @@ async function saveItemTags() {
     detailItem.value.tags = tagsStr
     tagManagerVisible.value = false
     await fetchWardrobe()
-    uni.showToast({ title: '已保存标签', icon: 'success' })
+    showToast({ title: '已保存标签', icon: 'success' })
   } catch (e) {
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    showToast({ title: '保存失败', icon: 'none' })
   }
 }
 
@@ -2993,9 +2998,9 @@ async function saveProfile() {
       }
     }
     profileEditVisible.value = false
-    uni.showToast({ title: '已保存', icon: 'success' })
+    showToast({ title: '已保存', icon: 'success' })
   } catch (e) {
-    uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+    showToast({ title: '保存失败，请重试', icon: 'none' })
   }
 }
 async function doMarkWorn() {
@@ -3009,9 +3014,9 @@ async function doMarkWorn() {
       detailItem.value.last_worn = it.last_worn
       detailItem.value.wear_count = it.wear_count
     }
-    uni.showToast({ title: '已记录', icon: 'success' })
+    showToast({ title: '已记录', icon: 'success' })
   } catch (e) {
-    uni.showToast({ title: '记录失败', icon: 'none' })
+    showToast({ title: '记录失败', icon: 'none' })
   }
 }
 async function deleteWearDate(dateStr) {
@@ -3027,9 +3032,9 @@ async function deleteWearDate(dateStr) {
         await post('/user/wardrobe/wear-history/delete', { item_id: itemId, worn_date: dateStr })
         await fetchWearHistory(itemId)
         await fetchWardrobe()
-        uni.showToast({ title: '已删除', icon: 'success' })
+        showToast({ title: '已删除', icon: 'success' })
       } catch (e) {
-        uni.showToast({ title: '删除失败', icon: 'none' })
+        showToast({ title: '删除失败', icon: 'none' })
       }
     }
   })
@@ -3075,9 +3080,9 @@ async function saveDetail() {
     detailEditing.value = false
     fetchWardrobe()
     fetchShoppingList()
-    uni.showToast({ title: '已保存', icon: 'success' })
+    showToast({ title: '已保存', icon: 'success' })
   } catch (e) {
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    showToast({ title: '保存失败', icon: 'none' })
   }
 }
 // 颜色名 → hex（用于无图卡片的占位色）
@@ -3122,7 +3127,7 @@ async function deleteConversation(id) {
         try {
           await del('/user/conversations/' + id)
           conversations.value = conversations.value.filter(c => c.id !== id)
-          uni.showToast({ title: '已删除', icon: 'success' })
+          showToast({ title: '已删除', icon: 'success' })
         } catch (e) {}
       }
     }

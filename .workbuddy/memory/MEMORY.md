@@ -39,6 +39,8 @@
 - user/123456（用户端）、stylist/123456（搭配师端）、admin/123456（配置端）。
 
 ## 长期稳定的关键事实
+- **2026-10-20 阿里云 DashScope 已下线旧 VL 系列**：`qwen-vl-plus`/`qwen-vl-max` 调用返回 `Model not exist`（此前衣橱识图一直在静默失败）。已换 **`qwen3-vl-plus`**（实测可调）：`.env` 加 `VISION_MODEL=qwen3-vl-plus`，`config.py` 默认值、`schemas/__init__.py` ModelConfigUpdate、`tongyi_vl.py` 兜底同步改（提交 `a85b86f`）。改后**须重启后端**才生效。
+- **云端 AI 额度口径（2026-10-20 实测/查证）**：百炼新用户每模型 100 万 tokens、90 天有效，本账号一批 **2026/10/31 到期**，各模型（含日期快照版）额度独立不互通；「免费额度用完即停」开关开=用完即停，按量付费需另行开通（qwen-plus 剩 97.7 万）。DeepSeek=充值余额（注册 500 万 tokens 仅 30 天、早已过期）；智谱为备选 provider 默认未启用；remove.bg 实测纯免费档（free_calls=50/月、credits=0）。本地 embedding/YOLO+CLIP 无额度问题。
 - 老库加列用 `app/models/migrate.py`（启动时幂等 ALTER）。
 - 视觉管线模型：`E:\models\...` 下 YOLOv8n + CLIP(sentence-transformers/clip-ViT-B-32)，衣物向量存 `backend/chroma_data/clothing_store.json`。
 - 衣橱单品 `status`：`confirmed` 才进推荐/衣橱列表；批量上传用 `pending` 草稿。`wardrobe-analysis`/`shopping-list` 只统计 `confirmed`；`delete_clothing` 已加 `user_id` 鉴权。
@@ -49,4 +51,9 @@
 - **产品决策（2026-08-24）：用户端不提供「日程」入口、也不提供独立「穿搭日志」Tab**。保留「穿搭回顾」（`GET /api/user/wardrobe/wear-by-date`，读 `wear_logs`，由 `mark-worn` 写入）。
 - **2026-09-22 死代码清理（提交 `85cf921`/`b23dab7`/`15fb99f`）**：日程(FR-C6)与采纳链路(FR-C7)的代码**已彻底删除**（不再是"保留但未启用"）——`models/calendar.py`、4 个 `/api/user/calendar`、`CalendarEvent*`/`Adoption*`/`ABTest*` schema、`services/{pipeline,ab_test}.py`、`scheduled.py` 的 `run_event_reminders`/`run_daily_push`、H5 的 `src/views/*`+`src/router/index.js`；另删 7 个零调用接口（logout、tools/reorder、ab-test、knowledge/sources、corrections/{id}/submit、wardrobe/upload-image、outfits/adopt）。接口数 93→80。
 - **清理后仍须保留**：`POST /api/user/notifications/trigger?job=monthly|trend|all`（答辩现场手动触发推送的唯一手段，前端不调用但勿删）；`models/adoption.py`+`adoption_records` 表。
+## 毕设 / 开题（2026-10-19 确认）
+- **本仓库即毕业设计**：题目《基于大语言模型智能体的个性化衣橱管理与穿搭推荐系统设计与实现》，2027 届，**厦门大学嘉庚学院**（开题模板为该校《本科生毕业论文（设计）指导工作进度记录表》）。`答辩话术.md` 亦自述为"毕设答辩话术"。
+- 开题报告成品：`C:\Users\23737\Desktop\开题报告_基于大模型智能体的个性化衣橱管理与穿搭推荐系统.docx`；进度口径 2026.10—2027.05（5 阶段）。
+- 工具坑：`editor_sdk`（tencent-local-office-edit）对二进制 `.doc` 打开后所有 `doc_*` 报 `document is not open`；改用 **Word COM（PowerShell）** 转 docx + 段落级填充。中文内容走 UTF-8 JSON 文件传入，.ps1 在本机无法执行，**内联命令可执行**。
+
 - **采纳记录已重新接线（2026-09-22 提交 `5f5ca77`）**：写入挂在 `mark-worn`（「确认今日穿搭」/「标记穿过」，`backend/app/api/user.py`）成功后 → 补写一条 `AdoptionRecord`（`source='today'`、`scene='今日穿搭'`）。幂等口径=**同用户+同天+同批单品只记一次；点「换一套」后再确认会再记一条**。返回体带 `adoption_id`/`adoption_counted` 便于观察。**不要**再把它当成"冻结的历史数据"——运营端「采纳数/采纳率/采纳来源分布」现在会随演示增长（`admin.py:79,104` 读它）。用户端「穿搭日志」列表入口仍不提供。
