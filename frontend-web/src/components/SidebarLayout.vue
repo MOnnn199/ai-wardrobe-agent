@@ -28,9 +28,9 @@
     <div class="sl-body">
       <!-- 顶部栏：搜索 + 操作 + 用户 -->
       <header class="sl-header">
-        <div class="sl-search">
+        <div class="sl-search" @click="openPalette" title="搜索或跳转（Ctrl / Cmd + K）">
           <el-icon :size="16"><Search /></el-icon>
-          <input v-model="searchText" type="text" placeholder="搜索或输入命令..." @keyup.enter="onSearch" />
+          <input v-model="searchText" type="text" placeholder="搜索或输入命令..." @keyup.enter="onSearch" @click.stop />
         </div>
         <div class="sl-header-actions">
           <el-popover placement="bottom-end" :width="300" trigger="click" popper-class="noti-popover" :show-arrow="false">
@@ -48,7 +48,7 @@
               <div class="noti-pop-body">
                 <slot name="notifications">
                   <div class="noti-empty">
-                    <el-icon :size="40" color="#c5d9ff"><Bell /></el-icon>
+                    <el-icon :size="40" color="#E5E7EB"><Bell /></el-icon>
                     <p>暂无新通知</p>
                   </div>
                 </slot>
@@ -78,12 +78,39 @@
       <main class="sl-content">
         <slot />
       </main>
+
+      <!-- 命令面板：Ctrl/Cmd+K 或搜索框回车打开，可跳转到任意侧栏页面 -->
+      <transition name="palette-fade">
+        <div v-if="paletteOpen" class="cmdk-mask" @click.self="closePalette">
+          <div class="cmdk-panel">
+            <div class="cmdk-input-row">
+              <el-icon :size="18"><Search /></el-icon>
+              <input ref="paletteInput" v-model="paletteQuery" class="cmdk-input"
+                placeholder="跳转到页面…" @input="paletteIndex = 0" @keydown="onPaletteKey" />
+              <span class="cmdk-kbd">ESC</span>
+            </div>
+            <div class="cmdk-list">
+              <div v-if="!filteredMenus.length" class="cmdk-empty">没有匹配的页面</div>
+              <div v-for="(m, i) in filteredMenus" :key="m.key"
+                :class="['cmdk-item', { active: i === paletteIndex }]"
+                @mouseenter="paletteIndex = i" @click="runItem(m)">
+                <el-icon :size="18"><component :is="m.icon" /></el-icon>
+                <span class="cmdk-label">{{ m.label }}</span>
+                <span v-if="i === paletteIndex" class="cmdk-enter">↵</span>
+              </div>
+            </div>
+            <div class="cmdk-foot">
+              <span><b>↑↓</b> 选择</span><span><b>↵</b> 跳转</span><span><b>Esc</b> 关闭</span>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Grid, SwitchButton, Search, Bell, ArrowDown
@@ -98,6 +125,55 @@ const props = defineProps({
 const emit = defineEmits(['update:active', 'export', 'add'])
 const router = useRouter()
 const searchText = ref('')
+
+// ===== 命令面板（跳转式搜索）=====
+const paletteOpen = ref(false)
+const paletteQuery = ref('')
+const paletteIndex = ref(0)
+const paletteInput = ref(null)
+
+const filteredMenus = computed(() => {
+  const q = (paletteQuery.value || '').trim().toLowerCase()
+  if (!q) return props.menus
+  return props.menus.filter(m => (m.label || '').toLowerCase().includes(q))
+})
+
+function openPalette() {
+  paletteQuery.value = searchText.value
+  paletteIndex.value = 0
+  paletteOpen.value = true
+  nextTick(() => { if (paletteInput.value) paletteInput.value.focus() })
+}
+function closePalette() {
+  paletteOpen.value = false
+}
+function runItem(m) {
+  emit('update:active', m.key)
+  closePalette()
+}
+function onPaletteKey(e) {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    paletteIndex.value = Math.min(paletteIndex.value + 1, filteredMenus.value.length - 1)
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    paletteIndex.value = Math.max(paletteIndex.value - 1, 0)
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    const m = filteredMenus.value[paletteIndex.value]
+    if (m) runItem(m)
+  } else if (e.key === 'Escape') {
+    closePalette()
+  }
+}
+function onGlobalKey(e) {
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault()
+    openPalette()
+  }
+}
+onMounted(() => window.addEventListener('keydown', onGlobalKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKey))
 
 const nickname = sessionStorage.getItem('web_nickname') || ''
 const userInitial = computed(() => (nickname || props.role || 'U').slice(0, 1).toUpperCase())
@@ -117,8 +193,8 @@ function goHome() {
   emit('update:active', 'dashboard')
 }
 function onSearch() {
-  // 搜索事件可透传给父组件，目前仅做视觉占位
-  emit('search', searchText.value)
+  // 搜索框回车 → 打开命令面板（按关键字跳转到侧栏页面）
+  openPalette()
 }
 function onExport() {
   emit('export')
@@ -137,31 +213,31 @@ function onLogout() {
 <style scoped>
 /* ===== 新设计语言：仿照截图的紫蓝仪表板风 ===== */
 .sl {
-  --bg: #eef5ff;
-  --bg-2: #e1edff;
+  --bg: #F7F8FA;
+  --bg-2: #EEF2FF;
   --panel: #FFFFFF;
-  --panel-2: #FDFBF7;
-  --text: #2D3A5A;
-  --text-2: #6B7A9C;
-  --text-3: #8A9ABA;
-  --accent: #7aa8ff;
-  --accent-2: #a9c6ff;
-  --accent-light: #e1edff;
+  --panel-2: #FFFFFF;
+  --text: #18181B;
+  --text-2: #6B7280;
+  --text-3: #9CA3AF;
+  --accent: #4F46E5;
+  --accent-2: #C7D2FE;
+  --accent-light: #EEF2FF;
   /* 淡薰衣草（与 H5 三色系统对齐：浅蓝 + 淡薰衣草 + 珊瑚） */
-  --lav-50: #F4EFFA;
-  --lav-100: #E8DEF3;
-  --lav-200: #D4C0E8;
-  --lav-400: #B19CD9;
-  --lav-600: #8B7AC0;
-  --lav-800: #5D4F80;
+  --lav-50: #F5F3FF;
+  --lav-100: #EDE9FE;
+  --lav-200: #DDD6FE;
+  --lav-400: #A5B4FC;
+  --lav-600: #818CF8;
+  --lav-800: #4F46E5;
   /* 珊瑚 CTA */
-  --coral: #FF9E8E;
-  --coral-light: #FFE9E2;
-  --coral-ink: #D66A60;
+  --coral: #EF4444;
+  --coral-light: #FEE2E2;
+  --coral-ink: #DC2626;
   --green: #22C55E;
-  --orange: #FF9E8E;
+  --orange: #EF4444;
   --red: #EF4444;
-  --blue: #5B8DEF;
+  --blue: #4F46E5;
   --shadow: 0 10px 30px rgba(122, 168, 255, 0.08);
   --shadow-sm: 0 4px 12px rgba(122, 168, 255, 0.06);
   --radius-xl: 22px;
@@ -206,7 +282,7 @@ function onLogout() {
   flex-direction: column;
   align-items: center;
   padding: 24px 0 18px;
-  background: linear-gradient(180deg, #7aa8ff 0%, #a9c6ff 100%);
+  background: linear-gradient(180deg, #4F46E5 0%, #C7D2FE 100%);
   border-radius: 30px;
   box-shadow: 8px 8px 26px rgba(122, 168, 255, 0.25);
   position: relative;
@@ -229,7 +305,7 @@ function onLogout() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #7aa8ff;
+  color: #4F46E5;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   transition: transform .25s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
@@ -264,7 +340,7 @@ function onLogout() {
   background: rgba(255, 255, 255, 0.14);
 }
 .sl-menu-item.active {
-  color: #7aa8ff;
+  color: #4F46E5;
   background: #fff;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   transform: scale(1.05);
@@ -294,7 +370,7 @@ function onLogout() {
   padding: 0 6px;
   height: 18px;
   border-radius: 9px;
-  background: var(--coral, #FF9E8E);
+  background: var(--coral, #EF4444);
   color: #fff;
   font-size: 9px;
   font-weight: 800;
@@ -362,16 +438,16 @@ function onLogout() {
 .sl-action-btn { border-radius: 999px; font-weight: 600; }
 .sl-action-btn.ghost {
   background: var(--panel-2);
-  border: 1px solid #d6e5ff;
+  border: 1px solid #F4F4F5;
   color: var(--text-2);
 }
-.sl-action-btn.ghost:hover { border-color: #c5d9ff; color: var(--text); }
+.sl-action-btn.ghost:hover { border-color: #E5E7EB; color: var(--text); }
 .sl-action-btn.primary {
   background: var(--accent);
   border-color: var(--accent);
   box-shadow: 0 6px 16px rgba(122, 168, 255, 0.28);
 }
-.sl-action-btn.primary:hover { background: #5B8DEF; border-color: #5B8DEF; }
+.sl-action-btn.primary:hover { background: #4F46E5; border-color: #4F46E5; }
 
 .sl-icon-btn {
   width: 40px;
@@ -410,7 +486,7 @@ function onLogout() {
   justify-content: space-between;
   margin-bottom: 10px;
   padding: 4px 6px 10px;
-  border-bottom: 1px solid #e1edff;
+  border-bottom: 1px solid #EEF2FF;
 }
 .noti-pop-title { font-size: 15px; font-weight: 700; color: var(--text); }
 .noti-pop-sub { font-size: 12px; color: var(--text-3); }
@@ -437,16 +513,16 @@ function onLogout() {
   min-height: 48px;
   border-radius: 12px;
   cursor: pointer;
-  background: #FDFBF7;
+  background: #FFFFFF;
   transition: background 0.15s ease;
   box-sizing: border-box;
 }
-.noti-task-item:hover { background: #eef5ff; }
+.noti-task-item:hover { background: #F7F8FA; }
 .noti-task-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #7aa8ff;
+  background: #4F46E5;
   flex-shrink: 0;
   box-shadow: 0 0 0 4px rgba(122,168,255,0.12);
 }
@@ -474,7 +550,7 @@ function onLogout() {
 }
 .sl-user:hover { background: var(--panel-2); }
 .sl-avatar {
-  background: linear-gradient(135deg, #7aa8ff, #a9c6ff);
+  background: linear-gradient(135deg, #4F46E5, #C7D2FE);
   color: #fff;
   font-weight: 700;
   font-size: 14px;
@@ -484,6 +560,52 @@ function onLogout() {
 .sl-user-role { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 
 .sl-content { flex: 1; overflow-y: auto; padding: 24px 28px 30px 24px; }
+
+/* ===== 命令面板（Ctrl/Cmd+K / 搜索框回车） ===== */
+.cmdk-mask {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(45, 58, 90, 0.18);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 14vh;
+}
+.cmdk-panel {
+  width: 560px; max-width: 92vw;
+  background: #fff; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(45, 58, 90, 0.22);
+  display: flex; flex-direction: column;
+}
+.cmdk-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 18px; border-bottom: 1px solid #EEF2FF; color: #6B7280;
+}
+.cmdk-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 16px; color: #18181B; font-family: inherit;
+}
+.cmdk-input::placeholder { color: #9CA3AF; }
+.cmdk-kbd {
+  font-size: 11px; color: #9CA3AF; background: #F7F8FA;
+  border: 1px solid #F4F4F5; border-radius: 6px; padding: 2px 7px; font-weight: 700;
+}
+.cmdk-list { max-height: 360px; overflow-y: auto; padding: 8px; }
+.cmdk-empty { padding: 28px; text-align: center; color: #9CA3AF; font-size: 14px; }
+.cmdk-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px; border-radius: 12px; cursor: pointer;
+  color: #18181B; font-size: 14px; transition: background .12s ease;
+}
+.cmdk-item:hover { background: #f5f9ff; }
+.cmdk-item.active { background: #F7F8FA; }
+.cmdk-label { flex: 1; }
+.cmdk-enter { color: #4F46E5; font-weight: 700; }
+.cmdk-foot {
+  display: flex; gap: 18px; padding: 10px 16px; border-top: 1px solid #EEF2FF;
+  font-size: 12px; color: #9CA3AF; background: #fbfcff;
+}
+.cmdk-foot b { color: #6B7280; font-weight: 700; }
+.palette-fade-enter-active, .palette-fade-leave-active { transition: opacity .18s ease; }
+.palette-fade-enter-from, .palette-fade-leave-to { opacity: 0; }
 </style>
 
 <style>
@@ -495,14 +617,14 @@ function onLogout() {
   box-shadow: 0 10px 30px rgba(122, 168, 255, 0.08) !important;
   color: var(--text);
 }
-.sl .el-card__header { border-bottom: 1px solid #e1edff; color: var(--text); font-weight: 700; }
+.sl .el-card__header { border-bottom: 1px solid #EEF2FF; color: var(--text); font-weight: 700; }
 
 .sl .el-button--primary {
-  --el-button-bg-color: #7aa8ff;
-  --el-button-border-color: #7aa8ff;
+  --el-button-bg-color: #4F46E5;
+  --el-button-border-color: #4F46E5;
   --el-button-text-color: #fff;
-  --el-button-hover-bg-color: #5B8DEF;
-  --el-button-hover-border-color: #5B8DEF;
+  --el-button-hover-bg-color: #4F46E5;
+  --el-button-hover-border-color: #4F46E5;
   --el-button-hover-text-color: #fff;
   --el-button-active-bg-color: #4A7DE4;
   --el-button-active-border-color: #4A7DE4;
@@ -516,27 +638,27 @@ function onLogout() {
   --el-button-hover-bg-color: #16A34A;
   --el-button-hover-border-color: #16A34A;
 }
-.sl .el-tag--primary { --el-tag-bg-color: #e1edff; --el-tag-text-color: #7aa8ff; --el-tag-border-color: #d6e5ff; }
+.sl .el-tag--primary { --el-tag-bg-color: #EEF2FF; --el-tag-text-color: #4F46E5; --el-tag-border-color: #F4F4F5; }
 .sl .el-tag--success { --el-tag-bg-color: #DCFCE7; --el-tag-text-color: #16A34A; --el-tag-border-color: #BBF7D0; }
-.sl .el-tag--warning { --el-tag-bg-color: #FFF0ED; --el-tag-text-color: #D66A60; --el-tag-border-color: #FFE4DE; }
+.sl .el-tag--warning { --el-tag-bg-color: #FEE2E2; --el-tag-text-color: #DC2626; --el-tag-border-color: #FFE4DE; }
 .sl .el-tag--danger { --el-tag-bg-color: #FEE2E2; --el-tag-text-color: #DC2626; --el-tag-border-color: #FECACA; }
-.sl .el-tag--info { --el-tag-bg-color: #eef5ff; --el-tag-text-color: #4A5568; --el-tag-border-color: #d6e5ff; }
+.sl .el-tag--info { --el-tag-bg-color: #F7F8FA; --el-tag-text-color: #374151; --el-tag-border-color: #F4F4F5; }
 
 .sl .el-table,
 .sl .el-table__expanded-cell { background: transparent !important; color: var(--text); }
 .sl .el-table tr, .sl .el-table th.el-table__cell { background: transparent !important; }
-.sl .el-table td.el-table__cell, .sl .el-table th.el-table__cell.is-leaf { border-bottom: 1px solid #e1edff !important; }
-.sl .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell { background: #FDFBF7 !important; }
+.sl .el-table td.el-table__cell, .sl .el-table th.el-table__cell.is-leaf { border-bottom: 1px solid #EEF2FF !important; }
+.sl .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell { background: #FFFFFF !important; }
 .sl .el-table .cell { color: var(--text); }
 .sl .el-table th.el-table__cell .cell { color: var(--text-2); font-weight: 600; }
 
 .sl .el-input__wrapper, .sl .el-textarea__inner {
-  background: #FDFBF7 !important;
-  box-shadow: 0 0 0 1px #d6e5ff inset !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 0 0 1px #F4F4F5 inset !important;
   border-radius: 10px !important;
   color: var(--text) !important;
 }
-.sl .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px #7aa8ff inset !important; }
+.sl .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px #4F46E5 inset !important; }
 .sl .el-input__inner, .sl .el-textarea__inner { color: var(--text) !important; }
 .sl .el-form-item__label { color: var(--text-2); font-weight: 500; }
 
@@ -545,17 +667,17 @@ function onLogout() {
 .sl .el-dialog__body { color: var(--text); }
 
 .sl .el-drawer { background: #fff !important; color: var(--text); }
-.sl .el-drawer__header { color: var(--text) !important; border-bottom: 1px solid #e1edff; margin-bottom: 0; padding-bottom: 16px; font-weight: 700; }
+.sl .el-drawer__header { color: var(--text) !important; border-bottom: 1px solid #EEF2FF; margin-bottom: 0; padding-bottom: 16px; font-weight: 700; }
 .sl .el-drawer__body { color: var(--text); }
 
-.sl .el-dropdown-menu { background: #fff; border: 1px solid #e1edff; box-shadow: 0 10px 30px rgba(122, 168, 255, 0.1); border-radius: 12px; }
+.sl .el-dropdown-menu { background: #fff; border: 1px solid #EEF2FF; box-shadow: 0 10px 30px rgba(122, 168, 255, 0.1); border-radius: 12px; }
 .sl .el-dropdown-menu__item { color: var(--text-2); border-radius: 8px; margin: 2px 6px; }
-.sl .el-dropdown-menu__item:hover { background: #eef5ff; color: var(--text); }
+.sl .el-dropdown-menu__item:hover { background: #F7F8FA; color: var(--text); }
 
-.sl .el-alert { background: #eef5ff !important; border: 1px solid #d6e5ff !important; color: var(--text-2) !important; }
+.sl .el-alert { background: #F7F8FA !important; border: 1px solid #F4F4F5 !important; color: var(--text-2) !important; }
 .sl .el-alert .el-alert__title, .sl .el-alert .el-alert__description { color: var(--text-2) !important; }
 
-.sl .el-divider { border-color: #e1edff; }
+.sl .el-divider { border-color: #EEF2FF; }
 .sl .el-pagination { color: var(--text-2); }
 
 /* 页面容器 */
@@ -576,7 +698,7 @@ function onLogout() {
 .noti-popover {
   padding: 0 !important;
   border-radius: 16px !important;
-  border: 1px solid #e1edff !important;
+  border: 1px solid #EEF2FF !important;
   box-shadow: 0 20px 50px rgba(122, 168, 255, 0.14) !important;
 }
 .noti-popover .el-popover__title { display: none; }

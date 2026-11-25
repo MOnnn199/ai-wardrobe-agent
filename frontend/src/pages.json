@@ -5,7 +5,7 @@
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "",
-        "backgroundColor": "#eef5ff"
+        "backgroundColor": "#F7F8FA"
       }
     },
     {
@@ -13,16 +13,16 @@
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "AI 穿搭助手",
-        "navigationBarBackgroundColor": "#7aa8ff",
+        "navigationBarBackgroundColor": "#4F46E5",
         "navigationBarTextStyle": "white",
-        "backgroundColor": "#eef5ff"
+        "backgroundColor": "#F7F8FA"
       }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "white",
     "navigationBarTitleText": "AI 穿搭助手",
-    "navigationBarBackgroundColor": "#7aa8ff",
-    "backgroundColor": "#eef5ff"
+    "navigationBarBackgroundColor": "#4F46E5",
+    "backgroundColor": "#F7F8FA"
   }
 }

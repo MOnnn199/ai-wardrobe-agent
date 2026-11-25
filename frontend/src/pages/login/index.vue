@@ -3,6 +3,20 @@
     <!-- 背景紫色光晕 -->
     <view class="glow glow-1"></view>
     <view class="glow glow-2"></view>
+
+    <!-- 账号被禁用提醒（显示 3 秒后淡出） -->
+    <view class="ban-toast-wrap">
+      <transition name="ban-fade">
+        <view v-if="banToast" class="ban-toast">
+          <svg class="ban-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>
+          </svg>
+          <text class="ban-tx">{{ banMsg }}</text>
+        </view>
+      </transition>
+    </view>
+
     <!-- 底部波浪 -->
     <svg class="bottom-wave" viewBox="0 0 375 120" preserveAspectRatio="none" aria-hidden="true">
       <path
@@ -10,7 +24,7 @@
            C60,10 120,100 187,60
            C255,20 315,90 375,50
            L375,120 L0,120 Z"
-        fill="#a9c6ff"
+        fill="#C7D2FE"
         opacity="0.28"
       />
       <path
@@ -18,7 +32,7 @@
            C70,40 130,110 187,80
            C245,50 305,100 375,70
            L375,120 L0,120 Z"
-        fill="#b8d0ff"
+        fill="#C7D2FE"
         opacity="0.38"
       />
     </svg>
@@ -149,12 +163,18 @@
 
       <view class="tip">演示账号：user / 123456</view>
     </view>
+
+    <!-- 全局轻提示：与用户端一致的白色圆角卡片 -->
+    <app-toast />
   </view>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { post } from '../../utils/request'
+import AppToast from '../../components/AppToast.vue'
+import { showToast } from '../../utils/toast.js'
 
 const mode = ref('login')
 const username = ref('')
@@ -165,6 +185,15 @@ const err = ref('')
 const loading = ref(false)
 const showPwd = ref(false)
 const remember = ref(false)
+const banToast = ref(false)
+const banMsg = ref('该账号已被禁用，请联系管理员')
+let banTimer = null
+function showBan(text) {
+  banMsg.value = text || '该账号已被禁用，请联系管理员'
+  banToast.value = true
+  if (banTimer) clearTimeout(banTimer)
+  banTimer = setTimeout(() => { banToast.value = false }, 3000)
+}
 
 function onUser(e) { username.value = e.detail.value }
 function onPwd(e) { password.value = e.detail.value }
@@ -176,20 +205,35 @@ function goRegister() { reset(); mode.value = 'register' }
 function goLogin() { reset(); mode.value = 'login' }
 function reset() {
   err.value = ''
-  username.value = ''
-  password.value = ''
+  // 勾选了「记住密码」时，切换登录/注册标签不要清空已回填的账号密码
+  if (!remember.value) {
+    username.value = ''
+    password.value = ''
+  }
   confirmPwd.value = ''
   nickname.value = ''
   showPwd.value = false
 }
 
 function onForgot() {
-  uni.showToast({ title: '请联系管理员重置密码', icon: 'none' })
+  showToast({ title: '请联系管理员重置密码', icon: 'none' })
 }
 
 function toggleRemember() {
   remember.value = !remember.value
 }
+
+// 进入登录页时，若之前勾选过「记住密码」，自动回填账号密码并勾上
+onLoad(() => {
+  try {
+    const saved = uni.getStorageSync('rememberedUser')
+    if (saved && saved.username) {
+      username.value = saved.username
+      password.value = saved.password || ''
+      remember.value = true
+    }
+  } catch (e) { /* 忽略本地存储异常 */ }
+})
 
 async function saveSession(d, uname) {
   uni.setStorageSync('token', d.token)
@@ -217,9 +261,20 @@ async function onLogin() {
       loading.value = false
       return
     }
+    // 记住密码：勾选则持久化账号密码，否则清除之前的记录
+    if (remember.value) {
+      uni.setStorageSync('rememberedUser', { username: u, password: p })
+    } else {
+      uni.removeStorageSync('rememberedUser')
+    }
     await saveSession(d, u)
   } catch (e) {
     const msg = e && e.data && e.data.detail ? e.data.detail : '登录失败，请检查后端'
+    if (msg.indexOf('禁用') !== -1) {
+      showBan()
+      loading.value = false
+      return
+    }
     err.value = msg
     loading.value = false
   }
@@ -263,7 +318,7 @@ async function onRegister() {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #eef5ff 0%, #e1edff 50%, #d6e5ff 100%);
+  background: linear-gradient(180deg, #F7F8FA 0%, #EEF2FF 50%, #F4F4F5 100%);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -315,7 +370,7 @@ async function onRegister() {
   transition: color .25s ease;
 }
 .switch-tab.active {
-  color: #2D3A5A;
+  color: #18181B;
 }
 .switch-tab.active::after {
   content: '';
@@ -323,7 +378,7 @@ async function onRegister() {
   left: 0; right: 0; bottom: 0;
   height: 2px;
   border-radius: 2px;
-  background: #8cb8ff;
+  background: #6366F1;
   transition: all .25s cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -337,7 +392,7 @@ async function onRegister() {
   display: block;
   font-size: 26px;
   font-weight: 700;
-  color: #2D3A5A;
+  color: #18181B;
   margin-bottom: 5px;
 }
 .hero-sub {
@@ -387,12 +442,12 @@ async function onRegister() {
   padding: 0 48px 0 18px;
   font-size: 14px;
   background: rgba(255, 255, 255, 0.95);
-  color: #2D3A5A;
+  color: #18181B;
   box-shadow: 0 2px 8px rgba(31, 42, 68, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
   box-sizing: border-box;
   transition: all .2s ease;
 }
-.inp::placeholder { color: #B0B7C3; }
+.inp::placeholder { color: #9CA3AF; }
 .inp:focus {
   box-shadow: 0 2px 12px rgba(140, 184, 255, 0.14), 0 0 0 1px rgba(140, 184, 255, 0.35);
   outline: none;
@@ -402,14 +457,14 @@ async function onRegister() {
   right: 16px;
   width: 20px;
   height: 20px;
-  color: #B0B7C3;
+  color: #9CA3AF;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
 }
 .input-icon.eye { pointer-events: auto; transition: color .2s ease, transform .2s cubic-bezier(.34, 1.56, .64, 1); }
-.input-icon.eye:active { transform: scale(.82); color: #7aa8ff; }
+.input-icon.eye:active { transform: scale(.82); color: #4F46E5; }
 .input-icon svg { width: 18px; height: 18px; }
 /* 密码可视眼睛切换动画：旋转 + 缩放 + 淡入淡出 */
 .eye-fade-enter-active,
@@ -436,7 +491,7 @@ async function onRegister() {
   line-height: 50px;
   text-align: center;
   /* 纯色浅蓝（去渐变），拟物双投影：右下深 + 左上亮 + 顶部高光 */
-  background: #7aa8ff;
+  background: #4F46E5;
   color: #fff;
   border-radius: 999px;
   font-size: 15px;
@@ -463,7 +518,7 @@ async function onRegister() {
 }
 .login-btn:hover::after { left: 120%; }
 .login-btn:active {
-  background: #6a98f5;
+  background: #4338CA;
   box-shadow:
     inset 3px 3px 8px rgba(48, 49, 51, .14),
     inset -2px -2px 6px rgba(255, 255, 255, .3);
@@ -475,7 +530,7 @@ async function onRegister() {
 
 .forgot {
   font-size: 12px;
-  color: #8cb8ff;
+  color: #6366F1;
   font-weight: 500;
 }
 .login-opts {
@@ -494,15 +549,15 @@ async function onRegister() {
   width: 16px;
   height: 16px;
   border-radius: 5px;
-  border: 1.5px solid #c5d9ff;
+  border: 1.5px solid #E5E7EB;
   background: #fff;
   position: relative;
   transition: all .25s cubic-bezier(.34, 1.56, .64, 1);
 }
 .remember-box:active { transform: scale(.82); }
 .remember-box.on {
-  background: #8cb8ff;
-  border-color: #8cb8ff;
+  background: #6366F1;
+  border-color: #6366F1;
 }
 .remember-box.on::after {
   content: '';
@@ -523,7 +578,7 @@ async function onRegister() {
 }
 .remember-text {
   font-size: 12px;
-  color: #6B7A9C;
+  color: #6B7280;
 }
 
 .switch-row {
@@ -534,11 +589,50 @@ async function onRegister() {
   margin-top: 18px;
 }
 .switch-text { font-size: 12px; color: #9CA3AF; }
-.switch-link { font-size: 12px; font-weight: 700; color: #8cb8ff; }
+.switch-link { font-size: 12px; font-weight: 700; color: #6366F1; }
 .tip {
   font-size: 11px;
-  color: #B0B7C3;
+  color: #9CA3AF;
   text-align: center;
   margin-top: 14px;
+}
+
+/* 账号被禁用提醒：顶部居中浮层，显示 3 秒后淡出 */
+.ban-toast-wrap {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 60;
+  pointer-events: none;
+}
+.ban-toast {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 84%;
+  padding: 11px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #18181B;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  border: 1px solid rgba(45, 58, 90, 0.08);
+  box-shadow: 0 8px 24px rgba(45, 58, 90, 0.12);
+}
+.ban-ic { width: 17px; height: 17px; flex: 0 0 17px; }
+.ban-tx { flex: 1; }
+/* 淡入 + 3 秒后淡出 */
+.ban-fade-enter-active { transition: opacity .3s ease, transform .3s cubic-bezier(.22, 1, .36, 1); }
+.ban-fade-leave-active { transition: opacity .6s ease, transform .6s ease; }
+.ban-fade-enter-from { opacity: 0; transform: translateY(-12px); }
+.ban-fade-leave-to { opacity: 0; transform: translateY(-12px); }
+@media (prefers-reduced-motion: reduce) {
+  .ban-fade-enter-active, .ban-fade-leave-active { transition: none; }
 }
 </style>

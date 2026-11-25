@@ -1,13 +1,0 @@
-E:\ai-wardrobe-agent\backend\.venv\Lib\site-packages\apscheduler\__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
-  from pkg_resources import get_distribution, DistributionNotFound
-INFO:     Started server process [31552]
-INFO:     Waiting for application startup.
-2026-08-18 22:31:48,859 | INFO    | modelscope_hub.download | Downloading 13 files from BAAI/bge-small-zh@master
-Downloading:   0%|          | 0/13 [00:00<?, ?file/s]Downloading: 100%|██████████| 13/13 [00:00<00:00, 63.14file/s]Downloading: 100%|██████████| 13/13 [00:00<00:00, 62.83file/s]
-[embedding] Loading local model from: E:\models\models\BAAI--bge-small-zh\snapshots\master ...
-Loading weights:   0%|          | 0/71 [00:00<?, ?it/s]Loading weights: 100%|██████████| 71/71 [00:00<00:00, 5918.27it/s]
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8009 (Press CTRL+C to quit)
-[embedding] Local model loaded, dimension=512
-INFO:     127.0.0.1:53541 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59388 - "GET /api/config/tools HTTP/1.1" 200 OK

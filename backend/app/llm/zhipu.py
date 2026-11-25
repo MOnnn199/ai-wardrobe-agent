@@ -22,7 +22,7 @@ class ZhipuClient:
     def __init__(self):
         self.api_key = ZHIPU_API_KEY
         self.api_base = ZHIPU_API_BASE
-        self.model = "glm-4-flash"
+        self.model = "glm-4.5"
 
     def chat(self, messages: list, tools: list = None, temperature: float = None, user_id: int = 0):
         # 运行时模型配置（运营端「模型配置」页可改）：未显式传参时读共享配置
@@ -57,7 +57,8 @@ class ZhipuClient:
             body["tools"] = tools
 
         try:
-            with httpx.Client(timeout=60) as client:
+            # 智谱在高峰期（如 19-21 点）网关冷启动慢，老的 60s 容易 read timeout → 90s 兜底
+            with httpx.Client(timeout=90) as client:
                 resp = client.post(
                     f"{self.api_base}/chat/completions",
                     headers=headers,
@@ -65,10 +66,23 @@ class ZhipuClient:
                 )
             if resp.status_code >= 400:
                 detail = ""
+                err_code = ""
                 try:
-                    detail = resp.json().get("error", {}).get("message", "") or resp.text[:200]
+                    err_obj = resp.json().get("error", {}) or {}
+                    detail = err_obj.get("message", "") or resp.text[:200]
+                    err_code = err_obj.get("code", "") or ""
                 except Exception:
                     detail = resp.text[:200]
+                # 智谱常见错误码：1301 余额不足 / 1302 速率限制 / 1303 模型不存在 / 1304 权限不足
+                code_hint = f"[code={err_code}] " if err_code else ""
+                user_msg = f"模型调用失败（HTTP {resp.status_code}）{code_hint}{detail}"
+                # 1302/503：标记限流，提示重试
+                if err_code == "1302" or resp.status_code == 429:
+                    user_msg += "（智谱限流，请等待 1-2 秒后重试）"
+                elif err_code == "1301":
+                    user_msg += "（智谱账户余额不足，请充值或换模型）"
+                elif err_code == "1303":
+                    user_msg += "（该模型在你账户下不存在，请选用账户内可见的 glm-4.5/5.x 等）"
                 return {
                     "choices": [{
                         "message": {

@@ -6,7 +6,6 @@ from app.models.conversation import Conversation
 from app.schemas import (
     PromptCreate, PromptUpdate, PromptResponse,
     ModelConfigUpdate, ToolToggle,
-    ABTestRequest, ABTestResponse,
     PipelineAction
 )
 from app.agent.init_tools import tool_registry
@@ -122,21 +121,6 @@ def toggle_tool(data: ToolToggle):
         print(f"[config] persist tool state failed: {e}")
     return {'name': data.tool_name, 'enabled': tool.enabled}
 
-@router.post('/tools/reorder')
-def reorder_tools(data: list[ToolToggle]):
-    for item in data:
-        tool = tool_registry.get(item.tool_name)
-        if tool:
-            tool.enabled = item.enabled
-    return {'message': 'ok'}
-
-# ===== A/B Test =====
-@router.post('/ab-test', response_model=ABTestResponse)
-def run_ab_test(data: ABTestRequest):
-    from app.services.ab_test import ABTestEngine
-    engine = ABTestEngine()
-    return engine.run(data.test_cases, data.config_a, data.config_b)
-
 # ===== Pipeline (Approval Workflow) =====
 @router.get('/pipeline')
 def pipeline_status(db: Session = Depends(get_db)):
@@ -244,12 +228,17 @@ def approve_correction(data: PipelineAction, db: Session = Depends(get_db)):
 # ===== System Monitoring =====
 @router.get('/monitor')
 def system_monitor():
+    active = [t.name for t in tool_registry.all_tools() if t.enabled]
+    total = len(tool_registry.all_tools())
+    model = model_config.get('model_name')
+    # 运行健康：工具与模型任一缺失即降级，否则正常（前端据此显示「正常 / 需关注」）
+    status = 'ok' if (active and model) else 'degraded'
     return {
-        'status': 'running',
-        'active_tools': [t.name for t in tool_registry.all_tools() if t.enabled],
-        'total_tools': len(tool_registry.all_tools()),
-        'current_model': model_config['model_name'],
-        'temperature': model_config['temperature']
+        'status': status,
+        'active_tools': active,
+        'total_tools': total,
+        'current_model': model,
+        'temperature': model_config.get('temperature')
     }
 
 # ===== Cost Monitoring（成本监控：防 AI 成本失控）=====

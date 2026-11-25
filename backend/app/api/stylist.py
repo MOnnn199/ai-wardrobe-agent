@@ -100,18 +100,6 @@ def update_correction(correction_id: int, data: CorrectionUpdate, db: Session = 
     db.refresh(corr)
     return corr
 
-@router.post('/corrections/{correction_id}/submit')
-def submit_correction(correction_id: int, db: Session = Depends(get_db)):
-    corr = db.query(Correction).filter(Correction.id == correction_id).first()
-    if not corr:
-        raise HTTPException(404)
-    corr.status = 'fixed'
-    conv = db.query(Conversation).filter(Conversation.id == corr.conversation_id).first()
-    if conv:
-        conv.status = 'fixed'
-    db.commit()
-    return {'message': '已提交审批'}
-
 # ===== Few-Shot Examples =====
 @router.get('/few-shot-examples')
 def list_few_shot(category: str = '', page: int = 1, page_size: int = 20, db: Session = Depends(get_db)):
@@ -222,11 +210,6 @@ def knowledge_stats(db: Session = Depends(get_db)):
     source_counts = db.query(KnowledgeChunk.source, sqlfunc.count(KnowledgeChunk.id)).group_by(KnowledgeChunk.source).all()
     return {'total_chunks': total, 'sources': [{'source': s, 'count': c} for s, c in source_counts]}
 
-@router.get('/knowledge/sources')
-def list_knowledge_sources(db: Session = Depends(get_db)):
-    source_counts = db.query(KnowledgeChunk.source, sqlfunc.count(KnowledgeChunk.id)).group_by(KnowledgeChunk.source).all()
-    return [{'source': s, 'count': c} for s, c in source_counts]
-
 # ===== Tags =====
 @router.get('/tags', response_model=list[TagResponse])
 def list_tags(category: str = '', db: Session = Depends(get_db)):
@@ -308,7 +291,10 @@ def stylist_stats(db: Session = Depends(get_db)):
     avg_row = db.query(sqlfunc.avg(Conversation.score)).filter(Conversation.score > 0).scalar()
     avg_score = round(avg_row, 2) if avg_row else 0
     failed = db.query(Conversation).filter(Conversation.score <= 2, Conversation.score > 0).count()
-    fixed = db.query(Correction).filter(Correction.status != 'pending').count()
+    # 「我的提交」只算真正修好的（fixed/approved/deployed），rejected 是被配置端驳回，
+    # 不应计入成功修正数——否则会把被驳回的也当成功，跟配置端审核口径不一致。
+    fixed = db.query(Correction).filter(Correction.status.in_(['fixed', 'approved', 'deployed'])).count()
+    published = db.query(Correction).filter(Correction.status == 'deployed').count()
 
     rating_rows = db.query(Conversation.score, sqlfunc.count(Conversation.id)).filter(Conversation.score > 0).group_by(Conversation.score).all()
     rating_dist = {str(i): 0 for i in range(1, 6)}
@@ -338,6 +324,7 @@ def stylist_stats(db: Session = Depends(get_db)):
         'avg_score': avg_score,
         'failed': failed,
         'fixed': fixed,
+        'published': published,
         'rating_dist': rating_dist,
         'error_dist': error_dist,
         'trend_7d': trend_7d

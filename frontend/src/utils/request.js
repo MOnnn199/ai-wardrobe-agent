@@ -14,6 +14,18 @@ function request(method, url, data = {}, options = {}) {
         options.header || {}
       ),
       success: (res) => {
+        if (res.statusCode === 401) {
+          // token 失效（如后端重启换密钥）→ 清登录态并跳登录页
+          uni.removeStorageSync('token')
+          // 若当前已在登录页（如登录/注册接口自身返回 401），不重复 reLaunch，避免页面重建使错误提示丢失
+          const pages = getCurrentPages()
+          const curRoute = pages.length ? pages[pages.length - 1].route : ''
+          if (curRoute && curRoute.indexOf('login') === -1) {
+            uni.reLaunch({ url: '/pages/login/index' })
+          }
+          reject(res)
+          return
+        }
         if (res.statusCode >= 200 && res.statusCode < 300) {
           // uni-app H5 可能把 res.data 包成只读 Proxy，深拷贝剥离，避免 Vue 响应式化时报错
           try {
@@ -64,6 +76,16 @@ export function upload(url, filePath, name = 'file', formData = {}) {
       formData,
       header: token ? { Authorization: 'Bearer ' + token } : {},
       success: (res) => {
+        if (res.statusCode === 401) {
+          uni.removeStorageSync('token')
+          const pages = getCurrentPages()
+          const curRoute = pages.length ? pages[pages.length - 1].route : ''
+          if (curRoute && curRoute.indexOf('login') === -1) {
+            uni.reLaunch({ url: '/pages/login/index' })
+          }
+          reject(res)
+          return
+        }
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
             resolve(JSON.parse(res.data))

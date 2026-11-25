@@ -21,11 +21,11 @@ export default {
  * - font-smoothing：macOS 抗锯齿，观感更细
  */
 page {
-  background: #EEF2FA;
+  background: #F7F8FA;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
     "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Source Han Sans SC",
     "Microsoft YaHei", "微软雅黑", "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
-  color: #2D3A5A;
+  color: #18181B;
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -56,7 +56,7 @@ image {
 
 /* =====================================================================
  * 全局动效（学习项目风格：淡入上移 + 弹出 + 按压回弹）
- * 配色沿用浅蓝奶油色系：主蓝 #7aa8ff / 强调珊瑚 #FF9E8E / 墨蓝 #2D3A5A
+ * 配色沿用浅蓝奶油色系：主蓝 #4F46E5 / 强调珊瑚 #EF4444 / 墨蓝 #18181B
  * ===================================================================== */
 @keyframes h5FadeUp {
   from { opacity: 0; transform: translateY(16rpx); }
@@ -118,12 +118,12 @@ image {
  * 与原有浅蓝 + 珊瑚形成三色和谐 (灵感来自 Depop / SSENSE)
  * ===================================================================== */
 page {
-  --lav-50:  #F4EFFA;
-  --lav-100: #E8DEF3;
-  --lav-200: #D4C0E8;
-  --lav-400: #B19CD9;
-  --lav-600: #8B7AC0;
-  --lav-800: #5D4F80;
+  --lav-50:  #F5F3FF;
+  --lav-100: #EDE9FE;
+  --lav-200: #DDD6FE;
+  --lav-400: #A5B4FC;
+  --lav-600: #818CF8;
+  --lav-800: #4F46E5;
 }
 .lav-bg     { background: var(--lav-100); }
 .lav-text   { color: var(--lav-600); }
@@ -164,7 +164,7 @@ page {
 
 /* 骨架屏 shimmer (学习自 Linear / Notion) */
 .h5-skel {
-  background: linear-gradient(90deg, #eef5ff 0%, #f4f8ff 50%, #eef5ff 100%);
+  background: linear-gradient(90deg, #F7F8FA 0%, #FAFAFB 50%, #F7F8FA 100%);
   background-size: 200% 100%;
   animation: h5Shimmer 1.4s linear infinite;
   border-radius: 12rpx;
@@ -173,7 +173,7 @@ page {
 /* 底部弹层拖拽把手 (学习自 iOS / 小红书) */
 .sheet-handle {
   width: 72rpx; height: 8rpx; border-radius: 4rpx;
-  background: #d6e5ff; margin: 16rpx 0 8rpx;
+  background: #F4F4F5; margin: 16rpx 0 8rpx;
   align-self: center;
   flex-shrink: 0;
 }

@@ -108,11 +108,17 @@ class ClothingDetector:
 
 
 def crop_for_vl(image_bytes: bytes) -> bytes | None:
-    """上传管线用：返回裁剪后的图片字节；无可靠区域返回 None（调用方用整图）。"""
+    """上传管线用：返回裁剪后的图片字节；无可靠区域返回 None（调用方用整图）。
+
+    策略调整：YOLO 检测到"person"时不再裁剪人体框——全身/穿着照保留完整画面更利于
+    VL 识别衣物，且能避免把人物裁成窄条。只有领带等小配饰才局部裁剪。
+    """
     detections = ClothingDetector.detect_and_crop(image_bytes)
     if not detections:
         return None
-    # 优先 person（面积最大者），其次 tie
-    detections.sort(key=lambda d: 0 if d["label"] == "person" else (1 if d["label"] == "tie" else 2))
-    best = detections[0]
-    return best["cropped"]
+    # 只取 tie 等小配饰做局部裁剪；person 返回 None 让调用方使用整图
+    tie_detections = [d for d in detections if d["label"] == "tie"]
+    if tie_detections:
+        tie_detections.sort(key=lambda d: d["box"][2] * d["box"][3], reverse=True)
+        return tie_detections[0]["cropped"]
+    return None

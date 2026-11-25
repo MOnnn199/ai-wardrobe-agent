@@ -10,28 +10,28 @@ import * as echarts from 'echarts'
 
 // ===== 浅色图表主题：蓝色系统一色板，配置端/搭配师端 echarts.init(el,'wardrobe') 复用 =====
 echarts.registerTheme('wardrobe', {
-  color: ['#7aa8ff', '#5B8DEF', '#a9c6ff', '#3d6fd1', '#bcd2ff', '#8ab4f8'],
+  color: ['#4F46E5', '#4F46E5', '#C7D2FE', '#4338CA', '#C7D2FE', '#A5B4FC'],
   backgroundColor: 'transparent',
-  textStyle: { color: '#6B7A9C' },
-  title: { textStyle: { color: '#2D3A5A' }, subtextStyle: { color: '#6B7A9C' } },
-  legend: { textStyle: { color: '#6B7A9C' } },
+  textStyle: { color: '#6B7280' },
+  title: { textStyle: { color: '#18181B' }, subtextStyle: { color: '#6B7280' } },
+  legend: { textStyle: { color: '#6B7280' } },
   tooltip: {
     backgroundColor: 'rgba(255,255,255,0.96)',
     borderColor: 'rgba(122,168,255,0.35)',
-    textStyle: { color: '#2D3A5A' }
+    textStyle: { color: '#18181B' }
   },
   categoryAxis: {
-    axisLine: { lineStyle: { color: '#d6e5ff' } },
-    axisTick: { lineStyle: { color: '#d6e5ff' } },
-    axisLabel: { color: '#6B7A9C' },
-    splitLine: { show: false, lineStyle: { color: '#eef5ff' } }
+    axisLine: { lineStyle: { color: '#F4F4F5' } },
+    axisTick: { lineStyle: { color: '#F4F4F5' } },
+    axisLabel: { color: '#6B7280' },
+    splitLine: { show: false, lineStyle: { color: '#F7F8FA' } }
   },
   valueAxis: {
     axisLine: { show: false },
-    axisLabel: { color: '#6B7A9C' },
-    splitLine: { lineStyle: { color: '#eef5ff' } }
+    axisLabel: { color: '#6B7280' },
+    splitLine: { lineStyle: { color: '#F7F8FA' } }
   },
-  graph: { itemStyle: { color: '#7aa8ff' } }
+  graph: { itemStyle: { color: '#4F46E5' } }
 })
 
 // 登录态使用 sessionStorage 存储（见 Login.vue / 各主页 logout）。

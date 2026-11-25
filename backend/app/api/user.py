@@ -9,6 +9,7 @@ from app.models import get_db
 from app.models.user import User
 from app.models.wardrobe import ClothingItem, WearLog
 from app.models.conversation import Conversation, AgentStep
+from app.models.adoption import AdoptionRecord
 from app.schemas import (
     ClothingCreate, ClothingUpdate, ClothingResponse,
     ConversationResponse, RatingRequest,
@@ -19,7 +20,6 @@ from app.auth.jwt import verify_token
 from app.agent.tool_registry import ToolRegistry
 from app.utils.outfit_collage import generate_outfit_collage, outfit_from_wardrobe, _pick_outfit_items
 from app.services.scheduled import check_duplicate_purchase
-import json
 
 router = APIRouter(prefix='/api/user', tags=['user'])
 
@@ -47,8 +47,10 @@ def resolve_user_id(authorization: str = Header(None), db: Session = Depends(get
 
 # ===== Wardrobe =====
 @router.get('/wardrobe', response_model=list[ClothingResponse])
-def list_wardrobe(user_id: int = Depends(resolve_user_id), category: str = '', db: Session = Depends(get_db)):
+def list_wardrobe(user_id: int = Depends(resolve_user_id), category: str = '', status: str = 'confirmed', db: Session = Depends(get_db)):
     q = db.query(ClothingItem).filter(ClothingItem.user_id == user_id)
+    if status:
+        q = q.filter(ClothingItem.status == status)
     if category:
         q = q.filter(ClothingItem.category == category)
     return q.order_by(ClothingItem.created_at.desc()).all()
@@ -73,26 +75,13 @@ def update_clothing(item_id: int, data: ClothingUpdate, db: Session = Depends(ge
     return item
 
 @router.delete('/wardrobe/{item_id}')
-def delete_clothing(item_id: int, db: Session = Depends(get_db)):
-    item = db.query(ClothingItem).filter(ClothingItem.id == item_id).first()
+def delete_clothing(item_id: int, user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
+    item = db.query(ClothingItem).filter(ClothingItem.id == item_id, ClothingItem.user_id == user_id).first()
     if not item:
         raise HTTPException(404, '衣物不存在')
     db.delete(item)
     db.commit()
     return {'message': 'ok'}
-
-@router.post('/wardrobe/upload-image')
-async def upload_image(file: UploadFile = File(...), user_id: int = Depends(resolve_user_id)):
-    import uuid, os
-    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
-    os.makedirs(upload_dir, exist_ok=True)
-    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f'{uuid.uuid4()}.{ext}'
-    path = f'{upload_dir}/{filename}'
-    content = await file.read()
-    with open(path, 'wb') as f:
-        f.write(content)
-    return {'url': f'/{path}'}
 
 # ===== Conversation =====
 
@@ -127,14 +116,16 @@ def _aggregate_conversations(rows: list[Conversation]) -> list[dict]:
                 hist = json.loads(last.get('history') or '[]')
                 # 第一次被追问时，先把父会话自己的第一轮补进 history
                 if last.get('turn_count', 1) == 1 and not hist:
-                    hist.append({'role': 'user', 'content': last['user_input']})
+                    hist.append({'role': 'user', 'content': last['user_input'], 'image_url': last.get('user_image_url')})
                     hist.append({'role': 'agent', 'content': last.get('agent_response') or ''})
-                hist.append({'role': 'user', 'content': row.user_input})
+                hist.append({'role': 'user', 'content': row.user_input, 'image_url': row.user_image_url or None})
                 hist.append({'role': 'agent', 'content': row.agent_response or ''})
                 last['history'] = json.dumps(hist, ensure_ascii=False)
                 last['agent_response'] = row.agent_response
                 last['turn_count'] = last.get('turn_count', 1) + 1
                 last['created_at'] = max(last.get('created_at'), row.created_at) if last.get('created_at') and row.created_at else (last.get('created_at') or row.created_at)
+                if row.user_image_url and not last.get('user_image_url'):
+                    last['user_image_url'] = row.user_image_url
                 continue
         groups.append({
             'id': row.id,
@@ -144,6 +135,7 @@ def _aggregate_conversations(rows: list[Conversation]) -> list[dict]:
             'score': row.score,
             'feedback': row.feedback or '',
             'status': row.status or 'normal',
+            'user_image_url': row.user_image_url or None,
             'history': row.history or '[]',
             'created_at': row.created_at,
             'turn_count': 1,
@@ -190,6 +182,8 @@ def chat(
     lat: Optional[float] = None,
     lon: Optional[float] = None,
     conversation_id: Optional[int] = None,
+    image_url: Optional[str] = None,
+    image_analysis: Optional[str] = None,
     user_id: int = Depends(resolve_user_id),
     db: Session = Depends(get_db)
 ):
@@ -208,28 +202,62 @@ def chat(
         db.add(conv)
         db.commit()
 
+    # 保存原始问题与图片地址；把图片分析作为一次性上下文注入 LLM
+    conv.user_input = user_input
+    if image_url:
+        conv.user_image_url = image_url
+    final_input = user_input
+    if image_url or image_analysis:
+        final_input = f"[图片分析：{image_analysis or ''}]\n{user_input}"
+
     history = json.loads(conv.history or '[]')
     agent = ReActAgent(tool_registry)
-    result = agent.run(user_input, user_id=user_id, conversation_id=conv.id, city=city, lat=lat, lon=lon, history=history)
+    result = agent.run(final_input, user_id=user_id, conversation_id=conv.id, city=city, lat=lat, lon=lon, history=history)
 
-    # 追加历史并更新最新回复
-    history.append({"role": "user", "content": user_input})
-    history.append({"role": "agent", "content": result})
+    # 根据推荐文本生成搭配拼贴图，并返回推荐单品列表供前端卡片化展示
+    # 关键：只有本轮 agent 真正调取了「衣橱类工具」才返回卡片，
+    # 这样问"你好/天气/穿搭知识"等不涉及本人衣橱的问题，不会硬推衣柜单品卡片。
+    # 例外：用户表达的是「购买/添置」意图（如"我想买件通勤外套"），此时应推荐新买的，
+    # 而非展示衣橱里已有的单品，故即便 agent 调了衣橱工具也不出卡片。
+    WARDROBE_TOOLS = {'get_wardrobe', 'get_my_outfits', 'check_outfit', 'search_similar_clothes'}
+
+    def _is_shopping_intent(text: str) -> bool:
+        """判定用户是否表达购买/添置新衣物的意图。
+        命中则就算 agent 调了衣橱工具，也不展示「衣橱已有单品」卡片
+        （买衣服=推荐新买，不是推已有的）。"""
+        if not text:
+            return False
+        keys = ('买', '购', '下单', '添置', '入手', '剁手', '加购', '凑单',
+                '淘', '逛', '选购', '该买', '要买', '想买', '打算买', '准备买',
+                'shopping', 'purchase', 'buy')
+        t = (text or '').lower()
+        return any(k in t for k in keys)
+
+    shopping_intent = _is_shopping_intent(user_input)
+    used_wardrobe = bool(agent.used_tools & WARDROBE_TOOLS)
+
+    item_dicts = []
+    outfit_image = None
+    if used_wardrobe and not shopping_intent:
+        items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
+        selected = _pick_outfit_items(result, items)
+        outfit_image = generate_outfit_collage(result, items, conv.id, user_id=user_id)
+        item_dicts = [{
+            'id': it.id, 'name': it.name, 'category': it.category,
+            'color': it.color or '', 'season': it.season or '',
+            'image_url': it.image_url or '', 'style': it.style or '',
+            'material': getattr(it, 'material', None) or '',
+            'pattern': getattr(it, 'pattern', None) or '',
+        } for it in selected]
+
+    # 追加历史并更新最新回复（保留原始问题与图片地址，不暴露图片分析文本）
+    # items / outfit_image 一并落进 agent 历史条目，历史对话打开时才能恢复单品卡片
+    user_hist = {"role": "user", "content": user_input, "image_url": image_url}
+    history.append(user_hist)
+    history.append({"role": "agent", "content": result, "items": item_dicts, "outfit_image": outfit_image})
     conv.history = json.dumps(history, ensure_ascii=False)
     conv.agent_response = result
     db.commit()
-
-    # 根据推荐文本生成搭配拼贴图，并返回推荐单品列表供前端卡片化展示
-    items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
-    selected = _pick_outfit_items(result, items)
-    outfit_image = generate_outfit_collage(result, items, conv.id, user_id=user_id)
-    item_dicts = [{
-        'id': it.id, 'name': it.name, 'category': it.category,
-        'color': it.color or '', 'season': it.season or '',
-        'image_url': it.image_url or '', 'style': it.style or '',
-        'material': getattr(it, 'material', None) or '',
-        'pattern': getattr(it, 'pattern', None) or '',
-    } for it in selected]
 
     return ChatResponse(response=result, conversation_id=conv.id, steps=agent.logger.steps, outfit_image=outfit_image, items=item_dicts)
 
@@ -402,13 +430,8 @@ def outfit_review(data: dict = Body(default={}), user_id: int = Depends(resolve_
             # 解析失败：把原文整体作为评语兜底
             review["color_comment"] = content
 
-    # 生成搭配预览拼贴图（固定文件名覆盖写，避免堆积；支持同类多件/叠穿）
+    # 审核结果不再生成拼贴图，改由前端用衣橱卡片展示搭配单品
     image_url = None
-    try:
-        from app.utils.outfit_collage import _render_collage
-        image_url = _render_collage(items, f'my_outfit_{user_id}', '我的搭配', 'http://localhost:8000')
-    except Exception as e:
-        print("outfit review collage failed:", e)
 
     return {
         "score": review["score"],
@@ -426,7 +449,8 @@ def outfit_review(data: dict = Body(default={}), user_id: int = Depends(resolve_
 # ===== Wardrobe Analysis =====
 @router.get('/wardrobe-analysis')
 def wardrobe_analysis(user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id).all()
+    items = db.query(ClothingItem).filter(
+        ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
     if not items:
         return WardrobeAnalysisResponse(
             total_items=0, category_distribution={}, season_distribution={},
@@ -496,7 +520,8 @@ def wardrobe_analysis(user_id: int = Depends(resolve_user_id), db: Session = Dep
 # ===== Shopping List Suggestions =====
 @router.get('/shopping-list')
 def shopping_list(user_id: int = Depends(resolve_user_id), db: Session = Depends(get_db)):
-    items = db.query(ClothingItem).filter(ClothingItem.user_id == user_id).all()
+    items = db.query(ClothingItem).filter(
+        ClothingItem.user_id == user_id, ClothingItem.status == 'confirmed').all()
     cats = {i.category for i in items}
     has_upper = 'top' in cats or 'dress' in cats
     has_lower = 'bottom' in cats or 'dress' in cats
@@ -527,11 +552,11 @@ async def analyze_image(file: UploadFile = File(...), user_id: int = Depends(res
     client = TongyiVLClient()
     prompt = '请详细描述这张图片中的衣物：类别（上装/下装/鞋子/配饰）、颜色、风格、适合的季节和场合。以JSON格式返回。'
     result = client.analyze_image(b64, prompt)
-    return {'image_url': f'/{path}', 'analysis': result}
+    return {'image_url': f'/uploads/temp/{filename}', 'analysis': result}
 
 
 @router.post('/wardrobe/upload-and-tag')
-async def upload_and_tag(file: UploadFile = File(...), user_id: int = Depends(resolve_user_id), purchase_date: str = Form(None), db: Session = Depends(get_db)):
+async def upload_and_tag(file: UploadFile = File(...), user_id: int = Depends(resolve_user_id), purchase_date: str = Form(None), status: str = Form('confirmed'), db: Session = Depends(get_db)):
     import uuid, os, base64, json
     upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
@@ -607,7 +632,7 @@ async def upload_and_tag(file: UploadFile = File(...), user_id: int = Depends(re
         season=tags.get('season', ''),
         occasion=tags.get('occasion', ''),
         image_url=f'http://localhost:8000/uploads/{filename}',
-        status='confirmed',
+        status=status,
         purchase_date=pd,
         last_worn=None,
         wear_count=0
@@ -669,12 +694,14 @@ def mark_worn(data: dict, user_id: int = Depends(resolve_user_id), db: Session =
         except Exception:
             worn_date = date.today()
     updated = 0
+    valid_ids = []
     for iid in ids:
         item = db.query(ClothingItem).filter(
             ClothingItem.id == iid, ClothingItem.user_id == user_id
         ).first()
         if not item:
             continue
+        valid_ids.append(iid)
         # 同件同天只记一次，避免重复计数
         exists = db.query(WearLog).filter(
             WearLog.item_id == iid, WearLog.user_id == user_id, WearLog.worn_date == worn_date
@@ -687,7 +714,43 @@ def mark_worn(data: dict, user_id: int = Depends(resolve_user_id), db: Session =
             item.last_worn = worn_date
         updated += 1
     db.commit()
-    return {'updated': updated, 'worn_date': str(worn_date)}
+
+    # ===== 采纳记录：驱动运营端「采纳数 / 采纳率 / 采纳来源分布」=====
+    # 「确认今日穿搭」/「标记穿过」= 用户实际采纳了一套搭配，落一条 adoption_records。
+    # （此处曾在 2026-08-24 随「穿搭日志」下线而注释停用，导致运营端 KPI 冻结在 5；
+    #   现按产品需要重新接线，只写采纳记录，不恢复用户端「穿搭日志」入口。）
+    # 幂等口径：同一用户 + 同一天 + 同一批单品只记一次；换一套后再确认会再记一条。
+    adopted = None
+    if valid_ids:
+        signature = json.dumps(sorted(set(valid_ids)))
+        same_day = db.query(AdoptionRecord).filter(
+            AdoptionRecord.user_id == user_id,
+            AdoptionRecord.adopted_date == worn_date,
+        ).all()
+        already = False
+        for r in same_day:
+            try:
+                if json.dumps(sorted(json.loads(r.item_ids or '[]'))) == signature:
+                    already = True
+                    break
+            except Exception:
+                continue
+        if not already:
+            adopted = AdoptionRecord(
+                user_id=user_id, source='today', scene='今日穿搭',
+                item_ids=signature, reason='用户确认今日穿搭',
+                adopted_date=worn_date,
+            )
+            db.add(adopted)
+            db.commit()
+            db.refresh(adopted)
+
+    return {
+        'updated': updated,
+        'worn_date': str(worn_date),
+        'adoption_id': adopted.id if adopted else None,
+        'adoption_counted': bool(adopted),
+    }
 
 
 # ===== 穿着历史：某件衣服都在哪些天穿过 =====
